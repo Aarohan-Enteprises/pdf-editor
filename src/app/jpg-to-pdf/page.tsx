@@ -270,6 +270,7 @@ export default function JpgToPdfPage() {
                       key={image.id}
                       className="relative group aspect-[3/4] bg-gray-100 dark:bg-slate-800 rounded-xl overflow-hidden"
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={image.preview}
                         alt={image.file.name}

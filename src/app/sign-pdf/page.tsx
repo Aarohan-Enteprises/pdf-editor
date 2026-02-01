@@ -479,6 +479,7 @@ export default function SignPdfPage() {
                   />
                   <div className="flex flex-col items-center">
                     {signaturePreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={signaturePreview} alt="Signature" className="max-h-12 max-w-full" />
                     ) : (
                       <p className="text-gray-500 dark:text-gray-400 text-sm">Drop image or click to browse</p>
@@ -697,6 +698,7 @@ export default function SignPdfPage() {
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={pagePreview}
                     alt="PDF Page"
@@ -715,6 +717,7 @@ export default function SignPdfPage() {
                     className={`border-2 ${currentPageHasSignature ? 'border-green-500' : 'border-rose-500'} bg-white/80 cursor-move`}
                     onMouseDown={(e) => handleMouseDown(e, 'drag')}
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={signaturePreview}
                       alt="Signature"

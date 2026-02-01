@@ -252,6 +252,7 @@ export default function PdfToJpgPage() {
                       onClick={() => downloadImage(page)}
                       className="relative group aspect-[3/4] bg-gray-100 dark:bg-slate-800 rounded-xl overflow-hidden hover:ring-2 hover:ring-purple-500 transition-all"
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={page.dataUrl}
                         alt={`Page ${page.pageNumber}`}

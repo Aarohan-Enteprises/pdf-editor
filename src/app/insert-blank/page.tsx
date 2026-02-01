@@ -5,6 +5,12 @@ import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { insertBlankPages, downloadPDF, getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
+const pageSizes = {
+  a4: { width: 595, height: 842 },
+  letter: { width: 612, height: 792 },
+  legal: { width: 612, height: 1008 },
+};
+
 export default function InsertBlankPage() {
   const t = useTranslations('tools.insertBlank');
 
@@ -18,12 +24,6 @@ export default function InsertBlankPage() {
   const [blankCount, setBlankCount] = useState(1);
   const [pageSize, setPageSize] = useState<'a4' | 'letter' | 'legal'>('a4');
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const pageSizes = {
-    a4: { width: 595, height: 842 },
-    letter: { width: 612, height: 792 },
-    legal: { width: 612, height: 1008 },
-  };
 
   const handleFile = useCallback(async (selectedFile: File) => {
     if (selectedFile.type !== 'application/pdf') {
