@@ -1,0 +1,174 @@
+{
+  "common": {
+    "appName": "PDF2.in",
+    "tagline": "Free & Secure PDF Tools",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "download": "Download",
+    "delete": "Delete",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "browse": "Browse",
+    "or": "or"
+  },
+  "hero": {
+    "title": "All-in-One PDF Tools",
+    "subtitle": "Edit, merge, split, and convert PDFs instantly. 100% free, secure, and works entirely in your browser.",
+    "cta": "Start Editing",
+    "trustedBy": "Trusted by thousands of users"
+  },
+  "features": {
+    "title": "Powerful Features",
+    "subtitle": "Everything you need to work with PDFs",
+    "merge": {
+      "title": "Merge PDFs",
+      "description": "Combine multiple PDF files into one document"
+    },
+    "split": {
+      "title": "Split PDF",
+      "description": "Extract pages or split PDF at any page number"
+    },
+    "rotate": {
+      "title": "Rotate Pages",
+      "description": "Rotate individual pages or entire documents"
+    },
+    "watermark": {
+      "title": "Add Watermark",
+      "description": "Add custom text watermarks to your PDFs"
+    },
+    "imageToPdf": {
+      "title": "Image to PDF",
+      "description": "Convert JPG and PNG images to PDF"
+    }
+  },
+  "trust": {
+    "secure": {
+      "title": "100% Secure",
+      "description": "Files are processed locally in your browser"
+    },
+    "free": {
+      "title": "Completely Free",
+      "description": "No hidden fees, no registration required"
+    },
+    "fast": {
+      "title": "Lightning Fast",
+      "description": "Instant processing with no uploads to server"
+    }
+  },
+  "dropzone": {
+    "title": "Drop your PDF files here",
+    "subtitle": "or click to browse",
+    "hint": "Max 10MB per file, up to 50 pages",
+    "invalidFile": "Please upload valid PDF files only",
+    "fileTooLarge": "File exceeds 10MB limit",
+    "tooManyPages": "Total pages exceed 50 page limit"
+  },
+  "imageDropzone": {
+    "title": "Drop images here",
+    "subtitle": "or click to browse",
+    "hint": "Supports JPG and PNG files",
+    "invalidFile": "Please upload valid image files only"
+  },
+  "viewer": {
+    "noPages": "No pages to display",
+    "page": "Page",
+    "of": "of",
+    "selected": "selected"
+  },
+  "toolbar": {
+    "merge": "Merge",
+    "split": "Split",
+    "splitByPage": "Split at Page",
+    "rotate": "Rotate",
+    "rotateLeft": "Rotate Left",
+    "rotateRight": "Rotate Right",
+    "rotate180": "Rotate 180°",
+    "watermark": "Watermark",
+    "download": "Download",
+    "clear": "Clear All",
+    "noSelection": "Select pages first",
+    "imageToPdf": "Image to PDF"
+  },
+  "watermark": {
+    "title": "Add Watermark",
+    "text": "Text",
+    "textPlaceholder": "Enter watermark text",
+    "fontSize": "Font Size",
+    "color": "Color",
+    "opacity": "Opacity",
+    "position": "Position",
+    "positions": {
+      "center": "Center",
+      "topLeft": "Top Left",
+      "topRight": "Top Right",
+      "bottomLeft": "Bottom Left",
+      "bottomRight": "Bottom Right"
+    },
+    "applyTo": "Apply to",
+    "selectedPages": "Selected Pages",
+    "allPages": "All Pages"
+  },
+  "split": {
+    "title": "Split PDF",
+    "extractSelected": "Extract selected pages as single PDF",
+    "splitAtPage": "Split at page number",
+    "pageNumber": "Page number",
+    "firstPart": "First part: Pages 1 to",
+    "secondPart": "Second part: Pages",
+    "toEnd": "to end",
+    "downloadFirst": "Download First Part",
+    "downloadSecond": "Download Second Part",
+    "downloadBoth": "Download Both"
+  },
+  "imageToPdf": {
+    "title": "Convert Images to PDF",
+    "addImages": "Add Images",
+    "convert": "Convert to PDF",
+    "noImages": "No images added yet"
+  },
+  "footer": {
+    "tagline": "Free online PDF tools",
+    "privacy": "Your files never leave your browser",
+    "copyright": "PDF2.in - All rights reserved"
+  },
+  "tools": {
+    "merge": {
+      "title": "Merge PDF",
+      "description": "Combine multiple PDFs into one document",
+      "pageTitle": "Merge PDF Files",
+      "pageDescription": "Drag and drop PDF files to combine them into a single document. Reorder pages as needed."
+    },
+    "split": {
+      "title": "Split PDF",
+      "description": "Split PDF into multiple documents",
+      "pageTitle": "Split PDF Document",
+      "pageDescription": "Extract specific pages or split your PDF at any page number."
+    },
+    "jpgToPdf": {
+      "title": "JPG to PDF",
+      "description": "Convert images to PDF document",
+      "pageTitle": "Convert Images to PDF",
+      "pageDescription": "Convert JPG, PNG and other images to a PDF document."
+    },
+    "pdfToJpg": {
+      "title": "PDF to JPG",
+      "description": "Convert PDF pages to images",
+      "pageTitle": "Convert PDF to Images",
+      "pageDescription": "Extract pages from your PDF as JPG or PNG images."
+    },
+    "rotate": {
+      "title": "Rotate PDF",
+      "description": "Rotate PDF pages to any angle",
+      "pageTitle": "Rotate PDF Pages",
+      "pageDescription": "Rotate individual pages or the entire document by 90, 180, or 270 degrees."
+    },
+    "watermark": {
+      "title": "Add Watermark",
+      "description": "Add text watermark to your PDF",
+      "pageTitle": "Add Watermark to PDF",
+      "pageDescription": "Add custom text watermarks to your PDF pages."
+    }
+  }
+}
