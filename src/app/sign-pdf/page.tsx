@@ -72,8 +72,9 @@ export default function SignPdfPage() {
 
       const viewport = page.getViewport({ scale: 1 });
 
-      // Calculate scale to fit in container (max 600px width)
-      const maxWidth = 600;
+      // Calculate scale to fit in container - responsive max width
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      const maxWidth = isMobile ? Math.min(window.innerWidth - 48, 400) : 600;
       const scale = Math.min(maxWidth / viewport.width, 1.5);
       setScaleFactor(scale);
 
@@ -163,6 +164,27 @@ export default function SignPdfPage() {
     }
   }, [pdfFile, currentPage, renderPagePreview, pageSignatures]);
 
+  // Re-render preview on window resize (for orientation change on mobile)
+  useEffect(() => {
+    const handleResize = () => {
+      if (pdfFile && currentPage) {
+        renderPagePreview(pdfFile, currentPage);
+      }
+    };
+
+    let timeoutId: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleResize, 250);
+    };
+
+    window.addEventListener('resize', debouncedResize);
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+      clearTimeout(timeoutId);
+    };
+  }, [pdfFile, currentPage, renderPagePreview]);
+
   const handlePdfDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -201,17 +223,27 @@ export default function SignPdfPage() {
     });
   }, [currentPage]);
 
-  // Mouse handlers for dragging signature
-  const handleMouseDown = useCallback((e: React.MouseEvent, type: 'drag' | ResizeDirection) => {
+  // Get client coordinates from mouse or touch event
+  const getClientCoords = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e) {
+      return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+    }
+    return { clientX: e.clientX, clientY: e.clientY };
+  }, []);
+
+  // Mouse/Touch handlers for dragging signature
+  const handlePointerDown = useCallback((e: React.MouseEvent | React.TouchEvent, type: 'drag' | ResizeDirection) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const { clientX, clientY } = getClientCoords(e);
 
     if (type === 'drag') {
       setIsDragging(true);
       const rect = (e.target as HTMLElement).getBoundingClientRect();
       setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: clientX - rect.left,
+        y: clientY - rect.top,
       });
     } else {
       setResizeDirection(type);
@@ -221,18 +253,22 @@ export default function SignPdfPage() {
         x: signaturePos.x,
         y: signaturePos.y,
       });
-      setDragOffset({ x: e.clientX, y: e.clientY });
+      setDragOffset({ x: clientX, y: clientY });
     }
-  }, [signaturePos]);
+  }, [signaturePos, getClientCoords]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+  const handlePointerMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!canvasContainerRef.current) return;
+    if (!isDragging && !resizeDirection) return;
 
+    e.preventDefault(); // Prevent scrolling on touch devices
+
+    const { clientX, clientY } = getClientCoords(e);
     const containerRect = canvasContainerRef.current.getBoundingClientRect();
 
     if (isDragging) {
-      const newX = e.clientX - containerRect.left - dragOffset.x;
-      const newY = e.clientY - containerRect.top - dragOffset.y;
+      const newX = clientX - containerRect.left - dragOffset.x;
+      const newY = clientY - containerRect.top - dragOffset.y;
 
       setSignaturePos(prev => ({
         ...prev,
@@ -240,8 +276,8 @@ export default function SignPdfPage() {
         y: Math.max(0, Math.min(newY, containerRect.height - prev.height)),
       }));
     } else if (resizeDirection) {
-      const deltaX = e.clientX - dragOffset.x;
-      const deltaY = e.clientY - dragOffset.y;
+      const deltaX = clientX - dragOffset.x;
+      const deltaY = clientY - dragOffset.y;
 
       let newWidth = initialSize.width;
       let newHeight = initialSize.height;
@@ -320,9 +356,9 @@ export default function SignPdfPage() {
 
       setSignaturePos({ x: newX, y: newY, width: newWidth, height: newHeight });
     }
-  }, [isDragging, resizeDirection, dragOffset, initialSize, lockAspectRatio, aspectRatio]);
+  }, [isDragging, resizeDirection, dragOffset, initialSize, lockAspectRatio, aspectRatio, getClientCoords]);
 
-  const handleMouseUp = useCallback(() => {
+  const handlePointerUp = useCallback(() => {
     setIsDragging(false);
     setResizeDirection(null);
   }, []);
@@ -404,20 +440,20 @@ export default function SignPdfPage() {
 
   return (
     <PageLayout>
-      <div className="w-full px-6 lg:px-12 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
             </div>
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                 {t('pageTitle')}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                 {t('pageDescription')}
               </p>
             </div>
@@ -425,10 +461,10 @@ export default function SignPdfPage() {
         </div>
 
         {/* Main Content */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left: Upload Controls */}
-          <div className="lg:col-span-1">
-            <div className="card p-4 space-y-4 sticky top-24">
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            <div className="card p-4 space-y-4 lg:sticky lg:top-24">
               {/* PDF Dropzone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -634,7 +670,7 @@ export default function SignPdfPage() {
 
                   <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
                     <p className="text-xs text-blue-800 dark:text-blue-200">
-                      <strong>Drag</strong> to move. <strong>Edge handles</strong> to stretch. <strong>Corner handles</strong> to resize.
+                      <strong>Drag</strong> to move. <strong>Blue handles</strong> to stretch. <strong>Red corners</strong> to resize.
                     </p>
                   </div>
 
@@ -678,9 +714,9 @@ export default function SignPdfPage() {
           </div>
 
           {/* Right: Interactive Canvas */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 order-1 lg:order-2">
             {pagePreview && signaturePreview ? (
-              <div className="card p-4">
+              <div className="card p-3 sm:p-4 overflow-x-auto">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-900 dark:text-white">
                     Position signature on page {currentPage}
@@ -693,16 +729,19 @@ export default function SignPdfPage() {
                 </div>
                 <div
                   ref={canvasContainerRef}
-                  className="relative inline-block border border-gray-300 dark:border-slate-600 rounded-lg overflow-hidden cursor-crosshair select-none"
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
+                  className="relative inline-block border border-gray-300 dark:border-slate-600 rounded-lg overflow-hidden cursor-crosshair select-none max-w-full"
+                  onMouseMove={handlePointerMove}
+                  onMouseUp={handlePointerUp}
+                  onMouseLeave={handlePointerUp}
+                  onTouchMove={handlePointerMove}
+                  onTouchEnd={handlePointerUp}
+                  onTouchCancel={handlePointerUp}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={pagePreview}
                     alt="PDF Page"
-                    className="block"
+                    className="block max-w-full h-auto"
                     draggable={false}
                   />
                   {/* Signature overlay */}
@@ -714,8 +753,9 @@ export default function SignPdfPage() {
                       width: signaturePos.width,
                       height: signaturePos.height,
                     }}
-                    className={`border-2 ${currentPageHasSignature ? 'border-green-500' : 'border-rose-500'} bg-white/80 cursor-move`}
-                    onMouseDown={(e) => handleMouseDown(e, 'drag')}
+                    className={`border-2 ${currentPageHasSignature ? 'border-green-500' : 'border-rose-500'} bg-white/80 cursor-move touch-none`}
+                    onMouseDown={(e) => handlePointerDown(e, 'drag')}
+                    onTouchStart={(e) => handlePointerDown(e, 'drag')}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -725,40 +765,48 @@ export default function SignPdfPage() {
                       draggable={false}
                     />
 
-                    {/* Corner resize handles */}
+                    {/* Corner resize handles - larger on mobile for touch */}
                     <div
-                      className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-rose-500 rounded-sm cursor-nw-resize hover:bg-rose-600"
-                      onMouseDown={(e) => handleMouseDown(e, 'nw')}
+                      className="absolute -top-2 -left-2 w-4 h-4 md:w-3 md:h-3 bg-rose-500 rounded-sm cursor-nw-resize hover:bg-rose-600 active:bg-rose-700 touch-none"
+                      onMouseDown={(e) => handlePointerDown(e, 'nw')}
+                      onTouchStart={(e) => handlePointerDown(e, 'nw')}
                     />
                     <div
-                      className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-rose-500 rounded-sm cursor-ne-resize hover:bg-rose-600"
-                      onMouseDown={(e) => handleMouseDown(e, 'ne')}
+                      className="absolute -top-2 -right-2 w-4 h-4 md:w-3 md:h-3 bg-rose-500 rounded-sm cursor-ne-resize hover:bg-rose-600 active:bg-rose-700 touch-none"
+                      onMouseDown={(e) => handlePointerDown(e, 'ne')}
+                      onTouchStart={(e) => handlePointerDown(e, 'ne')}
                     />
                     <div
-                      className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-rose-500 rounded-sm cursor-sw-resize hover:bg-rose-600"
-                      onMouseDown={(e) => handleMouseDown(e, 'sw')}
+                      className="absolute -bottom-2 -left-2 w-4 h-4 md:w-3 md:h-3 bg-rose-500 rounded-sm cursor-sw-resize hover:bg-rose-600 active:bg-rose-700 touch-none"
+                      onMouseDown={(e) => handlePointerDown(e, 'sw')}
+                      onTouchStart={(e) => handlePointerDown(e, 'sw')}
                     />
                     <div
-                      className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-rose-500 rounded-sm cursor-se-resize hover:bg-rose-600"
-                      onMouseDown={(e) => handleMouseDown(e, 'se')}
+                      className="absolute -bottom-2 -right-2 w-4 h-4 md:w-3 md:h-3 bg-rose-500 rounded-sm cursor-se-resize hover:bg-rose-600 active:bg-rose-700 touch-none"
+                      onMouseDown={(e) => handlePointerDown(e, 'se')}
+                      onTouchStart={(e) => handlePointerDown(e, 'se')}
                     />
 
-                    {/* Edge resize handles for stretching */}
+                    {/* Edge resize handles for stretching - larger on mobile */}
                     <div
-                      className="absolute top-1/2 -left-1.5 w-2 h-6 -translate-y-1/2 bg-blue-500 rounded-sm cursor-w-resize hover:bg-blue-600"
-                      onMouseDown={(e) => handleMouseDown(e, 'w')}
+                      className="absolute top-1/2 -left-2 w-3 h-8 md:w-2 md:h-6 -translate-y-1/2 bg-blue-500 rounded-sm cursor-w-resize hover:bg-blue-600 active:bg-blue-700 touch-none"
+                      onMouseDown={(e) => handlePointerDown(e, 'w')}
+                      onTouchStart={(e) => handlePointerDown(e, 'w')}
                     />
                     <div
-                      className="absolute top-1/2 -right-1.5 w-2 h-6 -translate-y-1/2 bg-blue-500 rounded-sm cursor-e-resize hover:bg-blue-600"
-                      onMouseDown={(e) => handleMouseDown(e, 'e')}
+                      className="absolute top-1/2 -right-2 w-3 h-8 md:w-2 md:h-6 -translate-y-1/2 bg-blue-500 rounded-sm cursor-e-resize hover:bg-blue-600 active:bg-blue-700 touch-none"
+                      onMouseDown={(e) => handlePointerDown(e, 'e')}
+                      onTouchStart={(e) => handlePointerDown(e, 'e')}
                     />
                     <div
-                      className="absolute -top-1.5 left-1/2 w-6 h-2 -translate-x-1/2 bg-blue-500 rounded-sm cursor-n-resize hover:bg-blue-600"
-                      onMouseDown={(e) => handleMouseDown(e, 'n')}
+                      className="absolute -top-2 left-1/2 w-8 h-3 md:w-6 md:h-2 -translate-x-1/2 bg-blue-500 rounded-sm cursor-n-resize hover:bg-blue-600 active:bg-blue-700 touch-none"
+                      onMouseDown={(e) => handlePointerDown(e, 'n')}
+                      onTouchStart={(e) => handlePointerDown(e, 'n')}
                     />
                     <div
-                      className="absolute -bottom-1.5 left-1/2 w-6 h-2 -translate-x-1/2 bg-blue-500 rounded-sm cursor-s-resize hover:bg-blue-600"
-                      onMouseDown={(e) => handleMouseDown(e, 's')}
+                      className="absolute -bottom-2 left-1/2 w-8 h-3 md:w-6 md:h-2 -translate-x-1/2 bg-blue-500 rounded-sm cursor-s-resize hover:bg-blue-600 active:bg-blue-700 touch-none"
+                      onMouseDown={(e) => handlePointerDown(e, 's')}
+                      onTouchStart={(e) => handlePointerDown(e, 's')}
                     />
                   </div>
                 </div>
