@@ -47,15 +47,12 @@ export function usePDFDocument() {
 
       const loadedFiles: PDFFile[] = [];
       let totalNewPages = 0;
-      let foundEncrypted = false;
-
       for (const file of newFiles) {
         const arrayBuffer = await file.arrayBuffer();
 
         // Check if PDF is encrypted/password-protected
         const isEncrypted = await checkPDFEncryption(arrayBuffer.slice(0));
         if (isEncrypted) {
-          foundEncrypted = true;
           throw new EncryptedPDFError(
             `The file "${file.name}" is password protected or encrypted. Please remove the password protection before editing.`
           );
