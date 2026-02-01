@@ -20,20 +20,6 @@ export function Header() {
             <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">{t('tagline')}</p>
           </div>
         </Link>
-        <nav className="hidden md:flex items-center gap-6">
-          <Link href="/merge" className="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            Merge
-          </Link>
-          <Link href="/split" className="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            Split
-          </Link>
-          <Link href="/jpg-to-pdf" className="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            JPG to PDF
-          </Link>
-          <Link href="/pdf-to-jpg" className="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            PDF to JPG
-          </Link>
-        </nav>
       </div>
     </header>
   );

@@ -4,9 +4,13 @@ import { getMessages } from 'next-intl/server';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PDF2.in - Free & Secure PDF Tools',
+  title: 'PDF2.in',
   description: 'Edit, merge, split, rotate, and convert PDFs instantly. 100% free, secure, and works entirely in your browser.',
   keywords: 'PDF editor, merge PDF, split PDF, rotate PDF, watermark, image to PDF, free PDF tools',
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default async function RootLayout({
