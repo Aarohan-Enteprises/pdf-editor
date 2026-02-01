@@ -188,6 +188,19 @@ const tools = [
     textColor: 'text-violet-600 dark:text-violet-400',
     category: 'edit',
   },
+  {
+    id: 'compress',
+    href: '/compress',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
+    ),
+    gradient: 'from-emerald-500 to-emerald-600',
+    lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+    textColor: 'text-emerald-600 dark:text-emerald-400',
+    category: 'edit',
+  },
 ];
 
 // Custom hook for staggered animation

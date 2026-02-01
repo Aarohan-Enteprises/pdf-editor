@@ -221,6 +221,31 @@
       "description": "Make copies of PDF pages",
       "pageTitle": "Duplicate PDF Pages",
       "pageDescription": "Create multiple copies of selected pages in your PDF."
+    },
+    "compress": {
+      "title": "Compress PDF",
+      "description": "Reduce PDF file size",
+      "pageTitle": "Compress PDF",
+      "pageDescription": "Reduce file size while maintaining quality",
+      "qualityLabel": "Compression Level",
+      "qualityLow": "Maximum Compression",
+      "qualityLowDesc": "60-90% reduction, aggressive compression",
+      "qualityMedium": "Balanced (Recommended)",
+      "qualityMediumDesc": "30-70% reduction, smart compression",
+      "qualityHigh": "Lossless",
+      "qualityHighDesc": "5-30% reduction, no quality loss",
+      "outputFilename": "Output filename",
+      "compressButton": "Compress PDF",
+      "processing": "Compressing...",
+      "compressionComplete": "Compression Complete!",
+      "originalSize": "Original",
+      "compressedSize": "Compressed",
+      "savingsPercent": "{percent}% smaller",
+      "noSavings": "File is already optimized",
+      "downloadButton": "Download Compressed PDF",
+      "noPdfYet": "No PDF added yet",
+      "uploadPrompt": "Upload a PDF file to compress it",
+      "progress": "Progress"
     }
   }
 }
