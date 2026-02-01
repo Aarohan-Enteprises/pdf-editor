@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { PageInfo, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
-export const MAX_TOTAL_PAGES = 50;
+export const MAX_TOTAL_PAGES = 200;
 
 export class PageLimitError extends Error {
   constructor(message: string) {
