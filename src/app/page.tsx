@@ -190,6 +190,42 @@ const tools = [
   },
 ];
 
+const upcomingTools = [
+  {
+    id: 'compressPdf',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
+    ),
+    gradient: 'from-teal-500 to-teal-600',
+    lightBg: 'bg-teal-50 dark:bg-teal-950/30',
+    textColor: 'text-teal-600 dark:text-teal-400',
+  },
+  {
+    id: 'lockPdf',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    ),
+    gradient: 'from-emerald-500 to-emerald-600',
+    lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+    textColor: 'text-emerald-600 dark:text-emerald-400',
+  },
+  {
+    id: 'unlockPdf',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+      </svg>
+    ),
+    gradient: 'from-yellow-500 to-yellow-600',
+    lightBg: 'bg-yellow-50 dark:bg-yellow-950/30',
+    textColor: 'text-yellow-600 dark:text-yellow-400',
+  },
+];
+
 // Custom hook for staggered animation
 function useStaggeredAnimation(itemCount: number, delay: number = 50) {
   const [visibleItems, setVisibleItems] = useState<number[]>([]);
@@ -300,6 +336,40 @@ function ToolCard({ tool, index, isVisible }: { tool: typeof tools[0]; index: nu
   );
 }
 
+function UpcomingToolCard({ tool, index, isVisible }: { tool: typeof upcomingTools[0]; index: number; isVisible: boolean }) {
+  const t = useTranslations('tools');
+
+  return (
+    <div className="group">
+      <div
+        className={`relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 h-full transition-all duration-500 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}
+        style={{ transitionDelay: `${index * 30}ms` }}
+      >
+        {/* Coming Soon Badge */}
+        <div className="absolute top-3 right-3">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+            Coming Soon
+          </span>
+        </div>
+
+        <div className="relative z-10">
+          <div className={`w-12 h-12 rounded-xl ${tool.lightBg} ${tool.textColor} flex items-center justify-center mb-3 opacity-60`}>
+            {tool.icon}
+          </div>
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+            {t(`${tool.id}.title`)}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+            {t(`${tool.id}.description`)}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StatCard({ value, label, suffix = '' }: { value: number; label: string; suffix?: string }) {
   const { ref, isInView } = useInView();
   const { count, start } = useCounter(value, 1500, true);
@@ -321,7 +391,7 @@ function StatCard({ value, label, suffix = '' }: { value: number; label: string;
 export default function HomePage() {
   const tHero = useTranslations('hero');
   const tTrust = useTranslations('trust');
-  const visibleItems = useStaggeredAnimation(tools.length, 40);
+  const visibleItems = useStaggeredAnimation(tools.length + upcomingTools.length, 40);
   const { ref: toolsRef, isInView: toolsInView } = useInView(0.05);
 
   const organizeTools = tools.filter(t => t.category === 'organize');
@@ -511,7 +581,7 @@ export default function HomePage() {
           </div>
 
           {/* Edit Tools */}
-          <div>
+          <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -527,6 +597,28 @@ export default function HomePage() {
                   tool={tool}
                   index={index + organizeTools.length + convertTools.length}
                   isVisible={toolsInView && visibleItems.includes(index + organizeTools.length + convertTools.length)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Coming Soon Tools */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Coming Soon</h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+              {upcomingTools.map((tool, index) => (
+                <UpcomingToolCard
+                  key={tool.id}
+                  tool={tool}
+                  index={index + organizeTools.length + convertTools.length + editTools.length}
+                  isVisible={toolsInView && visibleItems.includes(index + organizeTools.length + convertTools.length + editTools.length)}
                 />
               ))}
             </div>

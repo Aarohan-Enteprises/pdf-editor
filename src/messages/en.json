@@ -221,6 +221,18 @@
       "description": "Make copies of PDF pages",
       "pageTitle": "Duplicate PDF Pages",
       "pageDescription": "Create multiple copies of selected pages in your PDF."
+    },
+    "compressPdf": {
+      "title": "Compress PDF",
+      "description": "Reduce PDF file size"
+    },
+    "lockPdf": {
+      "title": "Lock PDF",
+      "description": "Password protect your PDF"
+    },
+    "unlockPdf": {
+      "title": "Unlock PDF",
+      "description": "Remove PDF password protection"
     }
   }
 }
