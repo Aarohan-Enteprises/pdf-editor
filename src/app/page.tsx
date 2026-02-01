@@ -224,6 +224,72 @@ const upcomingTools = [
     lightBg: 'bg-yellow-50 dark:bg-yellow-950/30',
     textColor: 'text-yellow-600 dark:text-yellow-400',
   },
+  {
+    id: 'pdfToDocx',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+    gradient: 'from-blue-600 to-blue-700',
+    lightBg: 'bg-blue-50 dark:bg-blue-950/30',
+    textColor: 'text-blue-600 dark:text-blue-400',
+  },
+  {
+    id: 'docxToPdf',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    ),
+    gradient: 'from-red-500 to-red-600',
+    lightBg: 'bg-red-50 dark:bg-red-950/30',
+    textColor: 'text-red-600 dark:text-red-400',
+  },
+  {
+    id: 'pdfToPptx',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 13v-1m4 1v-3m4 3V8M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+      </svg>
+    ),
+    gradient: 'from-orange-500 to-orange-600',
+    lightBg: 'bg-orange-50 dark:bg-orange-950/30',
+    textColor: 'text-orange-600 dark:text-orange-400',
+  },
+  {
+    id: 'pptxToPdf',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+      </svg>
+    ),
+    gradient: 'from-amber-500 to-amber-600',
+    lightBg: 'bg-amber-50 dark:bg-amber-950/30',
+    textColor: 'text-amber-600 dark:text-amber-400',
+  },
+  {
+    id: 'excelToPdf',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg>
+    ),
+    gradient: 'from-green-600 to-green-700',
+    lightBg: 'bg-green-50 dark:bg-green-950/30',
+    textColor: 'text-green-600 dark:text-green-400',
+  },
+  {
+    id: 'htmlToPdf',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+      </svg>
+    ),
+    gradient: 'from-purple-500 to-purple-600',
+    lightBg: 'bg-purple-50 dark:bg-purple-950/30',
+    textColor: 'text-purple-600 dark:text-purple-400',
+  },
 ];
 
 // Custom hook for staggered animation

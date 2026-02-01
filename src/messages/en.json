@@ -233,6 +233,30 @@
     "unlockPdf": {
       "title": "Unlock PDF",
       "description": "Remove PDF password protection"
+    },
+    "pdfToDocx": {
+      "title": "PDF to DOCX",
+      "description": "Convert PDF to Word document"
+    },
+    "docxToPdf": {
+      "title": "DOCX to PDF",
+      "description": "Convert Word document to PDF"
+    },
+    "pdfToPptx": {
+      "title": "PDF to PPTX",
+      "description": "Convert PDF to PowerPoint"
+    },
+    "pptxToPdf": {
+      "title": "PPTX to PDF",
+      "description": "Convert PowerPoint to PDF"
+    },
+    "excelToPdf": {
+      "title": "Excel to PDF",
+      "description": "Convert spreadsheet to PDF"
+    },
+    "htmlToPdf": {
+      "title": "HTML to PDF",
+      "description": "Convert webpage to PDF"
     }
   }
 }
