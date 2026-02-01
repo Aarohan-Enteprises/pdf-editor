@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFViewer } from '@/components/pdf/PDFViewer';
-import { usePDFDocument, PageLimitError } from '@/hooks/usePDFDocument';
+import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePDFDocument';
 import { mergePDFsWithOrder, downloadPDF } from '@/lib/pdf-operations';
 
 export default function DeletePagesPage() {
@@ -44,6 +44,8 @@ export default function DeletePagesPage() {
       } catch (error) {
         if (error instanceof PageLimitError) {
           setUploadError(tDropzone('tooManyPages'));
+        } else if (error instanceof EncryptedPDFError) {
+          setUploadError(error.message);
         } else {
           console.error('Failed to load files:', error);
         }

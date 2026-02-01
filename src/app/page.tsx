@@ -421,6 +421,17 @@ export default function HomePage() {
                   gradient: 'from-amber-500 to-orange-500',
                   bg: 'bg-amber-50 dark:bg-amber-900/20',
                 },
+                {
+                  icon: (
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                  ),
+                  title: tTrust('noAds.title'),
+                  description: tTrust('noAds.description'),
+                  gradient: 'from-rose-500 to-pink-500',
+                  bg: 'bg-rose-50 dark:bg-rose-900/20',
+                },
               ].map((badge, i) => (
                 <div
                   key={i}

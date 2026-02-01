@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { insertBlankPages, downloadPDF, getPDFPageCount } from '@/lib/pdf-operations';
+import { insertBlankPages, downloadPDF, getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
 export default function InsertBlankPage() {
   const t = useTranslations('tools.insertBlank');
@@ -30,13 +30,31 @@ export default function InsertBlankPage() {
       setError('Please upload a valid PDF file');
       return;
     }
-    setFile(selectedFile);
-    setOutputFilename(selectedFile.name.replace('.pdf', '-edited'));
-    setError(null);
 
-    const arrayBuffer = await selectedFile.arrayBuffer();
-    const count = await getPDFPageCount(arrayBuffer);
-    setPageCount(count);
+    try {
+      const arrayBuffer = await selectedFile.arrayBuffer();
+
+      // Check if PDF is encrypted
+      const isEncrypted = await checkPDFEncryption(arrayBuffer);
+      if (isEncrypted) {
+        setError(`The file "${selectedFile.name}" is password protected or encrypted. Please remove the password protection before editing.`);
+        return;
+      }
+
+      setFile(selectedFile);
+      setOutputFilename(selectedFile.name.replace('.pdf', '-edited'));
+      setError(null);
+
+      const count = await getPDFPageCount(arrayBuffer);
+      setPageCount(count);
+    } catch (err) {
+      if (err instanceof EncryptedPDFError) {
+        setError(err.message);
+      } else {
+        console.error('Failed to load PDF:', err);
+        setError('Failed to load PDF file.');
+      }
+    }
   }, []);
 
   const handleDrop = useCallback(

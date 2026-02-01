@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { downloadPDF, getPDFPageCount } from '@/lib/pdf-operations';
+import { downloadPDF, getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
 
@@ -96,17 +96,35 @@ export default function SignPdfPage() {
       setError('Please upload a valid PDF file');
       return;
     }
-    setPdfFile(selectedFile);
-    setOutputFilename(selectedFile.name.replace('.pdf', '-signed'));
-    setError(null);
-    setPageSignatures(new Map()); // Reset signatures when new PDF is loaded
 
-    const arrayBuffer = await selectedFile.arrayBuffer();
-    const count = await getPDFPageCount(arrayBuffer);
-    setPageCount(count);
-    setCurrentPage(1);
+    try {
+      const arrayBuffer = await selectedFile.arrayBuffer();
 
-    renderPagePreview(selectedFile, 1);
+      // Check if PDF is encrypted
+      const isEncrypted = await checkPDFEncryption(arrayBuffer);
+      if (isEncrypted) {
+        setError(`The file "${selectedFile.name}" is password protected or encrypted. Please remove the password protection before editing.`);
+        return;
+      }
+
+      setPdfFile(selectedFile);
+      setOutputFilename(selectedFile.name.replace('.pdf', '-signed'));
+      setError(null);
+      setPageSignatures(new Map()); // Reset signatures when new PDF is loaded
+
+      const count = await getPDFPageCount(arrayBuffer);
+      setPageCount(count);
+      setCurrentPage(1);
+
+      renderPagePreview(selectedFile, 1);
+    } catch (err) {
+      if (err instanceof EncryptedPDFError) {
+        setError(err.message);
+      } else {
+        console.error('Failed to load PDF:', err);
+        setError('Failed to load PDF file.');
+      }
+    }
   }, [renderPagePreview]);
 
   const handleSignatureFile = useCallback((selectedFile: File) => {

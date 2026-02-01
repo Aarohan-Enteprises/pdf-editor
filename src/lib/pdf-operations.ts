@@ -16,6 +16,31 @@ export interface WatermarkOptions {
   position: 'center' | 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight';
 }
 
+export class EncryptedPDFError extends Error {
+  constructor(message: string = 'This PDF is password protected or encrypted') {
+    super(message);
+    this.name = 'EncryptedPDFError';
+  }
+}
+
+export async function checkPDFEncryption(data: ArrayBuffer | Uint8Array): Promise<boolean> {
+  try {
+    // Try loading without ignoreEncryption - if it fails, the PDF is encrypted
+    await PDFDocument.load(data, { ignoreEncryption: false });
+    return false; // Not encrypted
+  } catch (error) {
+    // Check if the error is related to encryption
+    if (error instanceof Error &&
+        (error.message.includes('encrypted') ||
+         error.message.includes('password') ||
+         error.message.includes('decrypt'))) {
+      return true; // Encrypted
+    }
+    // Re-throw if it's a different error
+    throw error;
+  }
+}
+
 export async function loadPDF(data: ArrayBuffer | Uint8Array): Promise<PDFDocument> {
   return PDFDocument.load(data, { ignoreEncryption: true });
 }

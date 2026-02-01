@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
+import { checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Set worker
@@ -20,22 +21,41 @@ export default function ExtractTextPage() {
   const [extractedText, setExtractedText] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback((selectedFile: File) => {
+  const handleFile = useCallback(async (selectedFile: File) => {
     if (selectedFile.type !== 'application/pdf') {
       setError('Please upload a valid PDF file');
       return;
     }
-    setFile(selectedFile);
-    setError(null);
-    setExtractedText('');
+
+    try {
+      const arrayBuffer = await selectedFile.arrayBuffer();
+
+      // Check if PDF is encrypted
+      const isEncrypted = await checkPDFEncryption(arrayBuffer);
+      if (isEncrypted) {
+        setError(`The file "${selectedFile.name}" is password protected or encrypted. Please remove the password protection before editing.`);
+        return;
+      }
+
+      setFile(selectedFile);
+      setError(null);
+      setExtractedText('');
+    } catch (err) {
+      if (err instanceof EncryptedPDFError) {
+        setError(err.message);
+      } else {
+        console.error('Failed to load PDF:', err);
+        setError('Failed to load PDF file.');
+      }
+    }
   }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    async (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
       const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile) handleFile(droppedFile);
+      if (droppedFile) await handleFile(droppedFile);
     },
     [handleFile]
   );
@@ -51,9 +71,9 @@ export default function ExtractTextPage() {
   }, []);
 
   const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const selectedFile = e.target.files?.[0];
-      if (selectedFile) handleFile(selectedFile);
+      if (selectedFile) await handleFile(selectedFile);
     },
     [handleFile]
   );

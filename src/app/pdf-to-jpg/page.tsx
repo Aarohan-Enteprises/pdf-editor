@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
+import { checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Configure PDF.js worker
@@ -20,17 +21,31 @@ export default function PdfToJpgPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = useCallback(async (file: File) => {
-    if (file.type !== 'application/pdf') return;
+    if (file.type !== 'application/pdf') {
+      setError('Please upload a valid PDF file');
+      return;
+    }
 
     setIsLoading(true);
     setFileName(file.name);
     setPages([]);
+    setError(null);
 
     try {
       const arrayBuffer = await file.arrayBuffer();
+
+      // Check if PDF is encrypted
+      const isEncrypted = await checkPDFEncryption(arrayBuffer);
+      if (isEncrypted) {
+        setError(`The file "${file.name}" is password protected or encrypted. Please remove the password protection before editing.`);
+        setIsLoading(false);
+        return;
+      }
+
       const clonedData = arrayBuffer.slice(0);
       const pdf = await pdfjsLib.getDocument({ data: clonedData }).promise;
       const numPages = pdf.numPages;
@@ -60,8 +75,13 @@ export default function PdfToJpgPage() {
       }
 
       setPages(pageImages);
-    } catch (error) {
-      console.error('Failed to process PDF:', error);
+    } catch (err) {
+      if (err instanceof EncryptedPDFError) {
+        setError(err.message);
+      } else {
+        console.error('Failed to process PDF:', err);
+        setError('Failed to process PDF file.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -113,6 +133,7 @@ export default function PdfToJpgPage() {
   const clearAll = useCallback(() => {
     setPages([]);
     setFileName('');
+    setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -181,6 +202,12 @@ export default function PdfToJpgPage() {
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                     Converting pages...
                   </p>
+                </div>
+              )}
+
+              {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                 </div>
               )}
 

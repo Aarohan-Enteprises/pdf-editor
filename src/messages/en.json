@@ -55,6 +55,10 @@
     "fast": {
       "title": "Lightning Fast",
       "description": "Instant processing with no uploads to server"
+    },
+    "noAds": {
+      "title": "No Ads",
+      "description": "Clean, distraction-free experience with zero advertisements"
     }
   },
   "dropzone": {

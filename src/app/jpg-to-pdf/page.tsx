@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { imagesToPDF, downloadPDF } from '@/lib/pdf-operations';
+import { imagesToPDF, downloadPDF, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
 interface ImageFile {
   id: string;
@@ -20,13 +20,45 @@ export default function JpgToPdfPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [outputFilename, setOutputFilename] = useState('images-to-pdf');
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
+
+    // Check if any PDF files were uploaded (reject them)
+    const pdfFiles = fileArray.filter((file) => file.type === 'application/pdf');
+    if (pdfFiles.length > 0) {
+      // Check if they're encrypted
+      for (const pdfFile of pdfFiles) {
+        try {
+          const arrayBuffer = await pdfFile.arrayBuffer();
+          const isEncrypted = await checkPDFEncryption(arrayBuffer);
+          if (isEncrypted) {
+            setError(`The file "${pdfFile.name}" is password protected or encrypted. This tool only accepts image files (JPG, PNG).`);
+            return;
+          }
+        } catch (err) {
+          if (err instanceof EncryptedPDFError) {
+            setError(err.message);
+            return;
+          }
+        }
+      }
+      setError('This tool only accepts image files (JPG, PNG). Please use the appropriate PDF tool for PDF files.');
+      return;
+    }
+
     const validFiles = fileArray.filter(
       (file) => file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg'
     );
+
+    if (validFiles.length === 0 && fileArray.length > 0) {
+      setError('Please upload valid image files (JPG or PNG).');
+      return;
+    }
+
+    setError(null);
 
     const newImages: ImageFile[] = await Promise.all(
       validFiles.map(async (file) => {
@@ -113,6 +145,7 @@ export default function JpgToPdfPage() {
   const clearAll = useCallback(() => {
     images.forEach((img) => URL.revokeObjectURL(img.preview));
     setImages([]);
+    setError(null);
   }, [images]);
 
   return (
@@ -175,6 +208,12 @@ export default function JpgToPdfPage() {
                   </p>
                 </div>
               </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
 
               {images.length > 0 && (
                 <>

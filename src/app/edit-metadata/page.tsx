@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { editMetadata, getMetadata, downloadPDF } from '@/lib/pdf-operations';
+import { editMetadata, getMetadata, downloadPDF, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
 export default function EditMetadataPage() {
   const t = useTranslations('tools.editMetadata');
@@ -40,23 +40,42 @@ export default function EditMetadataPage() {
     }
   }, []);
 
-  const handleFile = useCallback((selectedFile: File) => {
+  const handleFile = useCallback(async (selectedFile: File) => {
     if (selectedFile.type !== 'application/pdf') {
       setError('Please upload a valid PDF file');
       return;
     }
-    setFile(selectedFile);
-    setOutputFilename(selectedFile.name.replace('.pdf', '-edited'));
-    setError(null);
-    loadMetadata(selectedFile);
+
+    try {
+      const arrayBuffer = await selectedFile.arrayBuffer();
+
+      // Check if PDF is encrypted
+      const isEncrypted = await checkPDFEncryption(arrayBuffer);
+      if (isEncrypted) {
+        setError(`The file "${selectedFile.name}" is password protected or encrypted. Please remove the password protection before editing.`);
+        return;
+      }
+
+      setFile(selectedFile);
+      setOutputFilename(selectedFile.name.replace('.pdf', '-edited'));
+      setError(null);
+      loadMetadata(selectedFile);
+    } catch (err) {
+      if (err instanceof EncryptedPDFError) {
+        setError(err.message);
+      } else {
+        console.error('Failed to load PDF:', err);
+        setError('Failed to load PDF file.');
+      }
+    }
   }, [loadMetadata]);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    async (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
       const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile) handleFile(droppedFile);
+      if (droppedFile) await handleFile(droppedFile);
     },
     [handleFile]
   );
@@ -72,9 +91,9 @@ export default function EditMetadataPage() {
   }, []);
 
   const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const selectedFile = e.target.files?.[0];
-      if (selectedFile) handleFile(selectedFile);
+      if (selectedFile) await handleFile(selectedFile);
     },
     [handleFile]
   );

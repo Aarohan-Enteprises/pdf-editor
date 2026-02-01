@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { PageInfo } from '@/lib/pdf-operations';
+import { PageInfo, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
 export const MAX_TOTAL_PAGES = 50;
 
@@ -12,17 +12,21 @@ export class PageLimitError extends Error {
   }
 }
 
+export { EncryptedPDFError };
+
 export interface PDFFile {
   id: string;
   name: string;
   data: ArrayBuffer;
   pageCount: number;
+  isEncrypted?: boolean;
 }
 
 export interface PDFState {
   files: PDFFile[];
   pages: PageInfo[];
   selectedPages: Set<string>;
+  hasEncryptedFile: boolean;
 }
 
 export function usePDFDocument() {
@@ -30,6 +34,7 @@ export function usePDFDocument() {
     files: [],
     pages: [],
     selectedPages: new Set(),
+    hasEncryptedFile: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const currentPageCountRef = useRef(0);
@@ -42,9 +47,20 @@ export function usePDFDocument() {
 
       const loadedFiles: PDFFile[] = [];
       let totalNewPages = 0;
+      let foundEncrypted = false;
 
       for (const file of newFiles) {
         const arrayBuffer = await file.arrayBuffer();
+
+        // Check if PDF is encrypted/password-protected
+        const isEncrypted = await checkPDFEncryption(arrayBuffer.slice(0));
+        if (isEncrypted) {
+          foundEncrypted = true;
+          throw new EncryptedPDFError(
+            `The file "${file.name}" is password protected or encrypted. Please remove the password protection before editing.`
+          );
+        }
+
         const pdf = await pdfLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
         const pageCount = pdf.getPageCount();
         totalNewPages += pageCount;
@@ -63,6 +79,7 @@ export function usePDFDocument() {
           name: file.name,
           data: arrayBuffer,
           pageCount,
+          isEncrypted: false,
         });
       }
 
@@ -191,6 +208,7 @@ export function usePDFDocument() {
       files: [],
       pages: [],
       selectedPages: new Set(),
+      hasEncryptedFile: false,
     });
   }, []);
 
@@ -204,6 +222,7 @@ export function usePDFDocument() {
     files: state.files,
     pages: state.pages,
     selectedPages: state.selectedPages,
+    hasEncryptedFile: state.hasEncryptedFile,
     isLoading,
     addFiles,
     removePage,
