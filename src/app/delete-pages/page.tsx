@@ -5,8 +5,10 @@ import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFViewer } from '@/components/pdf/PDFViewer';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePDFDocument';
-import { mergePDFsWithOrder, downloadPDF } from '@/lib/pdf-operations';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { mergePDFsWithOrder } from '@/lib/pdf-operations';
 
 export default function DeletePagesPage() {
   const t = useTranslations('tools.deletePages');
@@ -32,6 +34,15 @@ export default function DeletePagesPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [outputFilename, setOutputFilename] = useState('document-edited');
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   const handleFilesSelected = useCallback(
     async (selectedFiles: File[]) => {
@@ -67,16 +78,23 @@ export default function DeletePagesPage() {
       const pagesToKeep = pages.filter((page) => !selectedPages.has(page.id));
       const resultData = await mergePDFsWithOrder(files.map((f) => f.data), pagesToKeep);
       const filename = outputFilename.trim() || 'document-edited';
-      downloadPDF(resultData, `${filename}.pdf`);
+      showPreview(resultData, `${filename}.pdf`);
     } catch (error) {
       console.error('Failed to delete pages:', error);
     } finally {
       setIsProcessing(false);
     }
-  }, [files, pages, selectedPages, outputFilename]);
+  }, [files, pages, selectedPages, outputFilename, showPreview]);
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -161,7 +179,7 @@ export default function DeletePagesPage() {
                     disabled={isProcessing || selectedPages.size === 0}
                     className="btn btn-primary w-full bg-red-600 hover:bg-red-700"
                   >
-                    {isProcessing ? 'Processing...' : `Delete ${selectedPages.size} Page(s) & Download`}
+                    {isProcessing ? 'Processing...' : `Delete ${selectedPages.size} Page(s) & Preview`}
                   </button>
                 </>
               )}

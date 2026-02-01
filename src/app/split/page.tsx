@@ -5,7 +5,9 @@ import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFViewer } from '@/components/pdf/PDFViewer';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePDFDocument';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { mergePDFsWithOrder, splitPDF, downloadPDF } from '@/lib/pdf-operations';
 
 interface PageRange {
@@ -41,6 +43,15 @@ export default function SplitPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [splitMode, setSplitMode] = useState<SplitMode>('select');
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   // Range mode state
   const [ranges, setRanges] = useState<PageRange[]>([
@@ -80,13 +91,13 @@ export default function SplitPage() {
       const mergedData = await mergePDFsWithOrder(files.map((f) => f.data), pages);
       const splitData = await splitPDF(mergedData, selectedIndices);
       const filename = outputFilename.trim() || 'extracted-pages';
-      downloadPDF(splitData, `${filename}.pdf`);
+      showPreview(splitData, `${filename}.pdf`);
     } catch (error) {
       console.error('Failed to extract pages:', error);
     } finally {
       setIsProcessing(false);
     }
-  }, [files, pages, selectedPages, getSelectedPageIndices, outputFilename]);
+  }, [files, pages, selectedPages, getSelectedPageIndices, outputFilename, showPreview]);
 
   // Split by custom ranges
   const handleSplitByRanges = useCallback(async () => {
@@ -188,6 +199,13 @@ export default function SplitPage() {
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -300,7 +318,7 @@ export default function SplitPage() {
                         disabled={isProcessing || selectedPages.size === 0}
                         className="btn btn-primary w-full"
                       >
-                        {isProcessing ? 'Processing...' : `Extract ${selectedPages.size} page(s)`}
+                        {isProcessing ? 'Processing...' : `Extract & Preview ${selectedPages.size} page(s)`}
                       </button>
                     </div>
                   )}

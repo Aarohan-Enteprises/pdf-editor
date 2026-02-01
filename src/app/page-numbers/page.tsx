@@ -3,7 +3,9 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { addPageNumbers, downloadPDF, PageNumberOptions, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { addPageNumbers, PageNumberOptions, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
 export default function PageNumbersPage() {
   const t = useTranslations('tools.pageNumbers');
@@ -14,6 +16,15 @@ export default function PageNumbersPage() {
   const [error, setError] = useState<string | null>(null);
   const [outputFilename, setOutputFilename] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   // Page number options
   const [position, setPosition] = useState<PageNumberOptions['position']>('bottom-center');
@@ -94,20 +105,14 @@ export default function PageNumbersPage() {
         margin,
       });
       const filename = outputFilename.trim() || `numbered-${file.name.replace('.pdf', '')}`;
-      downloadPDF(resultData, `${filename}.pdf`);
-
-      // Reset form
-      setFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      showPreview(resultData, `${filename}.pdf`);
     } catch (err) {
       console.error('Failed to add page numbers:', err);
       setError('Failed to add page numbers. Please try again.');
     } finally {
       setIsProcessing(false);
     }
-  }, [file, position, format, fontSize, startNumber, margin, outputFilename]);
+  }, [file, position, format, fontSize, startNumber, margin, outputFilename, showPreview]);
 
   const clearAll = useCallback(() => {
     setFile(null);
@@ -119,6 +124,13 @@ export default function PageNumbersPage() {
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -301,7 +313,7 @@ export default function PageNumbersPage() {
                     disabled={isProcessing}
                     className="btn btn-primary flex-1"
                   >
-                    {isProcessing ? 'Processing...' : 'Add Page Numbers'}
+                    {isProcessing ? 'Processing...' : 'Preview with Page Numbers'}
                   </button>
                 </div>
               </>

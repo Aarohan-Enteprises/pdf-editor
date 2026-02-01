@@ -3,7 +3,9 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { editMetadata, getMetadata, downloadPDF, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { editMetadata, getMetadata, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
 export default function EditMetadataPage() {
   const t = useTranslations('tools.editMetadata');
@@ -15,6 +17,15 @@ export default function EditMetadataPage() {
   const [error, setError] = useState<string | null>(null);
   const [outputFilename, setOutputFilename] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   // Metadata fields
   const [title, setTitle] = useState('');
@@ -114,25 +125,14 @@ export default function EditMetadataPage() {
         creator,
       });
       const filename = outputFilename.trim() || `edited-${file.name.replace('.pdf', '')}`;
-      downloadPDF(resultData, `${filename}.pdf`);
-
-      // Reset form
-      setFile(null);
-      setTitle('');
-      setAuthor('');
-      setSubject('');
-      setKeywords('');
-      setCreator('');
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      showPreview(resultData, `${filename}.pdf`);
     } catch (err) {
       console.error('Failed to edit metadata:', err);
       setError('Failed to edit metadata. Please try again.');
     } finally {
       setIsProcessing(false);
     }
-  }, [file, title, author, subject, keywords, creator, outputFilename]);
+  }, [file, title, author, subject, keywords, creator, outputFilename, showPreview]);
 
   const clearAll = useCallback(() => {
     setFile(null);
@@ -149,6 +149,13 @@ export default function EditMetadataPage() {
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -328,7 +335,7 @@ export default function EditMetadataPage() {
                         disabled={isProcessing}
                         className="btn btn-primary flex-1"
                       >
-                        {isProcessing ? 'Processing...' : 'Save Metadata'}
+                        {isProcessing ? 'Processing...' : 'Preview with Metadata'}
                       </button>
                     </div>
                   </>

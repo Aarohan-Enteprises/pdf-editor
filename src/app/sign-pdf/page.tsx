@@ -3,7 +3,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { downloadPDF, getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
 
@@ -39,6 +41,15 @@ export default function SignPdfPage() {
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const signInputRef = useRef<HTMLInputElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   // Multi-page signature positions: Map<pageNumber, SignaturePosition>
   const [pageSignatures, setPageSignatures] = useState<Map<number, SignaturePosition>>(new Map());
@@ -406,23 +417,14 @@ export default function SignPdfPage() {
 
       const resultData = await pdfDoc.save();
       const filename = outputFilename.trim() || `signed-${pdfFile.name.replace('.pdf', '')}`;
-      downloadPDF(resultData, `${filename}.pdf`);
-
-      // Reset
-      setPdfFile(null);
-      setSignatureFile(null);
-      setSignaturePreview(null);
-      setPagePreview(null);
-      setPageSignatures(new Map());
-      if (pdfInputRef.current) pdfInputRef.current.value = '';
-      if (signInputRef.current) signInputRef.current.value = '';
+      showPreview(resultData, `${filename}.pdf`);
     } catch (err) {
       console.error('Failed to add signatures:', err);
       setError('Failed to add signatures. Please try again.');
     } finally {
       setIsProcessing(false);
     }
-  }, [pdfFile, signatureFile, pageSignatures, scaleFactor, outputFilename]);
+  }, [pdfFile, signatureFile, pageSignatures, scaleFactor, outputFilename, showPreview]);
 
   const clearAll = useCallback(() => {
     setPdfFile(null);
@@ -440,6 +442,13 @@ export default function SignPdfPage() {
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
@@ -706,7 +715,7 @@ export default function SignPdfPage() {
                     disabled={isProcessing || pageSignatures.size === 0}
                     className="btn btn-primary w-full"
                   >
-                    {isProcessing ? 'Processing...' : `Sign ${pageSignatures.size} Page(s) & Download`}
+                    {isProcessing ? 'Processing...' : `Sign ${pageSignatures.size} Page(s) & Preview`}
                   </button>
                 </>
               )}

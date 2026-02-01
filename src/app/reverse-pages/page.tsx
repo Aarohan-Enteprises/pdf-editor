@@ -3,7 +3,9 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { reversePageOrder, downloadPDF, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { reversePageOrder, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
 export default function ReversePagesPage() {
   const t = useTranslations('tools.reversePages');
@@ -14,6 +16,15 @@ export default function ReversePagesPage() {
   const [error, setError] = useState<string | null>(null);
   const [outputFilename, setOutputFilename] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   const handleFile = useCallback(async (selectedFile: File) => {
     if (selectedFile.type !== 'application/pdf') {
@@ -81,20 +92,14 @@ export default function ReversePagesPage() {
       const arrayBuffer = await file.arrayBuffer();
       const resultData = await reversePageOrder(arrayBuffer);
       const filename = outputFilename.trim() || `reversed-${file.name.replace('.pdf', '')}`;
-      downloadPDF(resultData, `${filename}.pdf`);
-
-      // Reset form
-      setFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      showPreview(resultData, `${filename}.pdf`);
     } catch (err) {
       console.error('Failed to reverse pages:', err);
       setError('Failed to reverse pages. Please try again.');
     } finally {
       setIsProcessing(false);
     }
-  }, [file, outputFilename]);
+  }, [file, outputFilename, showPreview]);
 
   const clearAll = useCallback(() => {
     setFile(null);
@@ -106,6 +111,13 @@ export default function ReversePagesPage() {
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -217,7 +229,7 @@ export default function ReversePagesPage() {
                     disabled={isProcessing}
                     className="btn btn-primary flex-1"
                   >
-                    {isProcessing ? 'Processing...' : 'Reverse Pages'}
+                    {isProcessing ? 'Processing...' : 'Preview Reversed PDF'}
                   </button>
                 </div>
               </>

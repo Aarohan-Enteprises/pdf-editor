@@ -3,7 +3,9 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { insertBlankPages, downloadPDF, getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { insertBlankPages, getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
 const pageSizes = {
   a4: { width: 595, height: 842 },
@@ -24,6 +26,15 @@ export default function InsertBlankPage() {
   const [blankCount, setBlankCount] = useState(1);
   const [pageSize, setPageSize] = useState<'a4' | 'letter' | 'legal'>('a4');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   const handleFile = useCallback(async (selectedFile: File) => {
     if (selectedFile.type !== 'application/pdf') {
@@ -97,20 +108,14 @@ export default function InsertBlankPage() {
       const positions = Array.from({ length: blankCount }, (_, i) => insertPosition - 1 + i);
       const resultData = await insertBlankPages(arrayBuffer, positions, pageSizes[pageSize]);
       const filename = outputFilename.trim() || `edited-${file.name.replace('.pdf', '')}`;
-      downloadPDF(resultData, `${filename}.pdf`);
-
-      // Reset form
-      setFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      showPreview(resultData, `${filename}.pdf`);
     } catch (err) {
       console.error('Failed to insert blank pages:', err);
       setError('Failed to insert blank pages. Please try again.');
     } finally {
       setIsProcessing(false);
     }
-  }, [file, insertPosition, blankCount, pageSize, outputFilename]);
+  }, [file, insertPosition, blankCount, pageSize, outputFilename, showPreview]);
 
   const clearAll = useCallback(() => {
     setFile(null);
@@ -123,6 +128,13 @@ export default function InsertBlankPage() {
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -272,7 +284,7 @@ export default function InsertBlankPage() {
                     disabled={isProcessing}
                     className="btn btn-primary flex-1"
                   >
-                    {isProcessing ? 'Processing...' : 'Insert Blank Pages'}
+                    {isProcessing ? 'Processing...' : 'Preview with Blank Pages'}
                   </button>
                 </div>
               </>

@@ -5,8 +5,10 @@ import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFViewer } from '@/components/pdf/PDFViewer';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePDFDocument';
-import { splitPDF, downloadPDF } from '@/lib/pdf-operations';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { splitPDF } from '@/lib/pdf-operations';
 
 export default function DuplicatePagesPage() {
   const t = useTranslations('tools.duplicatePages');
@@ -33,6 +35,15 @@ export default function DuplicatePagesPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [outputFilename, setOutputFilename] = useState('document-duplicated');
   const [copies, setCopies] = useState(1);
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   const handleFilesSelected = useCallback(
     async (selectedFiles: File[]) => {
@@ -77,16 +88,23 @@ export default function DuplicatePagesPage() {
 
       const resultData = await splitPDF(arrayBuffer, allIndices);
       const filename = outputFilename.trim() || 'document-duplicated';
-      downloadPDF(resultData, `${filename}.pdf`);
+      showPreview(resultData, `${filename}.pdf`);
     } catch (error) {
       console.error('Failed to duplicate pages:', error);
     } finally {
       setIsProcessing(false);
     }
-  }, [files, pages, selectedPages, copies, outputFilename]);
+  }, [files, pages, selectedPages, copies, outputFilename, showPreview]);
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -186,7 +204,7 @@ export default function DuplicatePagesPage() {
                     disabled={isProcessing || selectedPages.size === 0}
                     className="btn btn-primary w-full"
                   >
-                    {isProcessing ? 'Processing...' : `Duplicate ${selectedPages.size} Page(s)`}
+                    {isProcessing ? 'Processing...' : `Duplicate & Preview ${selectedPages.size} Page(s)`}
                   </button>
                 </>
               )}

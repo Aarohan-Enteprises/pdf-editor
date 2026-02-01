@@ -3,7 +3,9 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { imagesToPDF, downloadPDF, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { imagesToPDF, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 
 interface ImageFile {
   id: string;
@@ -22,6 +24,15 @@ export default function JpgToPdfPage() {
   const [outputFilename, setOutputFilename] = useState('images-to-pdf');
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   const handleFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -134,13 +145,13 @@ export default function JpgToPdfPage() {
       }));
       const pdfData = await imagesToPDF(imageData);
       const filename = outputFilename.trim() || 'images-to-pdf';
-      downloadPDF(pdfData, `${filename}.pdf`);
+      showPreview(pdfData, `${filename}.pdf`);
     } catch (error) {
       console.error('Failed to convert images:', error);
     } finally {
       setIsProcessing(false);
     }
-  }, [images, outputFilename]);
+  }, [images, outputFilename, showPreview]);
 
   const clearAll = useCallback(() => {
     images.forEach((img) => URL.revokeObjectURL(img.preview));
@@ -150,6 +161,13 @@ export default function JpgToPdfPage() {
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -245,7 +263,7 @@ export default function JpgToPdfPage() {
                     disabled={isProcessing || images.length === 0}
                     className="btn btn-primary w-full"
                   >
-                    {isProcessing ? 'Converting...' : `Convert ${images.length} image(s) to PDF`}
+                    {isProcessing ? 'Converting...' : `Preview ${images.length} image(s) as PDF`}
                   </button>
                 </>
               )}

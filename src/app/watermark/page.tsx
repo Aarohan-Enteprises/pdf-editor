@@ -5,8 +5,10 @@ import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFViewer } from '@/components/pdf/PDFViewer';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePDFDocument';
-import { mergePDFsWithOrder, addWatermark, downloadPDF, WatermarkOptions } from '@/lib/pdf-operations';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { mergePDFsWithOrder, addWatermark, WatermarkOptions } from '@/lib/pdf-operations';
 
 export default function WatermarkPage() {
   const t = useTranslations('tools.watermark');
@@ -33,6 +35,15 @@ export default function WatermarkPage() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   // Watermark options
   const [watermarkText, setWatermarkText] = useState('CONFIDENTIAL');
@@ -87,16 +98,23 @@ export default function WatermarkPage() {
         pageIndices
       );
       const filename = outputFilename.trim() || 'watermarked-document';
-      downloadPDF(watermarkedData, `${filename}.pdf`);
+      showPreview(watermarkedData, `${filename}.pdf`);
     } catch (error) {
       console.error('Failed to add watermark:', error);
     } finally {
       setIsProcessing(false);
     }
-  }, [files, pages, watermarkText, fontSize, color, opacity, position, applyToAll, getSelectedPageIndices, outputFilename]);
+  }, [files, pages, watermarkText, fontSize, color, opacity, position, applyToAll, getSelectedPageIndices, outputFilename, showPreview]);
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -279,7 +297,7 @@ export default function WatermarkPage() {
                     disabled={isProcessing || pages.length === 0 || !watermarkText.trim()}
                     className="btn btn-primary w-full"
                   >
-                    {isProcessing ? 'Processing...' : 'Apply Watermark & Download'}
+                    {isProcessing ? 'Processing...' : 'Apply Watermark & Preview'}
                   </button>
                 </>
               )}

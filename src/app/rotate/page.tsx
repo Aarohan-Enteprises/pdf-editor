@@ -5,8 +5,10 @@ import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFViewer } from '@/components/pdf/PDFViewer';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePDFDocument';
-import { mergePDFsWithOrder, downloadPDF } from '@/lib/pdf-operations';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { mergePDFsWithOrder } from '@/lib/pdf-operations';
 
 export default function RotatePage() {
   const t = useTranslations('tools.rotate');
@@ -34,6 +36,15 @@ export default function RotatePage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [outputFilename, setOutputFilename] = useState('rotated-document');
 
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
+
   const handleFilesSelected = useCallback(
     async (selectedFiles: File[]) => {
       setUploadError(null);
@@ -58,16 +69,23 @@ export default function RotatePage() {
     try {
       const pdfData = await mergePDFsWithOrder(files.map((f) => f.data), pages);
       const filename = outputFilename.trim() || 'rotated-document';
-      downloadPDF(pdfData, `${filename}.pdf`);
+      showPreview(pdfData, `${filename}.pdf`);
     } catch (error) {
       console.error('Failed to generate PDF:', error);
     } finally {
       setIsProcessing(false);
     }
-  }, [files, pages, outputFilename]);
+  }, [files, pages, outputFilename, showPreview]);
 
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -185,7 +203,7 @@ export default function RotatePage() {
                     disabled={isProcessing || pages.length === 0}
                     className="btn btn-primary w-full"
                   >
-                    {isProcessing ? 'Processing...' : 'Download Rotated PDF'}
+                    {isProcessing ? 'Processing...' : 'Preview Rotated PDF'}
                   </button>
                 </>
               )}
