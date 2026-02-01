@@ -234,6 +234,102 @@ export async function splitPDFAtPage(
   };
 }
 
+export interface SignatureOptions {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  pageIndex: number;
+}
+
+export async function addSignatureImage(
+  pdfData: ArrayBuffer | Uint8Array,
+  imageData: ArrayBuffer,
+  imageType: string,
+  options: SignatureOptions
+): Promise<Uint8Array> {
+  const pdf = await loadPDF(pdfData);
+
+  let pdfImage;
+  if (imageType === 'image/png') {
+    pdfImage = await pdf.embedPng(imageData);
+  } else {
+    pdfImage = await pdf.embedJpg(imageData);
+  }
+
+  const page = pdf.getPage(options.pageIndex);
+  page.drawImage(pdfImage, {
+    x: options.x,
+    y: options.y,
+    width: options.width,
+    height: options.height,
+  });
+
+  return pdf.save();
+}
+
+export async function insertBlankPages(
+  pdfData: ArrayBuffer | Uint8Array,
+  positions: number[],
+  pageSize: { width: number; height: number } = { width: 595, height: 842 } // A4 default
+): Promise<Uint8Array> {
+  const sourcePdf = await loadPDF(pdfData);
+  const newPdf = await PDFDocument.create();
+  const pageCount = sourcePdf.getPageCount();
+
+  // Copy all pages and insert blanks at specified positions
+  let insertedCount = 0;
+  for (let i = 0; i < pageCount; i++) {
+    // Check if we need to insert a blank page before this page
+    while (positions.includes(i + insertedCount)) {
+      newPdf.addPage([pageSize.width, pageSize.height]);
+      insertedCount++;
+    }
+    const [copiedPage] = await newPdf.copyPages(sourcePdf, [i]);
+    newPdf.addPage(copiedPage);
+  }
+
+  // Check if we need to insert blank pages at the end
+  while (positions.includes(pageCount + insertedCount)) {
+    newPdf.addPage([pageSize.width, pageSize.height]);
+    insertedCount++;
+  }
+
+  return newPdf.save();
+}
+
+export async function duplicatePages(
+  pdfData: ArrayBuffer | Uint8Array,
+  pageIndices: number[],
+  times: number = 1
+): Promise<Uint8Array> {
+  const sourcePdf = await loadPDF(pdfData);
+  const newPdf = await PDFDocument.create();
+
+  for (const pageIndex of pageIndices) {
+    for (let i = 0; i <= times; i++) {
+      const [copiedPage] = await newPdf.copyPages(sourcePdf, [pageIndex]);
+      newPdf.addPage(copiedPage);
+    }
+  }
+
+  return newPdf.save();
+}
+
+export async function reversePageOrder(
+  pdfData: ArrayBuffer | Uint8Array
+): Promise<Uint8Array> {
+  const sourcePdf = await loadPDF(pdfData);
+  const newPdf = await PDFDocument.create();
+  const pageCount = sourcePdf.getPageCount();
+
+  const reversedIndices = Array.from({ length: pageCount }, (_, i) => pageCount - 1 - i);
+  const pages = await newPdf.copyPages(sourcePdf, reversedIndices);
+  pages.forEach((page) => newPdf.addPage(page));
+
+  return newPdf.save();
+}
+
 export async function imagesToPDF(
   images: { data: ArrayBuffer; type: string }[]
 ): Promise<Uint8Array> {
@@ -259,6 +355,123 @@ export async function imagesToPDF(
       height,
     });
   }
+
+  return pdf.save();
+}
+
+export interface PDFMetadata {
+  title: string;
+  author: string;
+  subject: string;
+  keywords: string;
+  creator: string;
+}
+
+export async function editMetadata(
+  pdfData: ArrayBuffer | Uint8Array,
+  metadata: PDFMetadata
+): Promise<Uint8Array> {
+  const pdf = await loadPDF(pdfData);
+
+  if (metadata.title) pdf.setTitle(metadata.title);
+  if (metadata.author) pdf.setAuthor(metadata.author);
+  if (metadata.subject) pdf.setSubject(metadata.subject);
+  if (metadata.keywords) pdf.setKeywords([metadata.keywords]);
+  if (metadata.creator) pdf.setCreator(metadata.creator);
+  pdf.setProducer('PDF2.in');
+  pdf.setModificationDate(new Date());
+
+  return pdf.save();
+}
+
+export async function getMetadata(
+  pdfData: ArrayBuffer | Uint8Array
+): Promise<PDFMetadata> {
+  const pdf = await loadPDF(pdfData);
+  return {
+    title: pdf.getTitle() || '',
+    author: pdf.getAuthor() || '',
+    subject: pdf.getSubject() || '',
+    keywords: pdf.getKeywords() || '',
+    creator: pdf.getCreator() || '',
+  };
+}
+
+export interface PageNumberOptions {
+  position: 'bottom-center' | 'bottom-left' | 'bottom-right' | 'top-center' | 'top-left' | 'top-right';
+  format: 'number' | 'pageOfTotal' | 'dash';
+  fontSize: number;
+  startNumber: number;
+  margin: number;
+}
+
+export async function addPageNumbers(
+  pdfData: ArrayBuffer | Uint8Array,
+  options: PageNumberOptions
+): Promise<Uint8Array> {
+  const pdf = await loadPDF(pdfData);
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const pages = pdf.getPages();
+  const totalPages = pages.length;
+
+  pages.forEach((page, index) => {
+    const { width, height } = page.getSize();
+    const pageNum = index + options.startNumber;
+
+    let text: string;
+    switch (options.format) {
+      case 'pageOfTotal':
+        text = `Page ${pageNum} of ${totalPages + options.startNumber - 1}`;
+        break;
+      case 'dash':
+        text = `- ${pageNum} -`;
+        break;
+      case 'number':
+      default:
+        text = `${pageNum}`;
+        break;
+    }
+
+    const textWidth = font.widthOfTextAtSize(text, options.fontSize);
+    let x: number;
+    let y: number;
+
+    switch (options.position) {
+      case 'top-left':
+        x = options.margin;
+        y = height - options.margin;
+        break;
+      case 'top-center':
+        x = (width - textWidth) / 2;
+        y = height - options.margin;
+        break;
+      case 'top-right':
+        x = width - textWidth - options.margin;
+        y = height - options.margin;
+        break;
+      case 'bottom-left':
+        x = options.margin;
+        y = options.margin;
+        break;
+      case 'bottom-right':
+        x = width - textWidth - options.margin;
+        y = options.margin;
+        break;
+      case 'bottom-center':
+      default:
+        x = (width - textWidth) / 2;
+        y = options.margin;
+        break;
+    }
+
+    page.drawText(text, {
+      x,
+      y,
+      size: options.fontSize,
+      font,
+      color: rgb(0, 0, 0),
+    });
+  });
 
   return pdf.save();
 }

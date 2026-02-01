@@ -15,7 +15,6 @@ interface ImageFile {
 
 export default function JpgToPdfPage() {
   const t = useTranslations('tools.jpgToPdf');
-  const tCommon = useTranslations('common');
 
   const [images, setImages] = useState<ImageFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);

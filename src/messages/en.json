@@ -169,6 +169,54 @@
       "description": "Add text watermark to your PDF",
       "pageTitle": "Add Watermark to PDF",
       "pageDescription": "Add custom text watermarks to your PDF pages."
+    },
+    "pageNumbers": {
+      "title": "Add Page Numbers",
+      "description": "Add page numbers to your PDF",
+      "pageTitle": "Add Page Numbers",
+      "pageDescription": "Add customizable page numbers to your PDF document."
+    },
+    "deletePages": {
+      "title": "Delete Pages",
+      "description": "Remove unwanted pages from PDF",
+      "pageTitle": "Delete PDF Pages",
+      "pageDescription": "Select and remove unwanted pages from your PDF document."
+    },
+    "editMetadata": {
+      "title": "Edit Metadata",
+      "description": "Edit PDF title, author, keywords",
+      "pageTitle": "Edit PDF Metadata",
+      "pageDescription": "Edit the title, author, subject, and keywords of your PDF document."
+    },
+    "signPdf": {
+      "title": "Sign PDF",
+      "description": "Add signature image to PDF",
+      "pageTitle": "Add Signature to PDF",
+      "pageDescription": "Place a signature or image on your PDF document."
+    },
+    "reversePages": {
+      "title": "Reverse Pages",
+      "description": "Reverse the page order of PDF",
+      "pageTitle": "Reverse Page Order",
+      "pageDescription": "Reverse the order of all pages in your PDF document."
+    },
+    "extractText": {
+      "title": "Extract Text",
+      "description": "Extract text content from PDF",
+      "pageTitle": "Extract Text from PDF",
+      "pageDescription": "Extract all text content from your PDF document."
+    },
+    "insertBlank": {
+      "title": "Insert Blank Pages",
+      "description": "Add blank pages to your PDF",
+      "pageTitle": "Insert Blank Pages",
+      "pageDescription": "Add blank pages at any position in your PDF document."
+    },
+    "duplicatePages": {
+      "title": "Duplicate Pages",
+      "description": "Make copies of PDF pages",
+      "pageTitle": "Duplicate PDF Pages",
+      "pageDescription": "Create multiple copies of selected pages in your PDF."
     }
   }
 }

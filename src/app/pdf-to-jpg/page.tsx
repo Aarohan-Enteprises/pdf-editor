@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { renderPageToCanvas } from '@/lib/pdf-renderer';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Configure PDF.js worker
