@@ -7,6 +7,7 @@ import os
 import platform
 import shutil
 import logging
+import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -89,6 +90,8 @@ async def compress_pdf(
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="File must be a PDF")
 
+    start_time = time.time()
+
     # Check if Ghostscript is available
     gs_cmd = get_ghostscript_command()
     logger.info(f"Ghostscript command: {gs_cmd}")
@@ -100,6 +103,8 @@ async def compress_pdf(
 
     # Read uploaded file
     content = await file.read()
+    read_time = time.time()
+    logger.info(f"TIMING: File read completed in {read_time - start_time:.3f}s, size: {len(content)} bytes")
 
     # Create temp files for input and output
     with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as input_file:
@@ -107,6 +112,8 @@ async def compress_pdf(
         input_path = input_file.name
 
     output_path = input_path.replace('.pdf', '_compressed.pdf')
+    write_time = time.time()
+    logger.info(f"TIMING: Temp file written in {write_time - read_time:.3f}s")
 
     try:
         # Run Ghostscript compression
@@ -143,9 +150,15 @@ async def compress_pdf(
                 detail=f"Ghostscript compression failed: {result.stderr}"
             )
 
+        gs_time = time.time()
+        logger.info(f"TIMING: Ghostscript completed in {gs_time - write_time:.3f}s")
+
         # Read compressed file
         with open(output_path, 'rb') as f:
             compressed_content = f.read()
+
+        total_time = time.time()
+        logger.info(f"TIMING: Total processing time: {total_time - start_time:.3f}s")
 
         # Return compressed PDF
         return Response(
