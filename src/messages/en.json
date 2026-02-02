@@ -151,16 +151,16 @@
       "pageDescription": "Extract specific pages or split your PDF at any page number."
     },
     "jpgToPdf": {
-      "title": "JPG to PDF",
-      "description": "Convert images to PDF document",
+      "title": "Image to PDF",
+      "description": "Convert any image to PDF",
       "pageTitle": "Convert Images to PDF",
-      "pageDescription": "Convert JPG, PNG and other images to a PDF document."
+      "pageDescription": "Convert JPG, PNG, WebP, GIF, BMP, TIFF, AVIF, HEIC, SVG and more to PDF."
     },
     "pdfToJpg": {
-      "title": "PDF to JPG",
-      "description": "Convert PDF pages to images",
+      "title": "PDF to Image",
+      "description": "Convert PDF to JPG, PNG, WebP",
       "pageTitle": "Convert PDF to Images",
-      "pageDescription": "Extract pages from your PDF as JPG or PNG images."
+      "pageDescription": "Extract pages from your PDF as JPG, PNG, or WebP images."
     },
     "rotate": {
       "title": "Rotate PDF",

@@ -355,6 +355,54 @@ export async function reversePageOrder(
   return newPdf.save();
 }
 
+// Convert any image to PNG using Canvas API (for formats not natively supported by pdf-lib)
+async function convertImageToPng(data: ArrayBuffer, type: string): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([data], { type });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob((pngBlob) => {
+        URL.revokeObjectURL(url);
+        if (pngBlob) {
+          pngBlob.arrayBuffer().then(resolve).catch(reject);
+        } else {
+          reject(new Error('Failed to convert image to PNG'));
+        }
+      }, 'image/png');
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+
+    img.src = url;
+  });
+}
+
+// Supported image formats that can be converted to PDF
+export const SUPPORTED_IMAGE_FORMATS = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/bmp',
+  'image/tiff',
+  'image/avif',
+  'image/heic',
+  'image/heif',
+  'image/svg+xml',
+];
+
 export async function imagesToPDF(
   images: { data: ArrayBuffer; type: string }[]
 ): Promise<Uint8Array> {
@@ -362,11 +410,24 @@ export async function imagesToPDF(
 
   for (const image of images) {
     let pdfImage;
+    let imageData = image.data;
+    let imageType = image.type;
 
-    if (image.type === 'image/jpeg' || image.type === 'image/jpg') {
-      pdfImage = await pdf.embedJpg(image.data);
-    } else if (image.type === 'image/png') {
-      pdfImage = await pdf.embedPng(image.data);
+    // Convert non-JPG/PNG formats to PNG first
+    if (imageType !== 'image/jpeg' && imageType !== 'image/jpg' && imageType !== 'image/png') {
+      try {
+        imageData = await convertImageToPng(image.data, image.type);
+        imageType = 'image/png';
+      } catch (err) {
+        console.error('Failed to convert image:', err);
+        continue;
+      }
+    }
+
+    if (imageType === 'image/jpeg' || imageType === 'image/jpg') {
+      pdfImage = await pdf.embedJpg(imageData);
+    } else if (imageType === 'image/png') {
+      pdfImage = await pdf.embedPng(imageData);
     } else {
       continue;
     }

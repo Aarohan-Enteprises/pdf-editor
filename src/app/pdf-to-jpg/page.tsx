@@ -14,6 +14,14 @@ interface PageImage {
   dataUrl: string;
 }
 
+type ImageFormat = 'jpeg' | 'png' | 'webp';
+
+const FORMAT_OPTIONS: { value: ImageFormat; label: string; ext: string; mime: string }[] = [
+  { value: 'jpeg', label: 'JPG', ext: 'jpg', mime: 'image/jpeg' },
+  { value: 'png', label: 'PNG', ext: 'png', mime: 'image/png' },
+  { value: 'webp', label: 'WebP', ext: 'webp', mime: 'image/webp' },
+];
+
 export default function PdfToJpgPage() {
   const t = useTranslations('tools.pdfToJpg');
 
@@ -22,6 +30,8 @@ export default function PdfToJpgPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [outputFormat, setOutputFormat] = useState<ImageFormat>('jpeg');
+  const [quality, setQuality] = useState(95);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = useCallback(async (file: File) => {
@@ -67,7 +77,8 @@ export default function PdfToJpgPage() {
           viewport,
         }).promise;
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const format = FORMAT_OPTIONS.find(f => f.value === outputFormat)!;
+        const dataUrl = canvas.toDataURL(format.mime, quality / 100);
         pageImages.push({
           pageNumber: i,
           dataUrl,
@@ -116,11 +127,12 @@ export default function PdfToJpgPage() {
   );
 
   const downloadImage = useCallback((page: PageImage) => {
+    const format = FORMAT_OPTIONS.find(f => f.value === outputFormat)!;
     const link = document.createElement('a');
     link.href = page.dataUrl;
-    link.download = `${fileName.replace('.pdf', '')}-page-${page.pageNumber}.jpg`;
+    link.download = `${fileName.replace('.pdf', '')}-page-${page.pageNumber}.${format.ext}`;
     link.click();
-  }, [fileName]);
+  }, [fileName, outputFormat]);
 
   const downloadAllImages = useCallback(() => {
     pages.forEach((page, index) => {
@@ -211,6 +223,45 @@ export default function PdfToJpgPage() {
                 </div>
               )}
 
+              {/* Format & Quality Options */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Output Format
+                  </label>
+                  <select
+                    value={outputFormat}
+                    onChange={(e) => setOutputFormat(e.target.value as ImageFormat)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm"
+                  >
+                    {FORMAT_OPTIONS.map((format) => (
+                      <option key={format.value} value={format.value}>
+                        {format.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {outputFormat !== 'png' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Quality: {quality}%
+                    </label>
+                    <input
+                      type="range"
+                      min={10}
+                      max={100}
+                      value={quality}
+                      onChange={(e) => setQuality(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                      <span>Smaller</span>
+                      <span>Better</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {pages.length > 0 && !isLoading && (
                 <>
                   <div className="text-sm text-gray-600 dark:text-gray-400 text-center">
@@ -220,7 +271,7 @@ export default function PdfToJpgPage() {
                     onClick={downloadAllImages}
                     className="btn btn-primary w-full"
                   >
-                    Download All as JPG
+                    Download All as {FORMAT_OPTIONS.find(f => f.value === outputFormat)?.label}
                   </button>
                   <button
                     onClick={clearAll}
@@ -250,13 +301,14 @@ export default function PdfToJpgPage() {
                     <button
                       key={page.pageNumber}
                       onClick={() => downloadImage(page)}
-                      className="relative group aspect-[3/4] bg-gray-100 dark:bg-slate-800 rounded-xl overflow-hidden hover:ring-2 hover:ring-purple-500 transition-all"
+                      className="relative group aspect-[3/4] bg-white dark:bg-slate-700 rounded-xl overflow-hidden hover:ring-2 hover:ring-purple-500 transition-all shadow-sm"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={page.dataUrl}
                         alt={`Page ${page.pageNumber}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
+                        style={{ imageRendering: 'auto' }}
                       />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,7 +335,7 @@ export default function PdfToJpgPage() {
                   No PDF uploaded yet
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Upload a PDF file to convert pages to images
+                  Upload a PDF file to convert pages to JPG, PNG, or WebP images
                 </p>
               </div>
             ) : null}

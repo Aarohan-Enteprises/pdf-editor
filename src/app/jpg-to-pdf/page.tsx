@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
-import { imagesToPDF, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
+import { imagesToPDF, checkPDFEncryption, EncryptedPDFError, SUPPORTED_IMAGE_FORMATS } from '@/lib/pdf-operations';
 
 interface ImageFile {
   id: string;
@@ -46,7 +46,7 @@ export default function JpgToPdfPage() {
           const arrayBuffer = await pdfFile.arrayBuffer();
           const isEncrypted = await checkPDFEncryption(arrayBuffer);
           if (isEncrypted) {
-            setError(`The file "${pdfFile.name}" is password protected or encrypted. This tool only accepts image files (JPG, PNG).`);
+            setError(`The file "${pdfFile.name}" is password protected or encrypted. This tool only accepts image files.`);
             return;
           }
         } catch (err) {
@@ -56,16 +56,17 @@ export default function JpgToPdfPage() {
           }
         }
       }
-      setError('This tool only accepts image files (JPG, PNG). Please use the appropriate PDF tool for PDF files.');
+      setError('This tool only accepts image files. Please use the appropriate PDF tool for PDF files.');
       return;
     }
 
+    // Filter for supported image formats
     const validFiles = fileArray.filter(
-      (file) => file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg'
+      (file) => file.type.startsWith('image/') && SUPPORTED_IMAGE_FORMATS.includes(file.type)
     );
 
     if (validFiles.length === 0 && fileArray.length > 0) {
-      setError('Please upload valid image files (JPG or PNG).');
+      setError('Please upload valid image files (JPG, PNG, WebP, GIF, BMP, TIFF, AVIF, HEIC, SVG).');
       return;
     }
 
@@ -204,7 +205,7 @@ export default function JpgToPdfPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/jpg"
+                  accept="image/jpeg,image/png,image/jpg,image/webp,image/gif,image/bmp,image/tiff,image/avif,image/heic,image/heif,image/svg+xml"
                   multiple
                   onChange={handleFileInput}
                   className="hidden"
@@ -222,7 +223,7 @@ export default function JpgToPdfPage() {
                     or click to browse
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                    JPG, PNG supported
+                    JPG, PNG, WebP, GIF, BMP, TIFF, AVIF, HEIC, SVG
                   </p>
                 </div>
               </div>
@@ -344,7 +345,7 @@ export default function JpgToPdfPage() {
                   No images added yet
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Upload JPG or PNG images to convert them to PDF
+                  Upload images to convert them to PDF (JPG, PNG, WebP, GIF, BMP, TIFF, and more)
                 </p>
               </div>
             )}

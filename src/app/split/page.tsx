@@ -18,6 +18,18 @@ interface PageRange {
 
 type SplitMode = 'select' | 'ranges' | 'fixed';
 
+// Colors for range visualization
+const RANGE_COLORS = [
+  { bg: 'bg-orange-500', border: 'border-orange-500', text: 'text-orange-600 dark:text-orange-400', light: 'bg-orange-100 dark:bg-orange-900/30' },
+  { bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-600 dark:text-blue-400', light: 'bg-blue-100 dark:bg-blue-900/30' },
+  { bg: 'bg-green-500', border: 'border-green-500', text: 'text-green-600 dark:text-green-400', light: 'bg-green-100 dark:bg-green-900/30' },
+  { bg: 'bg-purple-500', border: 'border-purple-500', text: 'text-purple-600 dark:text-purple-400', light: 'bg-purple-100 dark:bg-purple-900/30' },
+  { bg: 'bg-pink-500', border: 'border-pink-500', text: 'text-pink-600 dark:text-pink-400', light: 'bg-pink-100 dark:bg-pink-900/30' },
+  { bg: 'bg-cyan-500', border: 'border-cyan-500', text: 'text-cyan-600 dark:text-cyan-400', light: 'bg-cyan-100 dark:bg-cyan-900/30' },
+  { bg: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-yellow-600 dark:text-yellow-400', light: 'bg-yellow-100 dark:bg-yellow-900/30' },
+  { bg: 'bg-red-500', border: 'border-red-500', text: 'text-red-600 dark:text-red-400', light: 'bg-red-100 dark:bg-red-900/30' },
+];
+
 export default function SplitPage() {
   const t = useTranslations('tools.split');
   const tDropzone = useTranslations('dropzone');
@@ -197,6 +209,35 @@ export default function SplitPage() {
   // Calculate chunks for fixed size preview
   const fixedChunks = pages.length > 0 ? Math.ceil(pages.length / fixedSize) : 0;
 
+  // Get range index for a page (1-indexed page number)
+  const getPageRangeIndex = useCallback((pageNum: number): number | null => {
+    for (let i = 0; i < ranges.length; i++) {
+      if (pageNum >= ranges[i].from && pageNum <= ranges[i].to) {
+        return i;
+      }
+    }
+    return null;
+  }, [ranges]);
+
+  // Get pages grouped by range for visualization
+  const getRangeGroups = useCallback(() => {
+    return ranges.map((range, index) => {
+      const rangePages = [];
+      for (let p = range.from; p <= range.to && p <= pages.length; p++) {
+        const pageIndex = p - 1;
+        if (pages[pageIndex]) {
+          rangePages.push({ ...pages[pageIndex], pageNum: p });
+        }
+      }
+      return {
+        range,
+        index,
+        color: RANGE_COLORS[index % RANGE_COLORS.length],
+        pages: rangePages,
+      };
+    });
+  }, [ranges, pages]);
+
   return (
     <PageLayout>
       <PDFPreviewModal
@@ -330,39 +371,62 @@ export default function SplitPage() {
                         Define custom page ranges. Each range becomes a separate PDF.
                       </p>
 
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
                         {ranges.map((range, index) => (
-                          <div key={range.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-slate-800 rounded-lg">
-                            <span className="text-xs text-gray-500 dark:text-gray-400 w-6">
-                              {index + 1}.
-                            </span>
-                            <input
-                              type="number"
-                              min={1}
-                              max={pages.length}
-                              value={range.from}
-                              onChange={(e) => updateRange(range.id, 'from', parseInt(e.target.value) || 1)}
-                              className="w-16 px-2 py-1 text-sm border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
-                            />
-                            <span className="text-xs text-gray-500 dark:text-gray-400">to</span>
-                            <input
-                              type="number"
-                              min={1}
-                              max={pages.length}
-                              value={range.to}
-                              onChange={(e) => updateRange(range.id, 'to', parseInt(e.target.value) || 1)}
-                              className="w-16 px-2 py-1 text-sm border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
-                            />
-                            {ranges.length > 1 && (
-                              <button
-                                onClick={() => removeRange(range.id)}
-                                className="p-1 text-red-500 hover:text-red-600"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          <div key={range.id} className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Range {index + 1}
+                              </span>
+                              {ranges.length > 1 && (
+                                <button
+                                  onClick={() => removeRange(range.id)}
+                                  className="p-1 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1">
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">From</label>
+                                <select
+                                  value={range.from}
+                                  onChange={(e) => updateRange(range.id, 'from', parseInt(e.target.value))}
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
+                                >
+                                  {Array.from({ length: pages.length }, (_, i) => i + 1).map((pageNum) => (
+                                    <option key={pageNum} value={pageNum}>
+                                      Page {pageNum}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="flex items-end pb-2">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                 </svg>
-                              </button>
-                            )}
+                              </div>
+                              <div className="flex-1">
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">To</label>
+                                <select
+                                  value={range.to}
+                                  onChange={(e) => updateRange(range.id, 'to', parseInt(e.target.value))}
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
+                                >
+                                  {Array.from({ length: pages.length }, (_, i) => i + 1).map((pageNum) => (
+                                    <option key={pageNum} value={pageNum}>
+                                      Page {pageNum}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                              {range.to - range.from + 1} page(s)
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -460,17 +524,81 @@ export default function SplitPage() {
                       {selectedPages.size} selected
                     </span>
                   )}
+                  {splitMode === 'ranges' && ranges.length > 0 && (
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {ranges.length} range(s) defined
+                    </span>
+                  )}
                 </div>
-                <PDFViewer
-                  files={files}
-                  pages={pages}
-                  selectedPages={splitMode === 'select' ? selectedPages : new Set()}
-                  onToggleSelection={splitMode === 'select' ? togglePageSelection : () => {}}
-                  onReorder={reorderPages}
-                  onRotate={rotatePage}
-                  onDelete={removePage}
-                  onThumbnailLoad={updatePageThumbnail}
-                />
+
+                {/* Ranges Mode - Show pages grouped by range */}
+                {splitMode === 'ranges' ? (
+                  <div className="space-y-6">
+                    {getRangeGroups().map((group) => (
+                      <div key={group.range.id} className={`p-4 rounded-xl ${group.color.light}`}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className={`w-3 h-3 rounded-full ${group.color.bg}`} />
+                          <h3 className={`font-medium ${group.color.text}`}>
+                            Range {group.index + 1}: Pages {group.range.from} - {group.range.to}
+                          </h3>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            ({group.pages.length} page{group.pages.length !== 1 ? 's' : ''})
+                          </span>
+                        </div>
+                        {group.pages.length > 0 ? (
+                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                            {group.pages.map((page) => (
+                              <div
+                                key={page.id}
+                                className={`relative aspect-[3/4] bg-white dark:bg-slate-800 rounded-lg overflow-hidden border-2 ${group.color.border} shadow-sm`}
+                              >
+                                {page.thumbnail ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={page.thumbnail}
+                                    alt={`Page ${page.pageNum}`}
+                                    className="w-full h-full object-contain"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                                  </div>
+                                )}
+                                <div className="absolute bottom-1 left-1 right-1">
+                                  <span className={`inline-block px-1.5 py-0.5 ${group.color.bg} rounded text-xs text-white font-medium`}>
+                                    {page.pageNum}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                            No pages in this range
+                          </p>
+                        )}
+                      </div>
+                    ))}
+
+                    {ranges.length === 0 && (
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <p>Add ranges to see page groupings</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Select/Fixed Mode - Use standard PDFViewer */
+                  <PDFViewer
+                    files={files}
+                    pages={pages}
+                    selectedPages={splitMode === 'select' ? selectedPages : new Set()}
+                    onToggleSelection={splitMode === 'select' ? togglePageSelection : () => {}}
+                    onReorder={reorderPages}
+                    onRotate={rotatePage}
+                    onDelete={removePage}
+                    onThumbnailLoad={updatePageThumbnail}
+                  />
+                )}
               </div>
             ) : (
               <div className="card p-12 text-center">
