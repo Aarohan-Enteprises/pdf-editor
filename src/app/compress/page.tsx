@@ -182,7 +182,6 @@ export default function CompressPage() {
                 isLoading={false}
                 externalError={uploadError}
                 onClearError={() => setUploadError(null)}
-                multiple={false}
               />
 
               {file && (
