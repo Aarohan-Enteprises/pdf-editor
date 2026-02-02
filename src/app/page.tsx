@@ -188,20 +188,22 @@ const tools = [
     textColor: 'text-violet-600 dark:text-violet-400',
     category: 'edit',
   },
-];
-
-const upcomingTools = [
   {
-    id: 'compressPdf',
+    id: 'compress',
+    href: '/compress',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
       </svg>
     ),
-    gradient: 'from-teal-500 to-teal-600',
-    lightBg: 'bg-teal-50 dark:bg-teal-950/30',
-    textColor: 'text-teal-600 dark:text-teal-400',
+    gradient: 'from-emerald-500 to-emerald-600',
+    lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+    textColor: 'text-emerald-600 dark:text-emerald-400',
+    category: 'optimize',
   },
+];
+
+const upcomingTools = [
   {
     id: 'lockPdf',
     icon: (
@@ -463,6 +465,7 @@ export default function HomePage() {
   const organizeTools = tools.filter(t => t.category === 'organize');
   const convertTools = tools.filter(t => t.category === 'convert');
   const editTools = tools.filter(t => t.category === 'edit');
+  const optimizeTools = tools.filter(t => t.category === 'optimize');
 
   return (
     <PageLayout>
@@ -668,19 +671,19 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Coming Soon Tools */}
+          {/* Optimize Tools */}
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Coming Soon</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Optimize</h3>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-              {upcomingTools.map((tool, index) => (
-                <UpcomingToolCard
+              {optimizeTools.map((tool, index) => (
+                <ToolCard
                   key={tool.id}
                   tool={tool}
                   index={index + organizeTools.length + convertTools.length + editTools.length}

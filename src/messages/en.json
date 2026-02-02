@@ -222,9 +222,23 @@
       "pageTitle": "Duplicate PDF Pages",
       "pageDescription": "Create multiple copies of selected pages in your PDF."
     },
-    "compressPdf": {
+    "compress": {
       "title": "Compress PDF",
-      "description": "Reduce PDF file size"
+      "description": "Reduce PDF file size",
+      "pageTitle": "Compress PDF",
+      "pageDescription": "Reduce PDF file size while maintaining quality",
+      "quality": "Compression Quality",
+      "low": "Low",
+      "lowDescription": "Smallest file size, 72 dpi",
+      "medium": "Medium",
+      "mediumDescription": "Balanced quality, 150 dpi",
+      "high": "High",
+      "highDescription": "Best quality, 300 dpi",
+      "compress": "Compress PDF",
+      "compressing": "Compressing...",
+      "originalSize": "Original size",
+      "compressedSize": "Compressed size",
+      "reduction": "Size reduction"
     },
     "lockPdf": {
       "title": "Lock PDF",
