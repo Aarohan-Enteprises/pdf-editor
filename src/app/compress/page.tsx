@@ -34,6 +34,7 @@ export default function CompressPage() {
   const [compressionStats, setCompressionStats] = useState<CompressionStats | null>(null);
   const [outputFilename, setOutputFilename] = useState('compressed-document');
   const [compressedData, setCompressedData] = useState<Uint8Array | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const {
     isPreviewOpen,
@@ -63,6 +64,7 @@ export default function CompressPage() {
     setUploadError(null);
     setCompressionStats(null);
     setCompressedData(null);
+    setUploadProgress(0);
 
     try {
       const formData = new FormData();
@@ -85,6 +87,7 @@ export default function CompressPage() {
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
             const percent = Math.round((e.loaded / e.total) * 100);
+            setUploadProgress(percent);
             console.log(`[TIMING] Upload progress: ${percent}% (${(e.loaded / 1024 / 1024).toFixed(2)} MB / ${(e.total / 1024 / 1024).toFixed(2)} MB)`);
           }
         };
@@ -331,36 +334,55 @@ export default function CompressPage() {
                 </h3>
                 <div className="space-y-4">
                   {/* Uploading */}
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      processingStage === 'uploading'
-                        ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                        : processingStage === 'compressing' || processingStage === 'downloading'
-                        ? 'bg-emerald-500'
-                        : 'bg-gray-100 dark:bg-slate-800'
-                    }`}>
-                      {processingStage === 'uploading' ? (
-                        <svg className="w-4 h-4 text-emerald-600 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                      ) : processingStage === 'compressing' || processingStage === 'downloading' ? (
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        <span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-slate-600"></span>
-                      )}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        processingStage === 'uploading'
+                          ? 'bg-emerald-100 dark:bg-emerald-900/30'
+                          : processingStage === 'compressing' || processingStage === 'downloading'
+                          ? 'bg-emerald-500'
+                          : 'bg-gray-100 dark:bg-slate-800'
+                      }`}>
+                        {processingStage === 'uploading' ? (
+                          <svg className="w-4 h-4 text-emerald-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : processingStage === 'compressing' || processingStage === 'downloading' ? (
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-slate-600"></span>
+                        )}
+                      </div>
+                      <div className="flex-1 flex items-center justify-between">
+                        <span className={`text-sm ${
+                          processingStage === 'uploading'
+                            ? 'text-emerald-600 dark:text-emerald-400 font-medium'
+                            : processingStage === 'compressing' || processingStage === 'downloading'
+                            ? 'text-gray-500 dark:text-gray-400'
+                            : 'text-gray-400 dark:text-gray-500'
+                        }`}>
+                          Uploading file...
+                        </span>
+                        {processingStage === 'uploading' && (
+                          <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                            {uploadProgress}%
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className={`text-sm ${
-                      processingStage === 'uploading'
-                        ? 'text-emerald-600 dark:text-emerald-400 font-medium'
-                        : processingStage === 'compressing' || processingStage === 'downloading'
-                        ? 'text-gray-500 dark:text-gray-400'
-                        : 'text-gray-400 dark:text-gray-500'
-                    }`}>
-                      Uploading file...
-                    </span>
+                    {processingStage === 'uploading' && (
+                      <div className="ml-11">
+                        <div className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Compressing */}

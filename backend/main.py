@@ -15,8 +15,15 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="PDF2.in API",
     description="API for PDF compression and other operations",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
 )
+
+# Security constants
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+PDF_MAGIC_BYTES = b'%PDF'
 
 
 def get_ghostscript_command():
@@ -103,6 +110,14 @@ async def compress_pdf(
 
     # Read uploaded file
     content = await file.read()
+
+    # Validate file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 50MB")
+
+    # Validate PDF magic bytes
+    if not content.startswith(PDF_MAGIC_BYTES):
+        raise HTTPException(status_code=400, detail="Invalid PDF file")
     read_time = time.time()
     logger.info(f"TIMING: File read completed in {read_time - start_time:.3f}s, size: {len(content)} bytes")
 

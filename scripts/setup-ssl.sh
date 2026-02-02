@@ -139,9 +139,14 @@ server {
     ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
     ssl_prefer_server_ciphers off;
 
+    # Security headers
     add_header Strict-Transport-Security "max-age=63072000" always;
     add_header X-Frame-Options "DENY" always;
     add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'" always;
+    add_header Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()" always;
 
     location /health {
         proxy_pass http://backend;
@@ -153,6 +158,7 @@ server {
     # API routes - CORS handled by FastAPI backend
     location /api {
         limit_req zone=api_limit burst=20 nodelay;
+        limit_conn conn_limit 10;
 
         proxy_pass http://backend;
         proxy_http_version 1.1;
