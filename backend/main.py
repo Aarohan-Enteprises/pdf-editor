@@ -523,21 +523,14 @@ async def convert_docx_to_pdf(file: UploadFile = File(...)):
 
 @app.post("/api/pdf-to-docx")
 async def convert_pdf_to_docx(file: UploadFile = File(...)):
-    """Convert a PDF file to DOCX using LibreOffice."""
+    """Convert a PDF file to DOCX using pdf2docx library."""
+    from pdf2docx import Converter
+
     # Validate file extension
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="File must be a PDF document")
 
     start_time = time.time()
-
-    # Check if LibreOffice is available
-    lo_cmd = get_libreoffice_command()
-    logger.info(f"LibreOffice command: {lo_cmd}")
-    if not lo_cmd:
-        raise HTTPException(
-            status_code=500,
-            detail="LibreOffice is not installed. Please install LibreOffice from https://www.libreoffice.org/download/"
-        )
 
     # Read uploaded file
     content = await file.read()
@@ -556,6 +549,7 @@ async def convert_pdf_to_docx(file: UploadFile = File(...)):
     # Create temp directory for input and output
     temp_dir = tempfile.mkdtemp()
     input_path = os.path.join(temp_dir, 'input.pdf')
+    output_path = os.path.join(temp_dir, 'output.docx')
 
     try:
         # Write input file
@@ -565,46 +559,16 @@ async def convert_pdf_to_docx(file: UploadFile = File(...)):
         write_time = time.time()
         logger.info(f"TIMING: Temp file written in {write_time - read_time:.3f}s")
 
-        # Run LibreOffice conversion
-        # --headless: Run without UI
-        # --infilter: Specify input filter for PDF
-        # --convert-to docx: Convert to DOCX format
-        # --outdir: Output directory
-        lo_command = [
-            lo_cmd,
-            '--headless',
-            '--infilter=writer_pdf_import',
-            '--convert-to', 'docx',
-            '--outdir', temp_dir,
-            input_path
-        ]
+        # Convert PDF to DOCX using pdf2docx
+        # This library preserves layout, margins, tables, and formatting better
+        logger.info(f"Starting pdf2docx conversion")
 
-        logger.info(f"Running command: {' '.join(lo_command)}")
+        cv = Converter(input_path)
+        cv.convert(output_path)
+        cv.close()
 
-        result = subprocess.run(
-            lo_command,
-            capture_output=True,
-            text=True,
-            timeout=120  # 2 minute timeout
-        )
-
-        logger.info(f"LibreOffice return code: {result.returncode}")
-        if result.stderr:
-            logger.info(f"LibreOffice stderr: {result.stderr}")
-        if result.stdout:
-            logger.info(f"LibreOffice stdout: {result.stdout}")
-
-        if result.returncode != 0:
-            raise HTTPException(
-                status_code=500,
-                detail=f"LibreOffice conversion failed: {result.stderr or 'Unknown error'}"
-            )
-
-        lo_time = time.time()
-        logger.info(f"TIMING: LibreOffice completed in {lo_time - write_time:.3f}s")
-
-        # Find the output DOCX file
-        output_path = os.path.join(temp_dir, 'input.docx')
+        convert_time = time.time()
+        logger.info(f"TIMING: pdf2docx completed in {convert_time - write_time:.3f}s")
 
         if not os.path.exists(output_path):
             raise HTTPException(
@@ -630,8 +594,12 @@ async def convert_pdf_to_docx(file: UploadFile = File(...)):
             }
         )
 
-    except subprocess.TimeoutExpired:
-        raise HTTPException(status_code=500, detail="Conversion timed out")
+    except Exception as e:
+        logger.error(f"PDF to DOCX conversion failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Conversion failed: {str(e)}"
+        )
 
     finally:
         # Cleanup temp directory and all files

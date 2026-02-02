@@ -281,7 +281,7 @@
       "success": "Conversion Complete",
       "successDescription": "Your PDF has been converted to Word format",
       "infoTitle": "About PDF to Word conversion",
-      "infoDescription": "PDF to Word conversion works best with text-based PDFs. Scanned documents or image-heavy PDFs may not convert perfectly."
+      "infoDescription": "Preserves layout, margins, tables and formatting. Works best with text-based PDFs. Scanned documents may have reduced accuracy."
     },
     "docxToPdf": {
       "title": "DOCX to PDF",
