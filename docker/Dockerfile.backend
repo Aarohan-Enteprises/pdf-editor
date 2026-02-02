@@ -26,8 +26,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice-writer-nogui \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# Create non-root user for security with proper home directory
+RUN groupadd -r appuser && useradd -r -g appuser -m -d /home/appuser appuser
 
 # Copy installed packages from builder
 COPY --from=builder /root/.local /home/appuser/.local
@@ -40,9 +40,12 @@ ENV PYTHONPATH=/app
 ENV PATH=/home/appuser/.local/bin:$PATH
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV HOME=/home/appuser
 
-# Create temp directory for PDF processing
-RUN mkdir -p /app/tmp && chown -R appuser:appuser /app
+# Create temp directory for PDF processing and ensure home directory permissions
+RUN mkdir -p /app/tmp && \
+    mkdir -p /home/appuser/.cache /home/appuser/.config && \
+    chown -R appuser:appuser /app /home/appuser
 
 # Switch to non-root user
 USER appuser
