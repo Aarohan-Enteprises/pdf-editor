@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   DndContext,
@@ -10,13 +10,15 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
-import { PageThumbnail } from './PageThumbnail';
+import { PageThumbnail, PageThumbnailOverlay } from './PageThumbnail';
 import { PageInfo } from '@/lib/pdf-operations';
 import { PDFFile } from '@/hooks/usePDFDocument';
 
@@ -42,11 +44,12 @@ export function PDFViewer({
   onThumbnailLoad,
 }: PDFViewerProps) {
   const t = useTranslations('viewer');
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -54,9 +57,14 @@ export function PDFViewer({
     })
   );
 
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  }, []);
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
+      setActiveId(null);
 
       if (over && active.id !== over.id) {
         onReorder(active.id as string, over.id as string);
@@ -65,12 +73,19 @@ export function PDFViewer({
     [onReorder]
   );
 
+  const handleDragCancel = useCallback(() => {
+    setActiveId(null);
+  }, []);
+
   const getFileForPage = useCallback(
     (page: PageInfo): PDFFile | null => {
       return files[page.sourceIndex] || null;
     },
     [files]
   );
+
+  const activePage = activeId ? pages.find(p => p.id === activeId) : null;
+  const activePageIndex = activePage ? pages.findIndex(p => p.id === activeId) : -1;
 
   if (pages.length === 0) {
     return (
@@ -96,7 +111,9 @@ export function PDFViewer({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <SortableContext items={pages.map((p) => p.id)} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -119,6 +136,15 @@ export function PDFViewer({
             })}
           </div>
         </SortableContext>
+        <DragOverlay>
+          {activePage ? (
+            <PageThumbnailOverlay
+              page={activePage}
+              pageNumber={activePageIndex + 1}
+              thumbnail={activePage.thumbnail}
+            />
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );
