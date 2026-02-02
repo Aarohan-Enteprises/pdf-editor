@@ -197,6 +197,184 @@ async def compress_pdf(
             os.remove(output_path)
 
 
+@app.post("/api/lock")
+async def lock_pdf(
+    file: UploadFile = File(...),
+    password: str = Form(...)
+):
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="File must be a PDF")
+
+    if not password or len(password) < 1:
+        raise HTTPException(status_code=400, detail="Password is required")
+
+    # Read uploaded file
+    content = await file.read()
+
+    # Validate file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 50MB")
+
+    # Validate PDF magic bytes
+    if not content.startswith(PDF_MAGIC_BYTES):
+        raise HTTPException(status_code=400, detail="Invalid PDF file")
+
+    # Create temp files
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as input_file:
+        input_file.write(content)
+        input_path = input_file.name
+
+    output_path = input_path.replace('.pdf', '_locked.pdf')
+
+    try:
+        # Use Ghostscript to encrypt the PDF
+        gs_cmd = get_ghostscript_command()
+        if not gs_cmd:
+            raise HTTPException(status_code=500, detail="Ghostscript is not installed")
+
+        gs_command = [
+            gs_cmd,
+            '-sDEVICE=pdfwrite',
+            '-dCompatibilityLevel=1.4',
+            '-dNOPAUSE',
+            '-dQUIET',
+            '-dBATCH',
+            f'-sOwnerPassword={password}',
+            f'-sUserPassword={password}',
+            '-dEncryptionR=3',
+            '-dKeyLength=128',
+            '-dPermissions=-3904',
+            f'-sOutputFile={output_path}',
+            input_path
+        ]
+
+        result = subprocess.run(
+            gs_command,
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"Failed to lock PDF: {result.stderr}")
+
+        with open(output_path, 'rb') as f:
+            locked_content = f.read()
+
+        return Response(
+            content=locked_content,
+            media_type='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="locked_{file.filename}"',
+            }
+        )
+
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="Operation timed out")
+
+    finally:
+        if os.path.exists(input_path):
+            os.remove(input_path)
+        if os.path.exists(output_path):
+            os.remove(output_path)
+
+
+@app.post("/api/unlock")
+async def unlock_pdf(
+    file: UploadFile = File(...),
+    password: str = Form(...)
+):
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="File must be a PDF")
+
+    if not password:
+        raise HTTPException(status_code=400, detail="Password is required")
+
+    # Read uploaded file
+    content = await file.read()
+
+    # Validate file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 50MB")
+
+    # Validate PDF magic bytes
+    if not content.startswith(PDF_MAGIC_BYTES):
+        raise HTTPException(status_code=400, detail="Invalid PDF file")
+
+    # Create temp files
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as input_file:
+        input_file.write(content)
+        input_path = input_file.name
+
+    output_path = input_path.replace('.pdf', '_unlocked.pdf')
+
+    try:
+        # Use Ghostscript to decrypt the PDF
+        gs_cmd = get_ghostscript_command()
+        if not gs_cmd:
+            raise HTTPException(status_code=500, detail="Ghostscript is not installed")
+
+        gs_command = [
+            gs_cmd,
+            '-sDEVICE=pdfwrite',
+            '-dCompatibilityLevel=1.4',
+            '-dNOPAUSE',
+            '-dQUIET',
+            '-dBATCH',
+            f'-sPDFPassword={password}',
+            f'-sOutputFile={output_path}',
+            input_path
+        ]
+
+        result = subprocess.run(
+            gs_command,
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+
+        logger.info(f"Unlock return code: {result.returncode}")
+        if result.stdout:
+            logger.info(f"Unlock stdout: {result.stdout}")
+        if result.stderr:
+            logger.info(f"Unlock stderr: {result.stderr}")
+
+        # Check for password errors - Ghostscript may return 0 even on password failure
+        # Check both stdout and stderr as Ghostscript output varies
+        all_output = ((result.stdout or '') + (result.stderr or '')).lower()
+        password_error_keywords = ['password did not work', 'cannot decrypt', 'password', 'decrypt', 'encrypted', 'invalid', 'authentication']
+
+        if any(keyword in all_output for keyword in password_error_keywords):
+            raise HTTPException(status_code=400, detail="Incorrect password")
+
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"Failed to unlock PDF: {result.stderr or 'Unknown error'}")
+
+        # Verify output file was created and has content
+        if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+            raise HTTPException(status_code=400, detail="Incorrect password")
+
+        with open(output_path, 'rb') as f:
+            unlocked_content = f.read()
+
+        return Response(
+            content=unlocked_content,
+            media_type='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="unlocked_{file.filename}"',
+            }
+        )
+
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="Operation timed out")
+
+    finally:
+        if os.path.exists(input_path):
+            os.remove(input_path)
+        if os.path.exists(output_path):
+            os.remove(output_path)
+
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}

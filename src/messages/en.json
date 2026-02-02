@@ -242,11 +242,34 @@
     },
     "lockPdf": {
       "title": "Lock PDF",
-      "description": "Password protect your PDF"
+      "description": "Password protect your PDF",
+      "pageTitle": "Lock PDF",
+      "pageDescription": "Add password protection to your PDF document",
+      "password": "Password",
+      "passwordPlaceholder": "Enter a strong password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter the password",
+      "passwordMismatch": "Passwords do not match",
+      "lock": "Lock PDF",
+      "locking": "Locking...",
+      "success": "PDF Locked Successfully",
+      "successDescription": "Your PDF is now password protected",
+      "infoTitle": "About password protection",
+      "infoDescription": "The PDF will require a password to open. Make sure to remember your password as it cannot be recovered."
     },
     "unlockPdf": {
       "title": "Unlock PDF",
-      "description": "Remove PDF password protection"
+      "description": "Remove PDF password protection",
+      "pageTitle": "Unlock PDF",
+      "pageDescription": "Remove password protection from your PDF document",
+      "password": "PDF Password",
+      "passwordPlaceholder": "Enter the PDF password",
+      "unlock": "Unlock PDF",
+      "unlocking": "Unlocking...",
+      "success": "PDF Unlocked Successfully",
+      "successDescription": "Password protection has been removed",
+      "infoTitle": "About unlocking",
+      "infoDescription": "You need to know the correct password to unlock a protected PDF. This tool removes the password requirement from the PDF."
     },
     "pdfToDocx": {
       "title": "PDF to DOCX",

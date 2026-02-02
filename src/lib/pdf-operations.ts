@@ -207,7 +207,7 @@ export async function getPDFPageCount(pdfData: ArrayBuffer | Uint8Array): Promis
 }
 
 export function downloadPDF(data: Uint8Array, filename: string): void {
-  const blob = new Blob([new Uint8Array(data)], { type: 'application/pdf' });
+  const blob = new Blob([data.slice()], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

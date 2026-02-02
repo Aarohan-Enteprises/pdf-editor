@@ -199,13 +199,11 @@ const tools = [
     gradient: 'from-emerald-500 to-emerald-600',
     lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
     textColor: 'text-emerald-600 dark:text-emerald-400',
-    category: 'optimize',
+    category: 'server',
   },
-];
-
-const upcomingTools = [
   {
     id: 'lockPdf',
+    href: '/lock-pdf',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -214,18 +212,24 @@ const upcomingTools = [
     gradient: 'from-emerald-500 to-emerald-600',
     lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
     textColor: 'text-emerald-600 dark:text-emerald-400',
+    category: 'server',
   },
   {
     id: 'unlockPdf',
+    href: '/unlock-pdf',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2 2v6a2 2 0 002 2z" />
       </svg>
     ),
     gradient: 'from-yellow-500 to-yellow-600',
     lightBg: 'bg-yellow-50 dark:bg-yellow-950/30',
     textColor: 'text-yellow-600 dark:text-yellow-400',
+    category: 'server',
   },
+];
+
+const upcomingTools = [
   {
     id: 'pdfToDocx',
     icon: (
@@ -465,7 +469,7 @@ export default function HomePage() {
   const organizeTools = tools.filter(t => t.category === 'organize');
   const convertTools = tools.filter(t => t.category === 'convert');
   const editTools = tools.filter(t => t.category === 'edit');
-  const optimizeTools = tools.filter(t => t.category === 'optimize');
+  const serverTools = tools.filter(t => t.category === 'server');
 
   return (
     <PageLayout>
@@ -671,18 +675,18 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Optimize Tools */}
+          {/* Secure Server Processing Tools */}
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center text-white">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Optimize</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Secure Server Processing</h3>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-              {optimizeTools.map((tool, index) => (
+              {serverTools.map((tool, index) => (
                 <ToolCard
                   key={tool.id}
                   tool={tool}
@@ -708,8 +712,8 @@ export default function HomePage() {
                 <UpcomingToolCard
                   key={tool.id}
                   tool={tool}
-                  index={index + organizeTools.length + convertTools.length + editTools.length + optimizeTools.length}
-                  isVisible={toolsInView && visibleItems.includes(index + organizeTools.length + convertTools.length + editTools.length + optimizeTools.length)}
+                  index={index + organizeTools.length + convertTools.length + editTools.length + serverTools.length}
+                  isVisible={toolsInView && visibleItems.includes(index + organizeTools.length + convertTools.length + editTools.length + serverTools.length)}
                 />
               ))}
             </div>

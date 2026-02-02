@@ -12,6 +12,14 @@ import * as pdfjsLib from 'pdfjs-dist';
 // Set worker
 if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+
+  // Load Google Fonts for signatures
+  const link = document.createElement('link');
+  link.href = 'https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Homemade+Apple&family=Indie+Flower&family=Kalam&family=Pacifico&family=Permanent+Marker&family=Satisfy&display=swap';
+  link.rel = 'stylesheet';
+  if (!document.querySelector(`link[href="${link.href}"]`)) {
+    document.head.appendChild(link);
+  }
 }
 
 interface SignaturePosition {
@@ -38,9 +46,34 @@ export default function SignPdfPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagePreview, setPagePreview] = useState<string | null>(null);
 
+  // Signature mode: 'upload' or 'text'
+  const [signatureMode, setSignatureMode] = useState<'upload' | 'text'>('upload');
+
+  // Text signature options
+  const [signatureText, setSignatureText] = useState('');
+  const [signatureFont, setSignatureFont] = useState('Dancing Script');
+  const [signatureColor, setSignatureColor] = useState('#000000');
+  const [signatureFontSize, setSignatureFontSize] = useState(48);
+  const [signatureBold, setSignatureBold] = useState(false);
+  const [signatureItalic, setSignatureItalic] = useState(true);
+
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const signInputRef = useRef<HTMLInputElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+
+  // Available handwriting-style fonts
+  const signatureFonts = [
+    { name: 'Dancing Script', label: 'Dancing Script' },
+    { name: 'Great Vibes', label: 'Great Vibes' },
+    { name: 'Pacifico', label: 'Pacifico' },
+    { name: 'Satisfy', label: 'Satisfy' },
+    { name: 'Caveat', label: 'Caveat' },
+    { name: 'Kalam', label: 'Kalam' },
+    { name: 'Indie Flower', label: 'Indie Flower' },
+    { name: 'Permanent Marker', label: 'Permanent Marker' },
+    { name: 'Homemade Apple', label: 'Homemade Apple' },
+    { name: 'cursive', label: 'System Cursive' },
+  ];
 
   const {
     isPreviewOpen,
@@ -161,6 +194,70 @@ export default function SignPdfPage() {
     };
     img.src = url;
   }, []);
+
+  // Generate text signature as image
+  const generateTextSignature = useCallback(() => {
+    if (!signatureText.trim()) {
+      setSignaturePreview(null);
+      setSignatureFile(null);
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+
+    // Set font for measuring
+    const fontWeight = signatureBold ? 'bold' : 'normal';
+    const fontStyle = signatureItalic ? 'italic' : 'normal';
+    const font = `${fontStyle} ${fontWeight} ${signatureFontSize}px "${signatureFont}", cursive`;
+    ctx.font = font;
+
+    // Measure text
+    const metrics = ctx.measureText(signatureText);
+    const textWidth = metrics.width;
+    const textHeight = signatureFontSize * 1.2;
+
+    // Set canvas size with padding
+    const padding = 20;
+    canvas.width = textWidth + padding * 2;
+    canvas.height = textHeight + padding * 2;
+
+    // Clear and set background transparent
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw text
+    ctx.font = font;
+    ctx.fillStyle = signatureColor;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(signatureText, padding, canvas.height / 2);
+
+    // Convert to data URL and create blob for signatureFile
+    const dataUrl = canvas.toDataURL('image/png');
+    setSignaturePreview(dataUrl);
+
+    // Convert to blob for PDF embedding
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], 'text-signature.png', { type: 'image/png' });
+        setSignatureFile(file);
+
+        // Update signature size
+        const maxWidth = 200;
+        const ratio = canvas.width / canvas.height;
+        const width = Math.min(canvas.width, maxWidth);
+        const height = width / ratio;
+        setAspectRatio(ratio);
+        setSignaturePos(prev => ({ ...prev, width, height }));
+      }
+    }, 'image/png');
+  }, [signatureText, signatureFont, signatureColor, signatureFontSize, signatureBold, signatureItalic]);
+
+  // Regenerate text signature when options change
+  useEffect(() => {
+    if (signatureMode === 'text') {
+      generateTextSignature();
+    }
+  }, [signatureMode, signatureText, signatureFont, signatureColor, signatureFontSize, signatureBold, signatureItalic, generateTextSignature]);
 
   // When changing pages, load the saved signature position or use default
   useEffect(() => {
@@ -503,34 +600,144 @@ export default function SignPdfPage() {
                 </div>
               </div>
 
-              {/* Signature Dropzone */}
+              {/* Signature Mode Toggle */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  2. Select Signature Image
+                  2. Create Signature
                 </label>
-                <div
-                  onClick={() => signInputRef.current?.click()}
-                  onDrop={handleSignDrop}
-                  onDragOver={(e) => { e.preventDefault(); setIsDraggingSign(true); }}
-                  onDragLeave={(e) => { e.preventDefault(); setIsDraggingSign(false); }}
-                  className={`dropzone py-4 ${isDraggingSign ? 'dropzone-active' : ''}`}
-                >
-                  <input
-                    ref={signInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg"
-                    onChange={(e) => e.target.files?.[0] && handleSignatureFile(e.target.files[0])}
-                    className="hidden"
-                  />
-                  <div className="flex flex-col items-center">
-                    {signaturePreview ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={signaturePreview} alt="Signature" className="max-h-12 max-w-full" />
-                    ) : (
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">Drop image or click to browse</p>
+                <div className="flex rounded-lg border border-gray-300 dark:border-slate-600 overflow-hidden mb-3">
+                  <button
+                    onClick={() => setSignatureMode('text')}
+                    className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+                      signatureMode === 'text'
+                        ? 'bg-rose-500 text-white'
+                        : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    Type Text
+                  </button>
+                  <button
+                    onClick={() => setSignatureMode('upload')}
+                    className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+                      signatureMode === 'upload'
+                        ? 'bg-rose-500 text-white'
+                        : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    Upload Image
+                  </button>
+                </div>
+
+                {signatureMode === 'upload' ? (
+                  <div
+                    onClick={() => signInputRef.current?.click()}
+                    onDrop={handleSignDrop}
+                    onDragOver={(e) => { e.preventDefault(); setIsDraggingSign(true); }}
+                    onDragLeave={(e) => { e.preventDefault(); setIsDraggingSign(false); }}
+                    className={`dropzone py-4 ${isDraggingSign ? 'dropzone-active' : ''}`}
+                  >
+                    <input
+                      ref={signInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg"
+                      onChange={(e) => e.target.files?.[0] && handleSignatureFile(e.target.files[0])}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center">
+                      {signaturePreview && signatureMode === 'upload' ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={signaturePreview} alt="Signature" className="max-h-12 max-w-full" />
+                      ) : (
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Drop image or click to browse</p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Text input */}
+                    <input
+                      type="text"
+                      value={signatureText}
+                      onChange={(e) => setSignatureText(e.target.value)}
+                      placeholder="Type your signature..."
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+                      style={{ fontFamily: `"${signatureFont}", cursive` }}
+                    />
+
+                    {/* Font selection */}
+                    <div>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Font</label>
+                      <select
+                        value={signatureFont}
+                        onChange={(e) => setSignatureFont(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm"
+                      >
+                        {signatureFonts.map((font) => (
+                          <option key={font.name} value={font.name} style={{ fontFamily: `"${font.name}", cursive` }}>
+                            {font.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Color and Size */}
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Color</label>
+                        <input
+                          type="color"
+                          value={signatureColor}
+                          onChange={(e) => setSignatureColor(e.target.value)}
+                          className="w-full h-9 border border-gray-300 dark:border-slate-600 rounded-lg cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Size</label>
+                        <input
+                          type="number"
+                          min={24}
+                          max={96}
+                          value={signatureFontSize}
+                          onChange={(e) => setSignatureFontSize(Math.max(24, Math.min(96, parseInt(e.target.value) || 48)))}
+                          className="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Style toggles */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSignatureBold(!signatureBold)}
+                        className={`px-3 py-1.5 rounded-lg border text-sm font-bold transition-colors ${
+                          signatureBold
+                            ? 'bg-rose-500 text-white border-rose-500'
+                            : 'border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        B
+                      </button>
+                      <button
+                        onClick={() => setSignatureItalic(!signatureItalic)}
+                        className={`px-3 py-1.5 rounded-lg border text-sm italic transition-colors ${
+                          signatureItalic
+                            ? 'bg-rose-500 text-white border-rose-500'
+                            : 'border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        I
+                      </button>
+                    </div>
+
+                    {/* Preview */}
+                    {signaturePreview && (
+                      <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Preview:</p>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={signaturePreview} alt="Signature Preview" className="max-h-16 max-w-full" />
+                      </div>
                     )}
                   </div>
-                </div>
+                )}
               </div>
 
               {pdfFile && signatureFile && (
@@ -762,7 +969,7 @@ export default function SignPdfPage() {
                       width: signaturePos.width,
                       height: signaturePos.height,
                     }}
-                    className={`border-2 ${currentPageHasSignature ? 'border-green-500' : 'border-rose-500'} bg-white/80 cursor-move touch-none`}
+                    className={`border-2 ${currentPageHasSignature ? 'border-green-500' : 'border-rose-500'} cursor-move touch-none`}
                     onMouseDown={(e) => handlePointerDown(e, 'drag')}
                     onTouchStart={(e) => handlePointerDown(e, 'drag')}
                   >
