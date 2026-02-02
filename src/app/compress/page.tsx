@@ -131,7 +131,7 @@ export default function CompressPage() {
 
   const handleDownload = useCallback(() => {
     if (compressedData) {
-      const blob = new Blob([compressedData], { type: 'application/pdf' });
+      const blob = new Blob([compressedData.buffer], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
