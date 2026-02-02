@@ -585,57 +585,86 @@ const redactionStyleText: Record<RedactionStyle, string> = {
   classified: 'CLASSIFIED',
 };
 
+// Create a black redaction image with optional text label
+async function createRedactionImage(
+  width: number,
+  height: number,
+  labelText: string
+): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    // Use higher resolution for crisp text
+    const scale = 2;
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
+    const ctx = canvas.getContext('2d')!;
+
+    // Fill with black
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Add text label if provided
+    if (labelText) {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Calculate font size to fit
+      let fontSize = Math.min(canvas.height * 0.6, 28);
+      ctx.font = `bold ${fontSize}px Helvetica, Arial, sans-serif`;
+
+      // Reduce font size if text is too wide
+      while (ctx.measureText(labelText).width > canvas.width - 8 && fontSize > 10) {
+        fontSize -= 2;
+        ctx.font = `bold ${fontSize}px Helvetica, Arial, sans-serif`;
+      }
+
+      if (fontSize >= 10) {
+        ctx.fillText(labelText, canvas.width / 2, canvas.height / 2);
+      }
+    }
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        blob.arrayBuffer().then(resolve).catch(reject);
+      } else {
+        reject(new Error('Failed to create redaction image'));
+      }
+    }, 'image/png');
+  });
+}
+
 export async function applyRedactions(
   pdfData: ArrayBuffer | Uint8Array,
   redactions: PageRedaction[],
   style: RedactionStyle = 'solid'
 ): Promise<Uint8Array> {
   const pdf = await loadPDF(pdfData);
-  const font = await pdf.embedFont(StandardFonts.HelveticaBold);
   const labelText = redactionStyleText[style];
 
   for (const pageRedaction of redactions) {
     const page = pdf.getPage(pageRedaction.pageIndex);
 
     for (const area of pageRedaction.areas) {
-      // Draw a solid black rectangle over the redacted area
-      page.drawRectangle({
+      // Create a rasterized black image for secure redaction
+      // This ensures the redaction cannot be removed to reveal underlying content
+      const redactionImageData = await createRedactionImage(
+        area.width,
+        area.height,
+        labelText
+      );
+
+      // Embed the redaction image
+      const redactionImage = await pdf.embedPng(redactionImageData);
+
+      // Draw the redaction image over the area
+      // This covers the content with an opaque image, not just a vector rectangle
+      page.drawImage(redactionImage, {
         x: area.x,
         y: area.y,
         width: area.width,
         height: area.height,
-        color: rgb(0, 0, 0),
-        opacity: 1,
       });
-
-      // Add text label if style is not solid
-      if (labelText) {
-        // Calculate font size to fit within the box
-        const maxFontSize = Math.min(area.height * 0.6, 14);
-        let fontSize = maxFontSize;
-        let textWidth = font.widthOfTextAtSize(labelText, fontSize);
-
-        // Reduce font size if text is too wide
-        while (textWidth > area.width - 4 && fontSize > 6) {
-          fontSize -= 1;
-          textWidth = font.widthOfTextAtSize(labelText, fontSize);
-        }
-
-        // Only draw text if it fits reasonably
-        if (fontSize >= 6) {
-          const textHeight = fontSize * 0.75;
-          const textX = area.x + (area.width - textWidth) / 2;
-          const textY = area.y + (area.height - textHeight) / 2;
-
-          page.drawText(labelText, {
-            x: textX,
-            y: textY,
-            size: fontSize,
-            font,
-            color: rgb(1, 1, 1), // White text
-          });
-        }
-      }
     }
   }
 
