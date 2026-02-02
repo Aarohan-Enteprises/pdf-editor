@@ -8,6 +8,7 @@ import platform
 import shutil
 import logging
 import time
+import glob as glob_module
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -54,6 +55,30 @@ def get_ghostscript_command():
         # Unix-like systems
         return shutil.which('gs')
 
+
+def get_libreoffice_command():
+    """Get the LibreOffice command for the current platform."""
+    if platform.system() == 'Windows':
+        # Check PATH first
+        for cmd in ['soffice', 'soffice.exe']:
+            found = shutil.which(cmd)
+            if found:
+                return found
+        # Check common installation paths using glob for version flexibility
+        search_patterns = [
+            r'C:\Program Files\LibreOffice*\program\soffice.exe',
+            r'C:\Program Files (x86)\LibreOffice*\program\soffice.exe',
+        ]
+        for pattern in search_patterns:
+            matches = glob_module.glob(pattern)
+            if matches:
+                # Return the first match (typically the most recent version)
+                return matches[0]
+        return None
+    else:
+        # Unix-like systems
+        return shutil.which('soffice') or shutil.which('libreoffice')
+
 # CORS for Next.js frontend
 # In production, set ALLOWED_ORIGINS env var (comma-separated)
 allowed_origins = os.environ.get(
@@ -77,6 +102,12 @@ async def startup_event():
         logger.info(f"Ghostscript found at: {gs_cmd}")
     else:
         logger.warning("Ghostscript not found! Compression will not work.")
+
+    lo_cmd = get_libreoffice_command()
+    if lo_cmd:
+        logger.info(f"LibreOffice found at: {lo_cmd}")
+    else:
+        logger.warning("LibreOffice not found! DOCX to PDF conversion will not work.")
 
 # Ghostscript quality presets
 QUALITY_SETTINGS = {
@@ -373,6 +404,121 @@ async def unlock_pdf(
             os.remove(input_path)
         if os.path.exists(output_path):
             os.remove(output_path)
+
+
+@app.post("/api/docx-to-pdf")
+async def convert_docx_to_pdf(file: UploadFile = File(...)):
+    """Convert a DOCX file to PDF using LibreOffice."""
+    # Validate file extension
+    if not file.filename or not file.filename.lower().endswith('.docx'):
+        raise HTTPException(status_code=400, detail="File must be a DOCX document")
+
+    start_time = time.time()
+
+    # Check if LibreOffice is available
+    lo_cmd = get_libreoffice_command()
+    logger.info(f"LibreOffice command: {lo_cmd}")
+    if not lo_cmd:
+        raise HTTPException(
+            status_code=500,
+            detail="LibreOffice is not installed. Please install LibreOffice from https://www.libreoffice.org/download/"
+        )
+
+    # Read uploaded file
+    content = await file.read()
+
+    # Validate file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 50MB")
+
+    # Validate DOCX magic bytes (DOCX is a ZIP file starting with PK)
+    if not content.startswith(b'PK'):
+        raise HTTPException(status_code=400, detail="Invalid DOCX file")
+
+    read_time = time.time()
+    logger.info(f"TIMING: File read completed in {read_time - start_time:.3f}s, size: {len(content)} bytes")
+
+    # Create temp directory for input and output
+    temp_dir = tempfile.mkdtemp()
+    input_path = os.path.join(temp_dir, 'input.docx')
+
+    try:
+        # Write input file
+        with open(input_path, 'wb') as f:
+            f.write(content)
+
+        write_time = time.time()
+        logger.info(f"TIMING: Temp file written in {write_time - read_time:.3f}s")
+
+        # Run LibreOffice conversion
+        # --headless: Run without UI
+        # --convert-to pdf: Convert to PDF format
+        # --outdir: Output directory
+        lo_command = [
+            lo_cmd,
+            '--headless',
+            '--convert-to', 'pdf',
+            '--outdir', temp_dir,
+            input_path
+        ]
+
+        logger.info(f"Running command: {' '.join(lo_command)}")
+
+        result = subprocess.run(
+            lo_command,
+            capture_output=True,
+            text=True,
+            timeout=120  # 2 minute timeout
+        )
+
+        logger.info(f"LibreOffice return code: {result.returncode}")
+        if result.stderr:
+            logger.info(f"LibreOffice stderr: {result.stderr}")
+        if result.stdout:
+            logger.info(f"LibreOffice stdout: {result.stdout}")
+
+        if result.returncode != 0:
+            raise HTTPException(
+                status_code=500,
+                detail=f"LibreOffice conversion failed: {result.stderr or 'Unknown error'}"
+            )
+
+        lo_time = time.time()
+        logger.info(f"TIMING: LibreOffice completed in {lo_time - write_time:.3f}s")
+
+        # Find the output PDF file
+        output_path = os.path.join(temp_dir, 'input.pdf')
+
+        if not os.path.exists(output_path):
+            raise HTTPException(
+                status_code=500,
+                detail="Conversion failed: output PDF not created"
+            )
+
+        # Read the converted PDF
+        with open(output_path, 'rb') as f:
+            pdf_content = f.read()
+
+        total_time = time.time()
+        logger.info(f"TIMING: Total processing time: {total_time - start_time:.3f}s")
+
+        # Generate output filename from input
+        output_filename = file.filename.rsplit('.', 1)[0] + '.pdf'
+
+        return Response(
+            content=pdf_content,
+            media_type='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="{output_filename}"',
+            }
+        )
+
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="Conversion timed out")
+
+    finally:
+        # Cleanup temp directory and all files
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @app.get("/health")

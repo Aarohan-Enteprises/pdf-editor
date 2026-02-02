@@ -277,7 +277,15 @@
     },
     "docxToPdf": {
       "title": "DOCX to PDF",
-      "description": "Convert Word document to PDF"
+      "description": "Convert Word document to PDF",
+      "pageTitle": "Convert DOCX to PDF",
+      "pageDescription": "Convert Microsoft Word documents to PDF format with high fidelity",
+      "convert": "Convert to PDF",
+      "converting": "Converting...",
+      "success": "Conversion Complete",
+      "successDescription": "Your Word document has been converted to PDF",
+      "infoTitle": "About DOCX conversion",
+      "infoDescription": "Uses LibreOffice for accurate conversion that preserves formatting, tables, images, and styles from your Word document."
     },
     "pdfToPptx": {
       "title": "PDF to PPTX",

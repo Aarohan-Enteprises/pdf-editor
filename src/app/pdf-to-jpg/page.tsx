@@ -96,7 +96,7 @@ export default function PdfToJpgPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [outputFormat, quality]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {

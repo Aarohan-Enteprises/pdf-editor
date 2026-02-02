@@ -241,6 +241,19 @@ const tools = [
     textColor: 'text-yellow-600 dark:text-yellow-400',
     category: 'server',
   },
+  {
+    id: 'docxToPdf',
+    href: '/docx-to-pdf',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    ),
+    gradient: 'from-red-500 to-red-600',
+    lightBg: 'bg-red-50 dark:bg-red-950/30',
+    textColor: 'text-red-600 dark:text-red-400',
+    category: 'server',
+  },
 ];
 
 const upcomingTools = [
@@ -254,17 +267,6 @@ const upcomingTools = [
     gradient: 'from-blue-600 to-blue-700',
     lightBg: 'bg-blue-50 dark:bg-blue-950/30',
     textColor: 'text-blue-600 dark:text-blue-400',
-  },
-  {
-    id: 'docxToPdf',
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-      </svg>
-    ),
-    gradient: 'from-red-500 to-red-600',
-    lightBg: 'bg-red-50 dark:bg-red-950/30',
-    textColor: 'text-red-600 dark:text-red-400',
   },
   {
     id: 'pdfToPptx',
