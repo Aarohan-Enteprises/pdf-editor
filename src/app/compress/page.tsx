@@ -69,13 +69,20 @@ export default function CompressPage() {
       formData.append('file', file);
       formData.append('quality', quality);
 
+      const timings: Record<string, number> = {};
+      timings.start = performance.now();
+
       setProcessingStage('compressing');
+      console.log(`[TIMING] Starting compression for ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const response = await fetch(`${apiUrl}/api/compress`, {
         method: 'POST',
         body: formData,
       });
+
+      timings.responseReceived = performance.now();
+      console.log(`[TIMING] Response received in ${((timings.responseReceived - timings.start) / 1000).toFixed(3)}s`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -85,7 +92,14 @@ export default function CompressPage() {
       setProcessingStage('downloading');
 
       const compressedBlob = await response.blob();
+      timings.blobReceived = performance.now();
+      console.log(`[TIMING] Blob downloaded in ${((timings.blobReceived - timings.responseReceived) / 1000).toFixed(3)}s`);
+
       const data = new Uint8Array(await compressedBlob.arrayBuffer());
+      timings.end = performance.now();
+
+      console.log(`[TIMING] Total time: ${((timings.end - timings.start) / 1000).toFixed(3)}s`);
+      console.log(`[TIMING] Breakdown: Upload+Process=${((timings.responseReceived - timings.start) / 1000).toFixed(3)}s, Download=${((timings.blobReceived - timings.responseReceived) / 1000).toFixed(3)}s`);
 
       // Get size info from headers
       const originalSize = parseInt(response.headers.get('X-Original-Size') || '0', 10);
