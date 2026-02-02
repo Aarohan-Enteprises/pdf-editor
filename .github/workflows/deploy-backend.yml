@@ -100,6 +100,10 @@ jobs:
             echo "Waiting for services..."
             sleep 10
 
+            # Reload nginx to pick up config changes
+            echo "Reloading nginx config..."
+            $DOCKER_CMD compose exec -T nginx nginx -s reload || $DOCKER_CMD compose restart nginx
+
             $DOCKER_CMD compose ps
 
             echo "Cleaning up old images..."
