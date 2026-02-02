@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { usePDFPreview } from '@/hooks/usePDFPreview';
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
@@ -23,6 +25,15 @@ export default function DocxToPdfPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingStage, setProcessingStage] = useState<'idle' | 'uploading' | 'processing' | 'done'>('idle');
   const [isDragOver, setIsDragOver] = useState(false);
+
+  const {
+    isPreviewOpen,
+    previewData,
+    previewFilename,
+    showPreview,
+    closePreview,
+    downloadPreview,
+  } = usePDFPreview();
 
   const handleFileSelect = useCallback((selectedFile: File) => {
     setUploadError(null);
@@ -154,8 +165,22 @@ export default function DocxToPdfPage() {
     }
   }, [convertedData, outputFilename]);
 
+  const handlePreview = useCallback(() => {
+    if (convertedData) {
+      const filename = outputFilename.trim() || 'converted-document';
+      showPreview(convertedData, `${filename}.pdf`);
+    }
+  }, [convertedData, outputFilename, showPreview]);
+
   return (
     <PageLayout>
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        pdfData={previewData}
+        filename={previewFilename}
+        onClose={closePreview}
+        onDownload={downloadPreview}
+      />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -405,16 +430,28 @@ export default function DocxToPdfPage() {
                   </div>
                 </div>
 
-                {/* Download Button */}
-                <button
-                  onClick={handleDownload}
-                  className="w-full btn btn-primary flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download PDF
-                </button>
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={handlePreview}
+                    className="flex-1 btn btn-secondary flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    Preview
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    className="flex-1 btn btn-primary flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download
+                  </button>
+                </div>
               </div>
             )}
 
