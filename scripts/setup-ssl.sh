@@ -150,23 +150,9 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
     }
 
+    # API routes - CORS handled by FastAPI backend
     location /api {
         limit_req zone=api_limit burst=20 nodelay;
-
-        # CORS
-        add_header Access-Control-Allow-Origin "https://pdf2.in" always;
-        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
-        add_header Access-Control-Allow-Headers "Content-Type" always;
-        add_header Access-Control-Expose-Headers "X-Original-Size, X-Compressed-Size" always;
-
-        if (\$request_method = 'OPTIONS') {
-            add_header Access-Control-Allow-Origin "https://pdf2.in" always;
-            add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
-            add_header Access-Control-Allow-Headers "Content-Type" always;
-            add_header Access-Control-Max-Age 86400;
-            add_header Content-Length 0;
-            return 204;
-        }
 
         proxy_pass http://backend;
         proxy_http_version 1.1;
