@@ -562,3 +562,83 @@ export async function addPageNumbers(
   return pdf.save();
 }
 
+export interface RedactionArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface PageRedaction {
+  pageIndex: number;
+  areas: RedactionArea[];
+}
+
+export type RedactionStyle = 'solid' | 'redacted' | 'confidential' | 'sensitive' | 'hidden' | 'classified';
+
+const redactionStyleText: Record<RedactionStyle, string> = {
+  solid: '',
+  redacted: 'REDACTED',
+  confidential: 'CONFIDENTIAL',
+  sensitive: 'SENSITIVE',
+  hidden: '[HIDDEN]',
+  classified: 'CLASSIFIED',
+};
+
+export async function applyRedactions(
+  pdfData: ArrayBuffer | Uint8Array,
+  redactions: PageRedaction[],
+  style: RedactionStyle = 'solid'
+): Promise<Uint8Array> {
+  const pdf = await loadPDF(pdfData);
+  const font = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const labelText = redactionStyleText[style];
+
+  for (const pageRedaction of redactions) {
+    const page = pdf.getPage(pageRedaction.pageIndex);
+
+    for (const area of pageRedaction.areas) {
+      // Draw a solid black rectangle over the redacted area
+      page.drawRectangle({
+        x: area.x,
+        y: area.y,
+        width: area.width,
+        height: area.height,
+        color: rgb(0, 0, 0),
+        opacity: 1,
+      });
+
+      // Add text label if style is not solid
+      if (labelText) {
+        // Calculate font size to fit within the box
+        const maxFontSize = Math.min(area.height * 0.6, 14);
+        let fontSize = maxFontSize;
+        let textWidth = font.widthOfTextAtSize(labelText, fontSize);
+
+        // Reduce font size if text is too wide
+        while (textWidth > area.width - 4 && fontSize > 6) {
+          fontSize -= 1;
+          textWidth = font.widthOfTextAtSize(labelText, fontSize);
+        }
+
+        // Only draw text if it fits reasonably
+        if (fontSize >= 6) {
+          const textHeight = fontSize * 0.75;
+          const textX = area.x + (area.width - textWidth) / 2;
+          const textY = area.y + (area.height - textHeight) / 2;
+
+          page.drawText(labelText, {
+            x: textX,
+            y: textY,
+            size: fontSize,
+            font,
+            color: rgb(1, 1, 1), // White text
+          });
+        }
+      }
+    }
+  }
+
+  return pdf.save();
+}
+

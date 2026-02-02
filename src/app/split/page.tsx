@@ -209,16 +209,6 @@ export default function SplitPage() {
   // Calculate chunks for fixed size preview
   const fixedChunks = pages.length > 0 ? Math.ceil(pages.length / fixedSize) : 0;
 
-  // Get range index for a page (1-indexed page number)
-  const getPageRangeIndex = useCallback((pageNum: number): number | null => {
-    for (let i = 0; i < ranges.length; i++) {
-      if (pageNum >= ranges[i].from && pageNum <= ranges[i].to) {
-        return i;
-      }
-    }
-    return null;
-  }, [ranges]);
-
   // Get pages grouped by range for visualization
   const getRangeGroups = useCallback(() => {
     return ranges.map((range, index) => {

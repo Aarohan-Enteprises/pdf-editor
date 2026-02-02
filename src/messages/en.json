@@ -294,6 +294,12 @@
     "htmlToPdf": {
       "title": "HTML to PDF",
       "description": "Convert webpage to PDF"
+    },
+    "redact": {
+      "title": "Redact PDF",
+      "description": "Black out sensitive information",
+      "pageTitle": "Redact PDF",
+      "pageDescription": "Draw black rectangles over sensitive content to permanently redact it."
     }
   }
 }
