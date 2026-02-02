@@ -74,7 +74,6 @@ export default function CompressPage() {
       const timings: Record<string, number> = {};
       timings.start = performance.now();
 
-      setProcessingStage('compressing');
       console.log(`[TIMING] Starting compression for ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -90,6 +89,11 @@ export default function CompressPage() {
             setUploadProgress(percent);
             console.log(`[TIMING] Upload progress: ${percent}% (${(e.loaded / 1024 / 1024).toFixed(2)} MB / ${(e.total / 1024 / 1024).toFixed(2)} MB)`);
           }
+        };
+
+        xhr.upload.onloadend = () => {
+          // Upload complete, now server is compressing
+          setProcessingStage('compressing');
         };
 
         xhr.onload = () => {
