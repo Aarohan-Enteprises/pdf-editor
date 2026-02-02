@@ -1,0 +1,153 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'backend/**'
+      - 'docker/**'
+      - 'nginx/**'
+      - 'scripts/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  deploy:
+    name: Build and Deploy Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Install Docker if not present
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            set -e
+            if ! command -v docker &> /dev/null; then
+              echo "Installing Docker..."
+              sudo apt-get update
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sudo sh get-docker.sh
+              sudo usermod -aG docker $USER
+              sudo apt-get install -y docker-compose-plugin
+              sudo systemctl enable docker
+              sudo systemctl start docker
+              echo "Docker installed!"
+            else
+              echo "Docker already installed: $(docker --version)"
+            fi
+          ENDSSH
+
+      - name: Pull Latest Code
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << ENDSSH
+            set -e
+            if [ ! -d ~/pdf-editor ]; then
+              echo "Cloning repository..."
+              git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git ~/pdf-editor
+            else
+              cd ~/pdf-editor
+              echo "Pulling latest code..."
+              git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
+              git fetch origin
+              git reset --hard origin/${{ github.ref_name }}
+              git clean -fd
+            fi
+          ENDSSH
+
+      - name: Create Environment File
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << ENDSSH
+            cd ~/pdf-editor
+            cat > .env << 'ENVFILE'
+          ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS || 'https://pdf2.in,https://www.pdf2.in' }}
+          ENVFILE
+            echo "Environment file created!"
+          ENDSSH
+
+      - name: Build and Deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            set -e
+            cd ~/pdf-editor
+
+            if groups | grep -q docker; then
+              DOCKER_CMD="docker"
+            else
+              DOCKER_CMD="sudo docker"
+            fi
+
+            echo "Stopping existing containers..."
+            $DOCKER_CMD compose down --remove-orphans || true
+
+            echo "Building Docker images..."
+            $DOCKER_CMD compose build --no-cache
+
+            echo "Starting containers..."
+            $DOCKER_CMD compose up -d
+
+            echo "Waiting for services..."
+            sleep 10
+
+            $DOCKER_CMD compose ps
+
+            echo "Cleaning up old images..."
+            $DOCKER_CMD image prune -f
+
+            echo "Deployment complete!"
+          ENDSSH
+
+      - name: Setup SSL Certificates
+        env:
+          DEPLOY_DOMAIN: ${{ vars.API_DOMAIN || 'api.pdf2.in' }}
+          DEPLOY_EMAIL: ${{ vars.SSL_EMAIL || 'admin@pdf2.in' }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << ENDSSH
+            set -e
+            cd ~/pdf-editor
+            chmod +x scripts/setup-ssl.sh
+            ./scripts/setup-ssl.sh "$DEPLOY_DOMAIN" "$DEPLOY_EMAIL"
+          ENDSSH
+
+      - name: Verify Deployment
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            cd ~/pdf-editor
+
+            if groups | grep -q docker; then
+              DOCKER_CMD="docker"
+            else
+              DOCKER_CMD="sudo docker"
+            fi
+
+            if $DOCKER_CMD compose ps | grep -q "Exit\|exited"; then
+              echo "ERROR: Some containers failed!"
+              $DOCKER_CMD compose logs --tail=50
+              exit 1
+            fi
+
+            sleep 5
+            if curl -f -k https://localhost/health > /dev/null 2>&1; then
+              echo "HTTPS Health check passed!"
+            elif curl -f http://localhost/health > /dev/null 2>&1; then
+              echo "HTTP Health check passed!"
+            else
+              echo "WARNING: Health check failed"
+              $DOCKER_CMD compose logs backend --tail=30
+            fi
+          ENDSSH
+
+      - name: Notify on Failure
+        if: failure()
+        run: echo "Deployment failed! Check logs above."

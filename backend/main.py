@@ -11,7 +11,11 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+app = FastAPI(
+    title="PDF2.in API",
+    description="API for PDF compression and other operations",
+    version="1.0.0"
+)
 
 
 def get_ghostscript_command():
@@ -43,10 +47,16 @@ def get_ghostscript_command():
         return shutil.which('gs')
 
 # CORS for Next.js frontend
+# In production, set ALLOWED_ORIGINS env var (comma-separated)
+allowed_origins = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "http://localhost:3000"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_methods=["POST", "GET"],
+    allow_origins=allowed_origins,
+    allow_methods=["POST", "GET", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["X-Original-Size", "X-Compressed-Size"],
 )

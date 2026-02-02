@@ -71,7 +71,8 @@ export default function CompressPage() {
 
       setProcessingStage('compressing');
 
-      const response = await fetch('http://localhost:8000/api/compress', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/compress`, {
         method: 'POST',
         body: formData,
       });
