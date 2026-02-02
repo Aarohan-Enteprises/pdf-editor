@@ -76,9 +76,32 @@ export default function CompressPage() {
       console.log(`[TIMING] Starting compression for ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/api/compress`, {
-        method: 'POST',
-        body: formData,
+
+      // Use XMLHttpRequest for upload progress tracking
+      const response = await new Promise<Response>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${apiUrl}/api/compress`);
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            console.log(`[TIMING] Upload progress: ${percent}% (${(e.loaded / 1024 / 1024).toFixed(2)} MB / ${(e.total / 1024 / 1024).toFixed(2)} MB)`);
+          }
+        };
+
+        xhr.onload = () => {
+          resolve(new Response(xhr.response, {
+            status: xhr.status,
+            headers: {
+              'X-Original-Size': xhr.getResponseHeader('X-Original-Size') || '0',
+              'X-Compressed-Size': xhr.getResponseHeader('X-Compressed-Size') || '0',
+            }
+          }));
+        };
+
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.responseType = 'blob';
+        xhr.send(formData);
       });
 
       timings.responseReceived = performance.now();
