@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 export function Footer() {
@@ -19,6 +20,10 @@ export function Footer() {
             <span className="font-bold text-gray-900 dark:text-white">{t('appName')}</span>
             <span className="text-gray-400 dark:text-gray-600 mx-2">|</span>
             <span className="text-sm text-gray-600 dark:text-gray-400">{tFooter('tagline')}</span>
+            <span className="text-gray-400 dark:text-gray-600 mx-2">|</span>
+            <Link href="/about" className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              About Us
+            </Link>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
             <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

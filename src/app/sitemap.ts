@@ -3,6 +3,10 @@ import { MetadataRoute } from 'next';
 const BASE_URL = 'https://pdf2.in';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const pages = [
+    { path: '/about', priority: 0.5 },
+  ];
+
   const tools = [
     { path: '/merge', priority: 0.9 },
     { path: '/split', priority: 0.9 },
@@ -39,6 +43,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 1,
     },
+    ...pages.map((page) => ({
+      url: `${BASE_URL}${page.path}`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly' as const,
+      priority: page.priority,
+    })),
     ...tools.map((tool) => ({
       url: `${BASE_URL}${tool.path}`,
       lastModified: currentDate,
