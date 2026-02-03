@@ -37,7 +37,7 @@ export default function ReversePagesPage() {
       const arrayBuffer = await selectedFile.arrayBuffer();
       const isEncrypted = await checkPDFEncryption(arrayBuffer);
       if (isEncrypted) {
-        setError(`The file "${selectedFile.name}" is password protected or encrypted. Please remove the password protection before editing.`);
+        setError(`The file "${selectedFile.name}" is password protected. Use our Unlock PDF tool to remove the password first, then try again.`);
         return;
       }
 
@@ -229,7 +229,7 @@ export default function ReversePagesPage() {
                     disabled={isProcessing}
                     className="btn btn-primary flex-1"
                   >
-                    {isProcessing ? 'Processing...' : 'Preview Reversed PDF'}
+                    {isProcessing ? 'Processing...' : 'Reverse & Preview'}
                   </button>
                 </div>
               </>

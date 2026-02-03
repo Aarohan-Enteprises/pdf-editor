@@ -54,7 +54,7 @@ export function usePDFDocument() {
         const isEncrypted = await checkPDFEncryption(arrayBuffer.slice(0));
         if (isEncrypted) {
           throw new EncryptedPDFError(
-            `The file "${file.name}" is password protected or encrypted. Please remove the password protection before editing.`
+            `The file "${file.name}" is password protected. Use our Unlock PDF tool to remove the password first, then try again.`
           );
         }
 

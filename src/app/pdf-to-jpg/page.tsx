@@ -51,7 +51,7 @@ export default function PdfToJpgPage() {
       // Check if PDF is encrypted
       const isEncrypted = await checkPDFEncryption(arrayBuffer);
       if (isEncrypted) {
-        setError(`The file "${file.name}" is password protected or encrypted. Please remove the password protection before editing.`);
+        setError(`The file "${file.name}" is password protected. Use our Unlock PDF tool to remove the password first, then try again.`);
         setIsLoading(false);
         return;
       }
@@ -177,7 +177,7 @@ export default function PdfToJpgPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left: Dropzone & Controls */}
           <div className="lg:col-span-1">
-            <div className="card p-4 sticky top-24 space-y-4">
+            <div className="card p-4 lg:sticky lg:top-24 space-y-4">
               {/* PDF Dropzone */}
               <div
                 onClick={() => fileInputRef.current?.click()}

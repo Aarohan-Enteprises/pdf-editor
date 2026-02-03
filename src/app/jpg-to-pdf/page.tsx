@@ -193,7 +193,7 @@ export default function JpgToPdfPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left: Dropzone & Controls */}
           <div className="lg:col-span-1">
-            <div className="card p-4 sticky top-24 space-y-4">
+            <div className="card p-4 lg:sticky lg:top-24 space-y-4">
               {/* Image Dropzone */}
               <div
                 onClick={() => fileInputRef.current?.click()}

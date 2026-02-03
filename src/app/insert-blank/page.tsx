@@ -48,7 +48,7 @@ export default function InsertBlankPage() {
       // Check if PDF is encrypted
       const isEncrypted = await checkPDFEncryption(arrayBuffer);
       if (isEncrypted) {
-        setError(`The file "${selectedFile.name}" is password protected or encrypted. Please remove the password protection before editing.`);
+        setError(`The file "${selectedFile.name}" is password protected. Use our Unlock PDF tool to remove the password first, then try again.`);
         return;
       }
 
@@ -284,7 +284,7 @@ export default function InsertBlankPage() {
                     disabled={isProcessing}
                     className="btn btn-primary flex-1"
                   >
-                    {isProcessing ? 'Processing...' : 'Preview with Blank Pages'}
+                    {isProcessing ? 'Processing...' : 'Insert & Preview'}
                   </button>
                 </div>
               </>
