@@ -884,9 +884,9 @@ export default function SignPdfPage() {
                     </div>
                   </div>
 
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-                    <p className="text-xs text-blue-800 dark:text-blue-200">
-                      <strong>Drag</strong> to move. <strong>Blue handles</strong> to stretch. <strong>Red corners</strong> to resize.
+                  <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
+                    <p className="text-xs text-indigo-800 dark:text-indigo-200">
+                      <strong>Drag</strong> to move. <strong>Corner circles</strong> to resize proportionally. <strong>Edge handles</strong> to stretch.
                     </p>
                   </div>
 
@@ -931,11 +931,11 @@ export default function SignPdfPage() {
 
           {/* Right: Interactive Canvas */}
           <div className="lg:col-span-2 order-1 lg:order-2">
-            {pagePreview && signaturePreview ? (
+            {pagePreview ? (
               <div className="card p-3 sm:p-4 overflow-x-auto">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-900 dark:text-white">
-                    Position signature on page {currentPage}
+                    {signaturePreview ? `Position signature on page ${currentPage}` : `Page ${currentPage} of ${pageCount}`}
                   </h3>
                   {currentPageHasSignature && (
                     <span className="text-xs bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded">
@@ -945,7 +945,7 @@ export default function SignPdfPage() {
                 </div>
                 <div
                   ref={canvasContainerRef}
-                  className="relative inline-block border border-gray-300 dark:border-slate-600 rounded-lg overflow-hidden cursor-crosshair select-none max-w-full"
+                  className={`relative inline-block border border-gray-300 dark:border-slate-600 rounded-lg overflow-hidden select-none max-w-full ${signaturePreview ? 'cursor-crosshair' : ''}`}
                   onMouseMove={handlePointerMove}
                   onMouseUp={handlePointerUp}
                   onMouseLeave={handlePointerUp}
@@ -960,72 +960,82 @@ export default function SignPdfPage() {
                     className="block max-w-full h-auto"
                     draggable={false}
                   />
-                  {/* Signature overlay */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: signaturePos.x,
-                      top: signaturePos.y,
-                      width: signaturePos.width,
-                      height: signaturePos.height,
-                    }}
-                    className={`border-2 ${currentPageHasSignature ? 'border-green-500' : 'border-rose-500'} cursor-move touch-none`}
-                    onMouseDown={(e) => handlePointerDown(e, 'drag')}
-                    onTouchStart={(e) => handlePointerDown(e, 'drag')}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={signaturePreview}
-                      alt="Signature"
-                      className="w-full h-full object-fill pointer-events-none"
-                      draggable={false}
-                    />
+                  {/* Signature overlay - only show when signature is uploaded */}
+                  {signaturePreview && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: signaturePos.x,
+                        top: signaturePos.y,
+                        width: signaturePos.width,
+                        height: signaturePos.height,
+                      }}
+                      className={`border-2 border-dashed ${currentPageHasSignature ? 'border-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.2)]' : 'border-indigo-500 shadow-[0_0_0_1px_rgba(99,102,241,0.2)]'} cursor-move touch-none rounded-sm transition-shadow`}
+                      onMouseDown={(e) => handlePointerDown(e, 'drag')}
+                      onTouchStart={(e) => handlePointerDown(e, 'drag')}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={signaturePreview}
+                        alt="Signature"
+                        className="w-full h-full object-fill pointer-events-none"
+                        draggable={false}
+                      />
 
-                    {/* Corner resize handles - larger on mobile for touch */}
-                    <div
-                      className="absolute -top-2 -left-2 w-4 h-4 md:w-3 md:h-3 bg-rose-500 rounded-sm cursor-nw-resize hover:bg-rose-600 active:bg-rose-700 touch-none"
-                      onMouseDown={(e) => handlePointerDown(e, 'nw')}
-                      onTouchStart={(e) => handlePointerDown(e, 'nw')}
-                    />
-                    <div
-                      className="absolute -top-2 -right-2 w-4 h-4 md:w-3 md:h-3 bg-rose-500 rounded-sm cursor-ne-resize hover:bg-rose-600 active:bg-rose-700 touch-none"
-                      onMouseDown={(e) => handlePointerDown(e, 'ne')}
-                      onTouchStart={(e) => handlePointerDown(e, 'ne')}
-                    />
-                    <div
-                      className="absolute -bottom-2 -left-2 w-4 h-4 md:w-3 md:h-3 bg-rose-500 rounded-sm cursor-sw-resize hover:bg-rose-600 active:bg-rose-700 touch-none"
-                      onMouseDown={(e) => handlePointerDown(e, 'sw')}
-                      onTouchStart={(e) => handlePointerDown(e, 'sw')}
-                    />
-                    <div
-                      className="absolute -bottom-2 -right-2 w-4 h-4 md:w-3 md:h-3 bg-rose-500 rounded-sm cursor-se-resize hover:bg-rose-600 active:bg-rose-700 touch-none"
-                      onMouseDown={(e) => handlePointerDown(e, 'se')}
-                      onTouchStart={(e) => handlePointerDown(e, 'se')}
-                    />
+                      {/* Corner resize handles - professional white circles with border */}
+                      <div
+                        className="absolute -top-1.5 -left-1.5 w-3 h-3 md:w-2.5 md:h-2.5 bg-white border-2 border-indigo-500 rounded-full cursor-nw-resize hover:scale-125 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
+                        onMouseDown={(e) => handlePointerDown(e, 'nw')}
+                        onTouchStart={(e) => handlePointerDown(e, 'nw')}
+                      />
+                      <div
+                        className="absolute -top-1.5 -right-1.5 w-3 h-3 md:w-2.5 md:h-2.5 bg-white border-2 border-indigo-500 rounded-full cursor-ne-resize hover:scale-125 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
+                        onMouseDown={(e) => handlePointerDown(e, 'ne')}
+                        onTouchStart={(e) => handlePointerDown(e, 'ne')}
+                      />
+                      <div
+                        className="absolute -bottom-1.5 -left-1.5 w-3 h-3 md:w-2.5 md:h-2.5 bg-white border-2 border-indigo-500 rounded-full cursor-sw-resize hover:scale-125 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
+                        onMouseDown={(e) => handlePointerDown(e, 'sw')}
+                        onTouchStart={(e) => handlePointerDown(e, 'sw')}
+                      />
+                      <div
+                        className="absolute -bottom-1.5 -right-1.5 w-3 h-3 md:w-2.5 md:h-2.5 bg-white border-2 border-indigo-500 rounded-full cursor-se-resize hover:scale-125 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
+                        onMouseDown={(e) => handlePointerDown(e, 'se')}
+                        onTouchStart={(e) => handlePointerDown(e, 'se')}
+                      />
 
-                    {/* Edge resize handles for stretching - larger on mobile */}
-                    <div
-                      className="absolute top-1/2 -left-2 w-3 h-8 md:w-2 md:h-6 -translate-y-1/2 bg-blue-500 rounded-sm cursor-w-resize hover:bg-blue-600 active:bg-blue-700 touch-none"
-                      onMouseDown={(e) => handlePointerDown(e, 'w')}
-                      onTouchStart={(e) => handlePointerDown(e, 'w')}
-                    />
-                    <div
-                      className="absolute top-1/2 -right-2 w-3 h-8 md:w-2 md:h-6 -translate-y-1/2 bg-blue-500 rounded-sm cursor-e-resize hover:bg-blue-600 active:bg-blue-700 touch-none"
-                      onMouseDown={(e) => handlePointerDown(e, 'e')}
-                      onTouchStart={(e) => handlePointerDown(e, 'e')}
-                    />
-                    <div
-                      className="absolute -top-2 left-1/2 w-8 h-3 md:w-6 md:h-2 -translate-x-1/2 bg-blue-500 rounded-sm cursor-n-resize hover:bg-blue-600 active:bg-blue-700 touch-none"
-                      onMouseDown={(e) => handlePointerDown(e, 'n')}
-                      onTouchStart={(e) => handlePointerDown(e, 'n')}
-                    />
-                    <div
-                      className="absolute -bottom-2 left-1/2 w-8 h-3 md:w-6 md:h-2 -translate-x-1/2 bg-blue-500 rounded-sm cursor-s-resize hover:bg-blue-600 active:bg-blue-700 touch-none"
-                      onMouseDown={(e) => handlePointerDown(e, 's')}
-                      onTouchStart={(e) => handlePointerDown(e, 's')}
-                    />
-                  </div>
+                      {/* Edge resize handles - subtle white rectangles with border */}
+                      <div
+                        className="absolute top-1/2 -left-1 w-2 h-5 md:w-1.5 md:h-4 -translate-y-1/2 bg-white border border-indigo-400 rounded-sm cursor-w-resize hover:scale-110 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
+                        onMouseDown={(e) => handlePointerDown(e, 'w')}
+                        onTouchStart={(e) => handlePointerDown(e, 'w')}
+                      />
+                      <div
+                        className="absolute top-1/2 -right-1 w-2 h-5 md:w-1.5 md:h-4 -translate-y-1/2 bg-white border border-indigo-400 rounded-sm cursor-e-resize hover:scale-110 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
+                        onMouseDown={(e) => handlePointerDown(e, 'e')}
+                        onTouchStart={(e) => handlePointerDown(e, 'e')}
+                      />
+                      <div
+                        className="absolute -top-1 left-1/2 w-5 h-2 md:w-4 md:h-1.5 -translate-x-1/2 bg-white border border-indigo-400 rounded-sm cursor-n-resize hover:scale-110 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
+                        onMouseDown={(e) => handlePointerDown(e, 'n')}
+                        onTouchStart={(e) => handlePointerDown(e, 'n')}
+                      />
+                      <div
+                        className="absolute -bottom-1 left-1/2 w-5 h-2 md:w-4 md:h-1.5 -translate-x-1/2 bg-white border border-indigo-400 rounded-sm cursor-s-resize hover:scale-110 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
+                        onMouseDown={(e) => handlePointerDown(e, 's')}
+                        onTouchStart={(e) => handlePointerDown(e, 's')}
+                      />
+                    </div>
+                  )}
                 </div>
+                {/* Prompt to add signature if PDF is loaded but no signature yet */}
+                {!signaturePreview && (
+                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                      Now create or upload a signature to position it on this page.
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="card p-12 text-center">
@@ -1038,7 +1048,7 @@ export default function SignPdfPage() {
                   Sign Your PDF
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Upload a PDF and signature image to get started. You can sign multiple pages at different locations.
+                  Upload a PDF to get started. You can sign multiple pages at different locations.
                 </p>
               </div>
             )}

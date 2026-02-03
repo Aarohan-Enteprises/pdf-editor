@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { PageLayout } from '@/components/layout/PageLayout';
 
 export default function AboutPage() {

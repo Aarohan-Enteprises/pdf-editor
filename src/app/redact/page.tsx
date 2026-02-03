@@ -587,9 +587,9 @@ export default function RedactPdfPage() {
               {pdfFile && pagePreview && (
                 <>
                   {/* Instructions */}
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-                    <p className="text-xs text-blue-800 dark:text-blue-200">
-                      <strong>Draw</strong> rectangles to redact. <strong>Click</strong> to select. <strong>Drag</strong> to move. <strong>Delete</strong> key to remove.
+                  <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
+                    <p className="text-xs text-indigo-800 dark:text-indigo-200">
+                      <strong>Draw</strong> rectangles to redact. <strong>Click</strong> to select. <strong>Drag</strong> to move. <strong>Corner circles</strong> to resize. <strong>Delete</strong> key to remove.
                     </p>
                   </div>
 
@@ -818,7 +818,7 @@ export default function RedactPdfPage() {
                         width: currentDrawRect.width,
                         height: currentDrawRect.height,
                       }}
-                      className="bg-black/80 border-2 border-dashed border-white pointer-events-none flex items-center justify-center overflow-hidden"
+                      className="bg-black/80 border-2 border-dashed border-indigo-400 rounded-sm pointer-events-none flex items-center justify-center overflow-hidden shadow-lg"
                     >
                       {getStyleText(redactionStyle) && (
                         <span className="text-white font-bold tracking-wider text-xs whitespace-nowrap">
@@ -839,8 +839,8 @@ export default function RedactPdfPage() {
                         width: rect.width,
                         height: rect.height,
                       }}
-                      className={`redaction-rect bg-black cursor-move touch-none flex items-center justify-center overflow-hidden ${
-                        selectedRedaction === rect.id ? 'ring-2 ring-blue-500 ring-offset-1' : ''
+                      className={`redaction-rect bg-black cursor-move touch-none flex items-center justify-center overflow-hidden rounded-sm transition-shadow ${
+                        selectedRedaction === rect.id ? 'shadow-[0_0_0_2px_rgba(99,102,241,0.5),0_0_8px_rgba(99,102,241,0.3)]' : 'hover:shadow-[0_0_0_1px_rgba(99,102,241,0.3)]'
                       }`}
                       onClick={(e) => handleRedactionClick(e, rect.id)}
                       onMouseDown={(e) => handleRedactionDragStart(e, rect)}
@@ -854,57 +854,57 @@ export default function RedactPdfPage() {
                       {/* Resize handles (only show when selected) */}
                       {selectedRedaction === rect.id && (
                         <>
-                          {/* Corner handles */}
+                          {/* Corner handles - professional white circles with border */}
                           <div
-                            className="absolute -top-2 -left-2 w-4 h-4 bg-blue-500 rounded-sm cursor-nw-resize hover:bg-blue-600 touch-none"
+                            className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-indigo-500 rounded-full cursor-nw-resize hover:scale-125 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
                             onMouseDown={(e) => handleResizeStart(e, 'nw', rect)}
                             onTouchStart={(e) => handleResizeStart(e, 'nw', rect)}
                           />
                           <div
-                            className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-sm cursor-ne-resize hover:bg-blue-600 touch-none"
+                            className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-indigo-500 rounded-full cursor-ne-resize hover:scale-125 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
                             onMouseDown={(e) => handleResizeStart(e, 'ne', rect)}
                             onTouchStart={(e) => handleResizeStart(e, 'ne', rect)}
                           />
                           <div
-                            className="absolute -bottom-2 -left-2 w-4 h-4 bg-blue-500 rounded-sm cursor-sw-resize hover:bg-blue-600 touch-none"
+                            className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-indigo-500 rounded-full cursor-sw-resize hover:scale-125 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
                             onMouseDown={(e) => handleResizeStart(e, 'sw', rect)}
                             onTouchStart={(e) => handleResizeStart(e, 'sw', rect)}
                           />
                           <div
-                            className="absolute -bottom-2 -right-2 w-4 h-4 bg-blue-500 rounded-sm cursor-se-resize hover:bg-blue-600 touch-none"
+                            className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-indigo-500 rounded-full cursor-se-resize hover:scale-125 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
                             onMouseDown={(e) => handleResizeStart(e, 'se', rect)}
                             onTouchStart={(e) => handleResizeStart(e, 'se', rect)}
                           />
-                          {/* Edge handles */}
+                          {/* Edge handles - subtle white rectangles with border */}
                           <div
-                            className="absolute top-1/2 -left-2 w-3 h-6 -translate-y-1/2 bg-blue-500 rounded-sm cursor-w-resize hover:bg-blue-600 touch-none"
+                            className="absolute top-1/2 -left-1 w-2 h-5 -translate-y-1/2 bg-white border border-indigo-400 rounded-sm cursor-w-resize hover:scale-110 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
                             onMouseDown={(e) => handleResizeStart(e, 'w', rect)}
                             onTouchStart={(e) => handleResizeStart(e, 'w', rect)}
                           />
                           <div
-                            className="absolute top-1/2 -right-2 w-3 h-6 -translate-y-1/2 bg-blue-500 rounded-sm cursor-e-resize hover:bg-blue-600 touch-none"
+                            className="absolute top-1/2 -right-1 w-2 h-5 -translate-y-1/2 bg-white border border-indigo-400 rounded-sm cursor-e-resize hover:scale-110 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
                             onMouseDown={(e) => handleResizeStart(e, 'e', rect)}
                             onTouchStart={(e) => handleResizeStart(e, 'e', rect)}
                           />
                           <div
-                            className="absolute -top-2 left-1/2 w-6 h-3 -translate-x-1/2 bg-blue-500 rounded-sm cursor-n-resize hover:bg-blue-600 touch-none"
+                            className="absolute -top-1 left-1/2 w-5 h-2 -translate-x-1/2 bg-white border border-indigo-400 rounded-sm cursor-n-resize hover:scale-110 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
                             onMouseDown={(e) => handleResizeStart(e, 'n', rect)}
                             onTouchStart={(e) => handleResizeStart(e, 'n', rect)}
                           />
                           <div
-                            className="absolute -bottom-2 left-1/2 w-6 h-3 -translate-x-1/2 bg-blue-500 rounded-sm cursor-s-resize hover:bg-blue-600 touch-none"
+                            className="absolute -bottom-1 left-1/2 w-5 h-2 -translate-x-1/2 bg-white border border-indigo-400 rounded-sm cursor-s-resize hover:scale-110 hover:border-indigo-600 active:bg-indigo-100 shadow-sm transition-transform touch-none"
                             onMouseDown={(e) => handleResizeStart(e, 's', rect)}
                             onTouchStart={(e) => handleResizeStart(e, 's', rect)}
                           />
-                          {/* Delete button */}
+                          {/* Delete button - refined design */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteSelectedRedaction();
                             }}
-                            className="absolute -top-3 -right-3 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg"
+                            className="absolute -top-2.5 -right-2.5 w-5 h-5 bg-white border-2 border-red-500 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white hover:scale-110 shadow-md transition-all"
                           >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
