@@ -395,19 +395,16 @@ function ToolCard({ tool, index, isVisible }: { tool: typeof tools[0]; index: nu
   return (
     <Link href={tool.href} className="group">
       <div
-        className={`relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 h-full transition-all duration-500 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-slate-900/50 hover:-translate-y-1 hover:border-transparent ${
+        className={`relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 h-full transition-all duration-300 hover:shadow-lg hover:border-gray-300 dark:hover:border-slate-600 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}
         style={{ transitionDelay: `${index * 30}ms` }}
       >
-        {/* Gradient overlay on hover */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-
         <div className="relative z-10">
-          <div className={`w-12 h-12 rounded-xl ${tool.lightBg} ${tool.textColor} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
+          <div className={`w-12 h-12 rounded-xl ${tool.lightBg} ${tool.textColor} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform duration-200`}>
             {tool.icon}
           </div>
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-indigo-500 group-hover:to-purple-500 transition-all duration-300">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
             {t(`${tool.id}.title`)}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
@@ -416,8 +413,8 @@ function ToolCard({ tool, index, isVisible }: { tool: typeof tools[0]; index: nu
         </div>
 
         {/* Arrow indicator */}
-        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-          <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <svg className={`w-5 h-5 ${tool.textColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
         </div>
@@ -432,14 +429,14 @@ function UpcomingToolCard({ tool, index, isVisible }: { tool: typeof upcomingToo
   return (
     <div className="group">
       <div
-        className={`relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 h-full transition-all duration-500 ${
+        className={`relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 h-full transition-all duration-300 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}
         style={{ transitionDelay: `${index * 30}ms` }}
       >
         {/* Coming Soon Badge */}
         <div className="absolute top-3 right-3">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-500 text-white">
             Coming Soon
           </span>
         </div>
@@ -470,7 +467,7 @@ function StatCard({ value, label, suffix = '' }: { value: number; label: string;
 
   return (
     <div ref={ref} className="text-center">
-      <div className="text-3xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
+      <div className="text-3xl lg:text-4xl font-bold text-indigo-600 dark:text-indigo-400">
         {count}{suffix}
       </div>
       <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{label}</div>
@@ -497,9 +494,6 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM2MzY2ZjEiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] " />
 
-        {/* Floating Elements */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-400/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
         <div className="relative w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-16 lg:py-20">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -507,15 +501,14 @@ export default function HomePage() {
             <div className="space-y-8">
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-medium">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                  </span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
                   100% Private
                 </div>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
                   {tHero('title').split(' ').map((word, i) => (
-                    <span key={i} className={i === 0 ? 'text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500' : ''}>
+                    <span key={i} className={i === 0 ? 'text-indigo-600 dark:text-indigo-400' : ''}>
                       {word}{' '}
                     </span>
                   ))}
@@ -529,7 +522,7 @@ export default function HomePage() {
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="#tools"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all duration-300"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   {tHero('cta')}
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -596,7 +589,7 @@ export default function HomePage() {
               ].map((badge, i) => (
                 <div
                   key={i}
-                  className={`${badge.bg} rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50 hover:scale-[1.02] transition-transform duration-300`}
+                  className={`${badge.bg} rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50`}
                 >
                   <div className="flex items-start gap-4">
                     <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white shadow-lg`}>

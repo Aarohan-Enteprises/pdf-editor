@@ -34,7 +34,22 @@ export function PDFPreviewModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [zoom, setZoom] = useState(100);
   const modalRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const zoomIn = useCallback(() => {
+    setZoom(prev => Math.min(prev + 25, 200));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setZoom(prev => Math.max(prev - 25, 50));
+  }, []);
+
+  const resetZoom = useCallback(() => {
+    setZoom(100);
+  }, []);
 
   // Render PDF pages
   useEffect(() => {
@@ -53,9 +68,9 @@ export function PDFPreviewModal({
         const totalPages = pdf.numPages;
         const renderedPages: PagePreview[] = [];
 
-        // Calculate scale based on screen size
+        // Calculate scale based on screen size - larger for vertical scroll view
         const isMobile = window.innerWidth < 768;
-        const maxWidth = isMobile ? window.innerWidth - 80 : 500;
+        const maxWidth = isMobile ? window.innerWidth - 64 : 600;
 
         for (let i = 1; i <= totalPages; i++) {
           const page = await pdf.getPage(i);
@@ -84,6 +99,7 @@ export function PDFPreviewModal({
 
         setPages(renderedPages);
         setCurrentPage(1);
+        pageRefs.current = new Array(totalPages).fill(null);
       } catch (err) {
         console.error('Failed to render PDF preview:', err);
         setError('Failed to load PDF preview');
@@ -94,6 +110,31 @@ export function PDFPreviewModal({
 
     renderPages();
   }, [isOpen, pdfData]);
+
+  // Track current page based on scroll position
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || pages.length === 0) return;
+
+    const handleScroll = () => {
+      const containerRect = container.getBoundingClientRect();
+      const containerCenter = containerRect.top + containerRect.height / 3;
+
+      for (let i = 0; i < pageRefs.current.length; i++) {
+        const pageEl = pageRefs.current[i];
+        if (pageEl) {
+          const pageRect = pageEl.getBoundingClientRect();
+          if (pageRect.top <= containerCenter && pageRect.bottom > containerCenter) {
+            setCurrentPage(i + 1);
+            break;
+          }
+        }
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [pages]);
 
   // Handle escape key
   useEffect(() => {
@@ -125,49 +166,120 @@ export function PDFPreviewModal({
     }
   }, [onClose]);
 
+  const scrollToPage = useCallback((pageNum: number) => {
+    const pageEl = pageRefs.current[pageNum - 1];
+    if (pageEl) {
+      pageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   if (!isOpen) return null;
 
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-              Preview: {filename}
+              {filename}
             </h2>
             {pages.length > 0 && (
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {pages.length} page{pages.length !== 1 ? 's' : ''}
+                Page {currentPage} of {pages.length}
               </p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            aria-label="Close preview"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* Zoom controls */}
+            {pages.length > 0 && (
+              <div className="flex items-center gap-1 mr-1 sm:mr-2">
+                <button
+                  onClick={zoomOut}
+                  disabled={zoom <= 50}
+                  className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Zoom out"
+                  title="Zoom out"
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={resetZoom}
+                  className="px-2 py-1 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors min-w-[3rem]"
+                  title="Reset zoom"
+                >
+                  {zoom}%
+                </button>
+                <button
+                  onClick={zoomIn}
+                  disabled={zoom >= 200}
+                  className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Zoom in"
+                  title="Zoom in"
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {/* Divider */}
+            {pages.length > 0 && (
+              <div className="hidden sm:block w-px h-6 bg-gray-200 dark:bg-slate-600 mx-1" />
+            )}
+
+            {/* Page jump input for multi-page docs */}
+            {pages.length > 1 && (
+              <div className="hidden sm:flex items-center gap-1 mr-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={pages.length}
+                  value={currentPage}
+                  onChange={(e) => {
+                    const page = parseInt(e.target.value);
+                    if (page >= 1 && page <= pages.length) {
+                      scrollToPage(page);
+                    }
+                  }}
+                  className="w-14 px-2 py-1 text-sm text-center border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                />
+                <span className="text-sm text-gray-500 dark:text-gray-400">/ {pages.length}</span>
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              aria-label="Close preview"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-slate-900">
+        {/* Scrollable Content */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-auto bg-gray-100 dark:bg-slate-900"
+        >
           {isLoading && (
-            <div className="flex flex-col items-center justify-center py-12">
+            <div className="flex flex-col items-center justify-center py-16">
               <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
               <p className="text-gray-600 dark:text-gray-400">Loading preview...</p>
             </div>
           )}
 
           {error && (
-            <div className="flex flex-col items-center justify-center py-12">
+            <div className="flex flex-col items-center justify-center py-16">
               <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -178,74 +290,47 @@ export function PDFPreviewModal({
           )}
 
           {!isLoading && !error && pages.length > 0 && (
-            <div className="space-y-4">
-              {/* Page navigation for multi-page PDFs */}
-              {pages.length > 1 && (
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="btn btn-secondary px-3 py-1.5 text-sm"
+            <div
+              className="inline-block min-w-full py-4 sm:py-6"
+              style={{
+                minWidth: zoom > 100 ? `${zoom}%` : '100%'
+              }}
+            >
+              <div className="space-y-4 sm:space-y-6">
+                {pages.map((page, index) => (
+                  <div
+                    key={page.pageNum}
+                    ref={(el) => { pageRefs.current[index] = el; }}
+                    className="flex flex-col items-center"
                   >
-                    Previous
-                  </button>
-                  <span className="px-4 py-1.5 text-sm text-gray-700 dark:text-gray-300">
-                    Page {currentPage} of {pages.length}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(pages.length, p + 1))}
-                    disabled={currentPage === pages.length}
-                    className="btn btn-secondary px-3 py-1.5 text-sm"
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-
-              {/* Current page preview */}
-              <div className="flex justify-center">
-                <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-slate-700">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={pages[currentPage - 1].dataUrl}
-                    alt={`Page ${currentPage}`}
-                    className="max-w-full h-auto"
-                  />
-                </div>
-              </div>
-
-              {/* Thumbnail strip for multi-page PDFs */}
-              {pages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto py-2 px-1">
-                  {pages.map((page) => (
-                    <button
-                      key={page.pageNum}
-                      onClick={() => setCurrentPage(page.pageNum)}
-                      className={`flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
-                        currentPage === page.pageNum
-                          ? 'border-indigo-500 ring-2 ring-indigo-500/30'
-                          : 'border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600'
-                      }`}
+                    {/* Page container with shadow */}
+                    <div
+                      className="relative bg-white shadow-lg rounded-sm overflow-hidden"
+                      style={{
+                        width: page.width * (zoom / 100),
+                      }}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={page.dataUrl}
-                        alt={`Page ${page.pageNum} thumbnail`}
-                        className="w-16 h-20 object-cover object-top"
+                        alt={`Page ${page.pageNum}`}
+                        className="w-full h-auto"
+                        draggable={false}
                       />
-                      <div className="text-xs text-center py-1 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400">
-                        {page.pageNum}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+                    </div>
+                    {/* Page number indicator */}
+                    <div className="mt-2 px-3 py-1 bg-gray-200 dark:bg-slate-700 rounded-full text-xs text-gray-600 dark:text-gray-400">
+                      {page.pageNum}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col sm:flex-row gap-3 px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+        <div className="flex flex-col sm:flex-row gap-3 px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <button
             onClick={onClose}
             className="btn btn-secondary flex-1 sm:flex-none"

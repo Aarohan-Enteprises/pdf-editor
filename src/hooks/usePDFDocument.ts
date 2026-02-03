@@ -209,6 +209,77 @@ export function usePDFDocument() {
     });
   }, []);
 
+  const removeFile = useCallback((fileId: string) => {
+    setState((prev) => {
+      const fileIndex = prev.files.findIndex((f) => f.id === fileId);
+      if (fileIndex === -1) return prev;
+
+      const newFiles = prev.files.filter((f) => f.id !== fileId);
+      const newPages = prev.pages.filter((p) => p.sourceIndex !== fileIndex);
+
+      // Update sourceIndex for pages from files after the removed one
+      const updatedPages = newPages.map((p) => ({
+        ...p,
+        sourceIndex: p.sourceIndex > fileIndex ? p.sourceIndex - 1 : p.sourceIndex,
+      }));
+
+      currentPageCountRef.current = updatedPages.length;
+
+      return {
+        ...prev,
+        files: newFiles,
+        pages: updatedPages,
+        selectedPages: new Set(
+          [...prev.selectedPages].filter((id) =>
+            updatedPages.some((p) => p.id === id)
+          )
+        ),
+      };
+    });
+  }, []);
+
+  const reorderFiles = useCallback((activeId: string, overId: string) => {
+    setState((prev) => {
+      const oldIndex = prev.files.findIndex((f) => f.id === activeId);
+      const newIndex = prev.files.findIndex((f) => f.id === overId);
+
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return prev;
+
+      // Reorder files
+      const newFiles = [...prev.files];
+      const [movedFile] = newFiles.splice(oldIndex, 1);
+      newFiles.splice(newIndex, 0, movedFile);
+
+      // Create a mapping from old file index to new file index
+      const indexMap = new Map<number, number>();
+      prev.files.forEach((file, idx) => {
+        const newIdx = newFiles.findIndex((f) => f.id === file.id);
+        indexMap.set(idx, newIdx);
+      });
+
+      // Rebuild pages array in new file order
+      const pagesByFile: PageInfo[][] = newFiles.map(() => []);
+      prev.pages.forEach((page) => {
+        const newFileIndex = indexMap.get(page.sourceIndex);
+        if (newFileIndex !== undefined) {
+          pagesByFile[newFileIndex].push({
+            ...page,
+            sourceIndex: newFileIndex,
+          });
+        }
+      });
+
+      // Flatten pages, maintaining order within each file
+      const newPages = pagesByFile.flat();
+
+      return {
+        ...prev,
+        files: newFiles,
+        pages: newPages,
+      };
+    });
+  }, []);
+
   const getSelectedPageIndices = useCallback((): number[] => {
     return state.pages
       .map((page, index) => (state.selectedPages.has(page.id) ? index : -1))
@@ -223,7 +294,9 @@ export function usePDFDocument() {
     isLoading,
     addFiles,
     removePage,
+    removeFile,
     reorderPages,
+    reorderFiles,
     rotatePage,
     rotateSelectedPages,
     togglePageSelection,

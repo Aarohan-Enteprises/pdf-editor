@@ -28,7 +28,7 @@ export function PageThumbnailOverlay({
   thumbnail?: string;
 }) {
   return (
-    <div className="thumbnail-card ring-2 ring-blue-500 shadow-2xl scale-105 cursor-grabbing">
+    <div className="thumbnail-card ring-2 ring-indigo-500 shadow-2xl scale-105 cursor-grabbing">
       <div
         className="relative aspect-[3/4] bg-gray-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden"
         style={{ transform: `rotate(${page.rotation}deg)` }}
@@ -106,10 +106,10 @@ export function PageThumbnail({
       style={style}
       className={`
         thumbnail-card group relative
-        ${isSelected ? 'selected ring-2 ring-blue-500' : ''}
-        ${isDragging ? 'opacity-40 ring-2 ring-dashed ring-blue-400' : ''}
+        ${isSelected ? 'selected ring-2 ring-indigo-500' : ''}
+        ${isDragging ? 'opacity-40 ring-2 ring-dashed ring-indigo-400' : ''}
         cursor-grab active:cursor-grabbing
-        hover:ring-2 hover:ring-blue-300 dark:hover:ring-blue-600
+        hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-500
         transition-shadow
       `}
       {...attributes}
@@ -169,10 +169,10 @@ export function PageThumbnail({
             onSelect();
           }}
           onPointerDown={(e) => e.stopPropagation()}
-          className="p-1.5 rounded bg-white/90 dark:bg-slate-800/90 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+          className="p-1.5 rounded bg-white/90 dark:bg-slate-800/90 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors"
           title="Select"
         >
-          <svg className={`w-3.5 h-3.5 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-3.5 h-3.5 ${isSelected ? 'text-indigo-600' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </button>
@@ -222,7 +222,7 @@ export function PageThumbnail({
 
       {isSelected && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-          <div className="w-8 h-8 rounded-full bg-blue-500/80 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-indigo-600/80 flex items-center justify-center">
             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"

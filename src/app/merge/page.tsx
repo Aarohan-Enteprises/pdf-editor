@@ -2,13 +2,99 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFViewer } from '@/components/pdf/PDFViewer';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
-import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePDFDocument';
+import { usePDFDocument, PageLimitError, EncryptedPDFError, PDFFile } from '@/hooks/usePDFDocument';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { mergePDFsWithOrder } from '@/lib/pdf-operations';
+
+interface SortableFileItemProps {
+  file: PDFFile;
+  index: number;
+  onRemove: (id: string) => void;
+}
+
+function SortableFileItem({ file, index, onRemove }: SortableFileItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: file.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl ${
+        isDragging ? 'opacity-50 shadow-lg' : ''
+      }`}
+    >
+      {/* Drag handle */}
+      <button
+        {...attributes}
+        {...listeners}
+        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
+      >
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M8 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm-2 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm8-14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm-2 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm2 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+        </svg>
+      </button>
+
+      {/* File number */}
+      <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm font-medium">
+        {index + 1}
+      </div>
+
+      {/* File info */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+          {file.name}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {file.pageCount} page{file.pageCount !== 1 ? 's' : ''}
+        </p>
+      </div>
+
+      {/* Remove button */}
+      <button
+        onClick={() => onRemove(file.id)}
+        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+        title="Remove file"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 export default function MergePage() {
   const t = useTranslations('tools.merge');
@@ -20,7 +106,9 @@ export default function MergePage() {
     isLoading,
     addFiles,
     removePage,
+    removeFile,
     reorderPages,
+    reorderFiles,
     rotatePage,
     updatePageThumbnail,
     clearAll,
@@ -39,6 +127,13 @@ export default function MergePage() {
     downloadPreview,
   } = usePDFPreview();
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const handleFilesSelected = useCallback(
     async (selectedFiles: File[]) => {
       setUploadError(null);
@@ -55,6 +150,16 @@ export default function MergePage() {
       }
     },
     [addFiles, tDropzone]
+  );
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (over && active.id !== over.id) {
+        reorderFiles(active.id as string, over.id as string);
+      }
+    },
+    [reorderFiles]
   );
 
   const handleMergeAndDownload = useCallback(async () => {
@@ -102,66 +207,98 @@ export default function MergePage() {
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left: Dropzone */}
-          <div className="lg:col-span-1">
-            <div className="card p-4 sticky top-24">
+          {/* Left: Dropzone and File List */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="card p-4">
               <PDFDropzone
                 onFilesSelected={handleFilesSelected}
                 isLoading={isLoading}
                 externalError={uploadError}
                 onClearError={() => setUploadError(null)}
               />
-
-              {pages.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-                    <p className="text-xs text-blue-700 dark:text-blue-300">
-                      Drag pages to reorder them. Click the X to remove a page.
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Output filename
-                    </label>
-                    <div className="flex">
-                      <input
-                        type="text"
-                        value={outputFilename}
-                        onChange={(e) => setOutputFilename(e.target.value)}
-                        placeholder="merged-document"
-                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-l-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm"
-                      />
-                      <span className="px-3 py-2 bg-gray-100 dark:bg-slate-700 border border-l-0 border-gray-300 dark:border-slate-600 rounded-r-lg text-gray-500 dark:text-gray-400 text-sm">
-                        .pdf
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={clearAll}
-                    className="btn btn-ghost w-full text-sm text-red-600 dark:text-red-400"
-                  >
-                    Clear All
-                  </button>
-                  <button
-                    onClick={handleMergeAndDownload}
-                    disabled={isProcessing || pages.length === 0}
-                    className="btn btn-primary w-full"
-                  >
-                    {isProcessing ? 'Processing...' : `Merge & Preview (${pages.length} pages)`}
-                  </button>
-                </div>
-              )}
             </div>
+
+            {/* File List with Drag & Drop */}
+            {files.length > 0 && (
+              <div className="card p-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  File Order
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  Drag to reorder files. Pages will be merged in this order.
+                </p>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={files.map((f) => f.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-2">
+                      {files.map((file, index) => (
+                        <SortableFileItem
+                          key={file.id}
+                          file={file}
+                          index={index}
+                          onRemove={removeFile}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </div>
+            )}
+
+            {/* Actions */}
+            {pages.length > 0 && (
+              <div className="card p-4 space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Output filename
+                  </label>
+                  <div className="flex">
+                    <input
+                      type="text"
+                      value={outputFilename}
+                      onChange={(e) => setOutputFilename(e.target.value)}
+                      placeholder="merged-document"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-l-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm"
+                    />
+                    <span className="px-3 py-2 bg-gray-100 dark:bg-slate-700 border border-l-0 border-gray-300 dark:border-slate-600 rounded-r-lg text-gray-500 dark:text-gray-400 text-sm">
+                      .pdf
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={clearAll}
+                  className="btn btn-ghost w-full text-sm text-red-600 dark:text-red-400"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={handleMergeAndDownload}
+                  disabled={isProcessing || pages.length === 0}
+                  className="btn btn-primary w-full"
+                >
+                  {isProcessing ? 'Processing...' : `Merge & Preview (${pages.length} pages)`}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Right: PDF Viewer */}
           <div className="lg:col-span-2">
             {pages.length > 0 ? (
               <div className="card p-4">
-                <div className="mb-4">
+                <div className="mb-4 flex items-center justify-between">
                   <h2 className="font-semibold text-gray-900 dark:text-white">
                     {pages.length} pages from {files.length} file(s)
                   </h2>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Drag individual pages to fine-tune order
+                  </p>
                 </div>
                 <PDFViewer
                   files={files}

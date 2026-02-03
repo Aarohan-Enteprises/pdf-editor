@@ -132,9 +132,9 @@ export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClear
       />
 
       <div className="flex flex-col items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
           <svg
-            className="w-8 h-8 text-blue-500"
+            className="w-8 h-8 text-indigo-600 dark:text-indigo-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -165,7 +165,7 @@ export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClear
         )}
 
         {isLoading && (
-          <div className="flex items-center gap-2 text-blue-500">
+          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
             <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
               <circle
                 className="opacity-25"

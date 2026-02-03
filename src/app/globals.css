@@ -71,11 +71,11 @@ body {
   }
 
   .dropzone-active {
-    @apply border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 scale-[1.02];
+    @apply border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30;
   }
 
   .thumbnail-card {
-    @apply relative bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+    @apply relative bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg;
   }
 
   .thumbnail-card.selected {
@@ -87,7 +87,7 @@ body {
   }
 
   .btn-primary {
-    @apply bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/25;
+    @apply bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 hover:shadow-lg;
   }
 
   .btn-secondary {
@@ -107,7 +107,7 @@ body {
   }
 
   .card-hover {
-    @apply hover:shadow-lg hover:-translate-y-1 transition-all duration-300;
+    @apply hover:shadow-lg transition-shadow duration-200;
   }
 
   .feature-icon {

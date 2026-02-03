@@ -64,10 +64,10 @@
   "dropzone": {
     "title": "Drop your PDF files here",
     "subtitle": "or click to browse",
-    "hint": "Max 10MB per file, up to 50 pages",
+    "hint": "Max 50MB per file, up to 200 pages total",
     "invalidFile": "Please upload valid PDF files only",
-    "fileTooLarge": "File exceeds 10MB limit",
-    "tooManyPages": "Total pages exceed 50 page limit"
+    "fileTooLarge": "File exceeds 50MB limit",
+    "tooManyPages": "Total pages exceed 200 page limit"
   },
   "imageDropzone": {
     "title": "Drop images here",
