@@ -4,3 +4,4 @@ python-multipart
 pymupdf
 python-docx
 lxml
+pdf2docx

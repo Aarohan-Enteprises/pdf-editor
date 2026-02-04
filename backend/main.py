@@ -865,11 +865,12 @@ def convert_pdf_to_docx_with_poppler(input_path: str, temp_dir: str) -> str | No
         output_path = os.path.join(temp_dir, 'output.docx')
 
         # Step 1: Convert PDF to HTML using pdftohtml
+        # -c: complex mode - preserves more layout/visual elements
         # -s: single HTML file (not multiple pages)
-        # -i: ignore images (faster, focus on text)
         # -noframes: don't generate frames
         pdftohtml_cmd = [
             'pdftohtml',
+            '-c',           # complex mode for better layout
             '-s',           # single document
             '-noframes',    # no frames
             '-enc', 'UTF-8',
@@ -953,6 +954,47 @@ def convert_pdf_to_docx_with_poppler(input_path: str, temp_dir: str) -> str | No
         return None
 
 
+def convert_pdf_to_docx_with_pdf2docx(input_path: str, output_path: str) -> bool:
+    """Convert PDF to DOCX using pdf2docx library.
+
+    pdf2docx is specifically designed for PDF to DOCX conversion and handles
+    layout elements including lines, tables, and images.
+
+    Returns True on success, False on failure.
+    """
+    try:
+        from pdf2docx import Converter
+
+        logger.info("Starting pdf2docx conversion...")
+        cv = Converter(input_path)
+        cv.convert(output_path)
+        cv.close()
+
+        if os.path.exists(output_path):
+            logger.info("pdf2docx conversion successful")
+            return True
+
+        logger.error("pdf2docx did not create output file")
+        return False
+
+    except ImportError:
+        logger.error("pdf2docx not installed")
+        return False
+    except Exception as e:
+        logger.error(f"pdf2docx conversion error: {str(e)}")
+        return False
+
+
+# Check if pdf2docx is available
+PDF2DOCX_AVAILABLE = False
+try:
+    from pdf2docx import Converter
+    PDF2DOCX_AVAILABLE = True
+    logger.info("pdf2docx is available")
+except ImportError:
+    logger.warning("pdf2docx not available")
+
+
 @app.post("/api/pdf-to-docx")
 async def convert_pdf_to_docx(
     file: UploadFile = File(...),
@@ -962,11 +1004,11 @@ async def convert_pdf_to_docx(
 
     Args:
         file: The PDF file to convert
-        engine: Conversion engine - "pymupdf" (default), "libreoffice", or "poppler"
+        engine: Conversion engine - "pymupdf" (default), "libreoffice", "poppler", or "pdf2docx"
     """
     # Validate engine parameter
-    if engine not in ["pymupdf", "libreoffice", "poppler"]:
-        raise HTTPException(status_code=400, detail="Invalid engine. Use 'pymupdf', 'libreoffice', or 'poppler'")
+    if engine not in ["pymupdf", "libreoffice", "poppler", "pdf2docx"]:
+        raise HTTPException(status_code=400, detail="Invalid engine. Use 'pymupdf', 'libreoffice', 'poppler', or 'pdf2docx'")
 
     # Validate file extension
     if not file.filename or not file.filename.lower().endswith('.pdf'):
@@ -978,6 +1020,13 @@ async def convert_pdf_to_docx(
     use_pymupdf = engine == "pymupdf" and PYMUPDF_AVAILABLE
     use_libreoffice = engine == "libreoffice"
     use_poppler = engine == "poppler"
+    use_pdf2docx = engine == "pdf2docx" and PDF2DOCX_AVAILABLE
+
+    if use_pdf2docx and not PDF2DOCX_AVAILABLE:
+        raise HTTPException(
+            status_code=500,
+            detail="pdf2docx not available on this server."
+        )
 
     if use_libreoffice:
         lo_cmd = get_libreoffice_command()
@@ -1048,6 +1097,16 @@ async def convert_pdf_to_docx(
                     docx_content = f.read()
                 logger.info("LibreOffice conversion successful")
 
+        elif use_pdf2docx:
+            logger.info("Attempting conversion with pdf2docx...")
+            if convert_pdf_to_docx_with_pdf2docx(input_path, output_path):
+                engine_used = "pdf2docx"
+                with open(output_path, 'rb') as f:
+                    docx_content = f.read()
+                logger.info("pdf2docx conversion successful")
+            else:
+                logger.warning("pdf2docx conversion failed")
+
         if docx_content is None:
             raise HTTPException(
                 status_code=500,
@@ -1098,10 +1157,15 @@ async def get_available_engines():
             },
             "poppler": {
                 "available": poppler_available and pandoc_available,
-                "description": "PDF→HTML→DOCX pipeline using Poppler and Pandoc",
+                "description": "PDF→HTML→DOCX pipeline using Poppler and Pandoc (complex mode)",
                 "missing": [] if (poppler_available and pandoc_available) else
                           (["poppler-utils"] if not poppler_available else []) +
                           (["pandoc"] if not pandoc_available else [])
+            },
+            "pdf2docx": {
+                "available": PDF2DOCX_AVAILABLE,
+                "description": "Dedicated PDF to DOCX converter (preserves layout, lines, tables)",
+                "missing": [] if PDF2DOCX_AVAILABLE else ["pdf2docx"]
             }
         },
         "docx_to_pdf": {

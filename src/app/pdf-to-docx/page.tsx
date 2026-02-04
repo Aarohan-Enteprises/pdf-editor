@@ -23,7 +23,7 @@ export default function PdfToDocxPage() {
   const [convertedData, setConvertedData] = useState<Uint8Array | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingStage, setProcessingStage] = useState<'idle' | 'uploading' | 'processing' | 'done'>('idle');
-  const [engine, setEngine] = useState<'pymupdf' | 'libreoffice' | 'poppler'>('pymupdf');
+  const [engine, setEngine] = useState<'pymupdf' | 'libreoffice' | 'poppler' | 'pdf2docx'>('pymupdf');
   const [engineUsed, setEngineUsed] = useState<string | null>(null);
 
   const handleFilesSelected = useCallback(async (selectedFiles: File[]) => {
@@ -211,7 +211,7 @@ export default function PdfToDocxPage() {
                         name="engine"
                         value="pymupdf"
                         checked={engine === 'pymupdf'}
-                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler')}
+                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler' | 'pdf2docx')}
                         className="mt-1"
                       />
                       <div>
@@ -234,7 +234,7 @@ export default function PdfToDocxPage() {
                         name="engine"
                         value="libreoffice"
                         checked={engine === 'libreoffice'}
-                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler')}
+                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler' | 'pdf2docx')}
                         className="mt-1"
                       />
                       <div>
@@ -254,13 +254,33 @@ export default function PdfToDocxPage() {
                         name="engine"
                         value="poppler"
                         checked={engine === 'poppler'}
-                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler')}
+                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler' | 'pdf2docx')}
                         className="mt-1"
                       />
                       <div>
                         <span className="font-medium text-gray-900 dark:text-white text-sm">Poppler + Pandoc</span>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          PDF→HTML→DOCX pipeline, good for text-heavy documents
+                          PDF→HTML→DOCX pipeline (complex mode)
+                        </p>
+                      </div>
+                    </label>
+                    <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      engine === 'pdf2docx'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="engine"
+                        value="pdf2docx"
+                        checked={engine === 'pdf2docx'}
+                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler' | 'pdf2docx')}
+                        className="mt-1"
+                      />
+                      <div>
+                        <span className="font-medium text-gray-900 dark:text-white text-sm">pdf2docx</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          Dedicated converter - preserves layout, lines, and tables
                         </p>
                       </div>
                     </label>
