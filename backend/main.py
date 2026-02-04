@@ -645,8 +645,47 @@ def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
         return False
 
 
+def fix_docx_margins(docx_path: str) -> bool:
+    """Post-process DOCX to fix margins and alignment issues.
+
+    Returns True on success, False on failure.
+    """
+    if not PYMUPDF_AVAILABLE:
+        return False
+
+    try:
+        from docx.shared import Inches, Pt
+
+        doc = Document(docx_path)
+
+        # Fix page margins (set to standard 1 inch)
+        for section in doc.sections:
+            section.left_margin = Inches(1)
+            section.right_margin = Inches(1)
+            section.top_margin = Inches(1)
+            section.bottom_margin = Inches(1)
+
+        # Fix paragraph alignment - remove excessive left indent
+        for para in doc.paragraphs:
+            if para.paragraph_format.left_indent:
+                # Only reset if indent is excessive (> 0.5 inch)
+                if para.paragraph_format.left_indent > Inches(0.5):
+                    para.paragraph_format.left_indent = Inches(0)
+
+        doc.save(docx_path)
+        logger.info("Fixed DOCX margins successfully")
+        return True
+
+    except Exception as e:
+        logger.warning(f"Failed to fix margins: {e}")
+        return False
+
+
 def convert_pdf_to_docx_with_libreoffice(input_path: str, temp_dir: str) -> str | None:
     """Convert PDF to DOCX using LibreOffice.
+
+    Tries draw_pdf_import first (better for visual elements),
+    falls back to writer_pdf_import if needed.
 
     Returns the output path on success, None on failure.
     """
@@ -654,45 +693,56 @@ def convert_pdf_to_docx_with_libreoffice(input_path: str, temp_dir: str) -> str 
     if not lo_cmd:
         return None
 
-    try:
-        lo_command = [
-            lo_cmd,
-            '--headless',
-            '--convert-to', 'docx',
-            '--outdir', temp_dir,
-            input_path
-        ]
+    # Try different filters - draw_pdf_import often preserves lines better
+    filters = ['draw_pdf_import', 'writer_pdf_import']
 
-        logger.info(f"Running command: {' '.join(lo_command)}")
+    for infilter in filters:
+        try:
+            # Clean up any previous attempt
+            output_path = os.path.join(temp_dir, 'input.docx')
+            if os.path.exists(output_path):
+                os.remove(output_path)
 
-        result = subprocess.run(
-            lo_command,
-            capture_output=True,
-            text=True,
-            timeout=120
-        )
+            lo_command = [
+                lo_cmd,
+                '--headless',
+                f'--infilter={infilter}',
+                '--convert-to', 'docx',
+                '--outdir', temp_dir,
+                input_path
+            ]
 
-        logger.info(f"LibreOffice return code: {result.returncode}")
-        if result.stderr:
-            logger.info(f"LibreOffice stderr: {result.stderr}")
-        if result.stdout:
-            logger.info(f"LibreOffice stdout: {result.stdout}")
+            logger.info(f"Running command: {' '.join(lo_command)}")
 
-        if result.returncode != 0:
-            return None
+            result = subprocess.run(
+                lo_command,
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
 
-        output_path = os.path.join(temp_dir, 'input.docx')
-        if os.path.exists(output_path):
-            return output_path
+            logger.info(f"LibreOffice return code: {result.returncode}")
+            if result.stderr:
+                logger.info(f"LibreOffice stderr: {result.stderr}")
+            if result.stdout:
+                logger.info(f"LibreOffice stdout: {result.stdout}")
 
-        return None
+            if os.path.exists(output_path):
+                logger.info(f"Conversion successful with filter: {infilter}")
+                # Post-process to fix margins
+                fix_docx_margins(output_path)
+                return output_path
 
-    except subprocess.TimeoutExpired:
-        logger.error("LibreOffice conversion timed out")
-        return None
-    except Exception as e:
-        logger.error(f"LibreOffice conversion error: {str(e)}")
-        return None
+            logger.warning(f"Filter {infilter} did not produce output, trying next...")
+
+        except subprocess.TimeoutExpired:
+            logger.error(f"LibreOffice conversion timed out with filter: {infilter}")
+            continue
+        except Exception as e:
+            logger.error(f"LibreOffice conversion error with filter {infilter}: {str(e)}")
+            continue
+
+    return None
 
 
 @app.post("/api/pdf-to-docx")
