@@ -23,8 +23,6 @@ export default function PdfToDocxPage() {
   const [convertedData, setConvertedData] = useState<Uint8Array | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingStage, setProcessingStage] = useState<'idle' | 'uploading' | 'processing' | 'done'>('idle');
-  const [engine, setEngine] = useState<'pymupdf' | 'libreoffice' | 'poppler' | 'pdf2docx'>('pymupdf');
-  const [engineUsed, setEngineUsed] = useState<string | null>(null);
 
   const handleFilesSelected = useCallback(async (selectedFiles: File[]) => {
     setUploadError(null);
@@ -43,17 +41,15 @@ export default function PdfToDocxPage() {
     setProcessingStage('uploading');
     setUploadError(null);
     setConvertedData(null);
-    setEngineUsed(null);
     setUploadProgress(0);
 
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('engine', engine);
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-      const { response, conversionEngine } = await new Promise<{ response: Response; conversionEngine: string | null }>((resolve, reject) => {
+      const response = await new Promise<Response>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `${apiUrl}/api/pdf-to-docx`);
 
@@ -69,13 +65,9 @@ export default function PdfToDocxPage() {
         };
 
         xhr.onload = () => {
-          const engineHeader = xhr.getResponseHeader('X-Conversion-Engine');
-          resolve({
-            response: new Response(xhr.response, {
-              status: xhr.status,
-            }),
-            conversionEngine: engineHeader,
-          });
+          resolve(new Response(xhr.response, {
+            status: xhr.status,
+          }));
         };
 
         xhr.onerror = () => reject(new Error('Network error'));
@@ -92,7 +84,6 @@ export default function PdfToDocxPage() {
       const data = new Uint8Array(await convertedBlob.arrayBuffer());
 
       setConvertedData(data);
-      setEngineUsed(conversionEngine);
       setProcessingStage('done');
     } catch (error) {
       console.error('Conversion failed:', error);
@@ -101,7 +92,7 @@ export default function PdfToDocxPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [file, engine]);
+  }, [file]);
 
   const clearFile = useCallback(() => {
     setFile(null);
@@ -109,7 +100,6 @@ export default function PdfToDocxPage() {
     setUploadError(null);
     setOutputFilename('converted-document');
     setProcessingStage('idle');
-    setEngineUsed(null);
   }, []);
 
   const handleDownload = useCallback(() => {
@@ -195,98 +185,6 @@ export default function PdfToDocxPage() {
 
             {file && (
               <div className="card p-4 space-y-4">
-                {/* Conversion Engine */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Conversion Engine
-                  </label>
-                  <div className="space-y-2">
-                    <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      engine === 'pymupdf'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="engine"
-                        value="pymupdf"
-                        checked={engine === 'pymupdf'}
-                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler' | 'pdf2docx')}
-                        className="mt-1"
-                      />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 dark:text-white text-sm">PyMuPDF (Advanced)</span>
-                          <span className="px-1.5 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">Recommended</span>
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          Preserves text formatting, images, and horizontal lines
-                        </p>
-                      </div>
-                    </label>
-                    <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      engine === 'libreoffice'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="engine"
-                        value="libreoffice"
-                        checked={engine === 'libreoffice'}
-                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler' | 'pdf2docx')}
-                        className="mt-1"
-                      />
-                      <div>
-                        <span className="font-medium text-gray-900 dark:text-white text-sm">LibreOffice</span>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          Basic conversion, faster but may lose complex formatting
-                        </p>
-                      </div>
-                    </label>
-                    <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      engine === 'poppler'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="engine"
-                        value="poppler"
-                        checked={engine === 'poppler'}
-                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler' | 'pdf2docx')}
-                        className="mt-1"
-                      />
-                      <div>
-                        <span className="font-medium text-gray-900 dark:text-white text-sm">Poppler + Pandoc</span>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          PDF→HTML→DOCX pipeline (complex mode)
-                        </p>
-                      </div>
-                    </label>
-                    <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      engine === 'pdf2docx'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="engine"
-                        value="pdf2docx"
-                        checked={engine === 'pdf2docx'}
-                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice' | 'poppler' | 'pdf2docx')}
-                        className="mt-1"
-                      />
-                      <div>
-                        <span className="font-medium text-gray-900 dark:text-white text-sm">pdf2docx</span>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          Dedicated converter - preserves layout, lines, and tables
-                        </p>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
                 {/* Output Filename */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -400,7 +298,7 @@ export default function PdfToDocxPage() {
                         ? 'text-blue-600 dark:text-blue-400 font-medium'
                         : 'text-gray-400 dark:text-gray-500'
                     }`}>
-                      Converting with {engine === 'pymupdf' ? 'PyMuPDF' : 'LibreOffice'}...
+                      Converting to Word...
                     </span>
                   </div>
                 </div>
@@ -426,21 +324,13 @@ export default function PdfToDocxPage() {
                 </div>
 
                 {/* File size info */}
-                <div className="mb-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg space-y-2">
+                <div className="mb-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500 dark:text-gray-400">Output size</span>
                     <span className="font-medium text-gray-900 dark:text-white">
                       {formatFileSize(convertedData.length)}
                     </span>
                   </div>
-                  {engineUsed && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Converted with</span>
-                      <span className="font-medium text-gray-900 dark:text-white capitalize">
-                        {engineUsed === 'pymupdf' ? 'PyMuPDF' : 'LibreOffice'}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Download Button */}
@@ -483,7 +373,7 @@ export default function PdfToDocxPage() {
                 <div className="text-sm text-slate-600 dark:text-slate-300">
                   <p className="font-medium mb-1">Secure server processing</p>
                   <p className="text-slate-500 dark:text-slate-400">
-                    Your file is encrypted during transfer, processed using {engine === 'pymupdf' ? 'PyMuPDF' : 'LibreOffice'}, and automatically deleted after conversion.
+                    Your file is encrypted during transfer, processed using Apache PDFBox, and automatically deleted after conversion.
                   </p>
                 </div>
               </div>
@@ -497,9 +387,7 @@ export default function PdfToDocxPage() {
                 </svg>
                 <div className="text-sm text-amber-700 dark:text-amber-300">
                   <p className="font-medium mb-1">{t('infoTitle')}</p>
-                  <p className="text-amber-600 dark:text-amber-400">
-                    {t('infoDescription')}
-                  </p>
+                  <p>{t('infoDescription')}</p>
                 </div>
               </div>
             </div>
