@@ -88,12 +88,6 @@ const toolConfigs: Record<string, ToolSEOConfig> = {
     keywords: ['Word to PDF', 'DOCX to PDF', 'convert Word to PDF', 'DOC to PDF', 'Word document to PDF'],
     path: '/docx-to-pdf',
   },
-  'pdf-to-docx': {
-    title: 'Convert PDF to Word Online - PDF to DOCX Free',
-    description: 'Convert PDF documents to editable Microsoft Word (DOCX) format online for free. Maintain layout and formatting.',
-    keywords: ['PDF to Word', 'PDF to DOCX', 'convert PDF to Word', 'PDF to DOC', 'PDF to editable Word'],
-    path: '/pdf-to-docx',
-  },
   'extract-text': {
     title: 'Extract Text from PDF Online - PDF Text Extractor Free',
     description: 'Extract all text content from PDF documents online for free. Copy text from PDF files easily and quickly.',

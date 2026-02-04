@@ -1,18 +1,7 @@
 # Backend Dockerfile - PDF2.in API
 # Multi-stage build for smaller production image
 
-# Stage 1: Build Java converter
-FROM maven:3.9-eclipse-temurin-11 AS java-builder
-
-WORKDIR /java-build
-COPY backend/java-converter/pom.xml .
-COPY backend/java-converter/src ./src
-
-# Build fat JAR
-RUN mvn package -DskipTests -q
-
-# Stage 2: Build Python dependencies
-FROM python:3.12-slim AS python-builder
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
@@ -26,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Stage 3: Production image
+# Production stage
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -34,21 +23,16 @@ WORKDIR /app
 # Install runtime dependencies:
 # - Ghostscript for PDF compression
 # - LibreOffice for DOCX to PDF conversion
-# - OpenJDK JRE for Java converter
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ghostscript \
     libreoffice-writer-nogui \
-    openjdk-21-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security with proper home directory
 RUN groupadd -r appuser && useradd -r -g appuser -m -d /home/appuser appuser
 
 # Copy installed Python packages from builder
-COPY --from=python-builder /root/.local /home/appuser/.local
-
-# Copy Java converter JAR from builder
-COPY --from=java-builder /java-build/target/pdf-to-docx-converter-1.0.0.jar /app/converter.jar
+COPY --from=builder /root/.local /home/appuser/.local
 
 # Copy source code
 COPY backend ./backend
@@ -59,7 +43,6 @@ ENV PATH=/home/appuser/.local/bin:$PATH
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV HOME=/home/appuser
-ENV JAVA_CONVERTER_JAR=/app/converter.jar
 
 # Create temp directory for PDF processing and ensure home directory permissions
 RUN mkdir -p /app/tmp && \

@@ -271,18 +271,6 @@
       "infoTitle": "About unlocking",
       "infoDescription": "You need to know the correct password to unlock a protected PDF. This tool removes the password requirement from the PDF."
     },
-    "pdfToDocx": {
-      "title": "PDF to DOCX",
-      "description": "Convert PDF to Word document",
-      "pageTitle": "Convert PDF to Word",
-      "pageDescription": "Convert PDF documents to editable Microsoft Word format",
-      "convert": "Convert to Word",
-      "converting": "Converting...",
-      "success": "Conversion Complete",
-      "successDescription": "Your PDF has been converted to Word format",
-      "infoTitle": "About PDF to Word conversion",
-      "infoDescription": "PDF to Word conversion works best with text-based PDFs. Scanned documents or image-heavy PDFs may not convert perfectly."
-    },
     "docxToPdf": {
       "title": "DOCX to PDF",
       "description": "Convert Word document to PDF",
