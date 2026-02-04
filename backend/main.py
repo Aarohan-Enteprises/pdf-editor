@@ -648,6 +648,9 @@ def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
 def fix_docx_margins(docx_path: str) -> bool:
     """Post-process DOCX to fix margins and alignment issues.
 
+    LibreOffice converts PDFs using text frames (positioned boxes) rather than
+    normal paragraphs. This function fixes both regular paragraphs and text frames.
+
     Returns True on success, False on failure.
     """
     if not PYMUPDF_AVAILABLE:
@@ -655,7 +658,9 @@ def fix_docx_margins(docx_path: str) -> bool:
 
     try:
         from docx.shared import Inches, Pt, Twips
-        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from docx.oxml.ns import nsmap, qn
+        import zipfile
+        from lxml import etree
 
         doc = Document(docx_path)
 
@@ -666,22 +671,13 @@ def fix_docx_margins(docx_path: str) -> bool:
             section.top_margin = Inches(0.75)
             section.bottom_margin = Inches(0.75)
 
-        # Fix paragraph indentation - remove all indents and extra spacing
+        # Fix paragraph indentation - remove all indents
         for para in doc.paragraphs:
-            # Remove all indentation
             para.paragraph_format.left_indent = Twips(0)
             para.paragraph_format.right_indent = Twips(0)
             para.paragraph_format.first_line_indent = Twips(0)
 
-            # Also check and fix runs for any character-level positioning
-            for run in para.runs:
-                # Clear any position adjustments
-                if hasattr(run.font, '_element'):
-                    pos = run.font._element.find('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}position')
-                    if pos is not None:
-                        run.font._element.remove(pos)
-
-        # Also fix tables if any
+        # Fix tables
         for table in doc.tables:
             for row in table.rows:
                 for cell in row.cells:
@@ -691,11 +687,92 @@ def fix_docx_margins(docx_path: str) -> bool:
                         para.paragraph_format.first_line_indent = Twips(0)
 
         doc.save(docx_path)
+
+        # Now fix text frames via direct XML manipulation
+        # LibreOffice creates text boxes with horizontal position offsets
+        fix_docx_textframes(docx_path)
+
         logger.info("Fixed DOCX margins successfully")
         return True
 
     except Exception as e:
         logger.warning(f"Failed to fix margins: {e}")
+        return False
+
+
+def fix_docx_textframes(docx_path: str) -> bool:
+    """Fix text frame positions in DOCX by directly manipulating XML.
+
+    LibreOffice places text in positioned frames. This shifts all frames
+    to start from the left margin.
+    """
+    import zipfile
+    import shutil
+    from lxml import etree
+
+    try:
+        # DOCX is a ZIP file - we need to modify document.xml
+        temp_path = docx_path + '.tmp'
+
+        # Word/DrawingML namespaces
+        namespaces = {
+            'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+            'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
+            'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+            'wps': 'http://schemas.microsoft.com/office/word/2010/wordprocessingShape',
+            'wpg': 'http://schemas.microsoft.com/office/word/2010/wordprocessingGroup',
+        }
+
+        with zipfile.ZipFile(docx_path, 'r') as zip_in:
+            with zipfile.ZipFile(temp_path, 'w', zipfile.ZIP_DEFLATED) as zip_out:
+                for item in zip_in.infolist():
+                    data = zip_in.read(item.filename)
+
+                    if item.filename == 'word/document.xml':
+                        # Parse and modify the document XML
+                        root = etree.fromstring(data)
+
+                        # Find minimum X position across all frames to use as offset
+                        min_x = None
+                        positions = []
+
+                        # Find all positionH elements (horizontal position of frames)
+                        for pos_h in root.iter('{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}positionH'):
+                            pos_offset = pos_h.find('{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}posOffset')
+                            if pos_offset is not None and pos_offset.text:
+                                try:
+                                    x_val = int(pos_offset.text)
+                                    positions.append((pos_offset, x_val))
+                                    if min_x is None or x_val < min_x:
+                                        min_x = x_val
+                                except ValueError:
+                                    pass
+
+                        # Shift all positions left by the minimum (so leftmost starts at 0)
+                        if min_x and min_x > 0 and positions:
+                            # Convert margin to EMUs (914400 EMUs = 1 inch, use 0.75 inch margin)
+                            target_margin = int(0.75 * 914400)
+                            shift = min_x - target_margin
+
+                            if shift > 0:
+                                for pos_offset, old_val in positions:
+                                    new_val = old_val - shift
+                                    pos_offset.text = str(max(0, new_val))
+                                logger.info(f"Shifted {len(positions)} text frames left by {shift} EMUs")
+
+                        data = etree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone='yes')
+
+                    zip_out.writestr(item, data)
+
+        # Replace original with modified
+        shutil.move(temp_path, docx_path)
+        return True
+
+    except Exception as e:
+        logger.warning(f"Failed to fix text frames: {e}")
+        # Clean up temp file if it exists
+        if os.path.exists(docx_path + '.tmp'):
+            os.remove(docx_path + '.tmp')
         return False
 
 
