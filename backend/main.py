@@ -15,9 +15,6 @@ try:
     import fitz  # PyMuPDF
     from docx import Document
     from docx.shared import Pt, Inches, RGBColor
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
-    from docx.oxml.ns import qn
-    from docx.oxml import OxmlElement
     PYMUPDF_AVAILABLE = True
 except ImportError:
     PYMUPDF_AVAILABLE = False
@@ -636,49 +633,6 @@ def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
                     except Exception as img_error:
                         logger.warning(f"Failed to extract image: {img_error}")
 
-            # Extract and add drawings (lines, rectangles, etc.)
-            try:
-                drawings = page.get_drawings()
-                if drawings:
-                    for drawing in drawings:
-                        if drawing.get("items"):
-                            for item in drawing["items"]:
-                                if item[0] == "l":  # Line
-                                    # Add horizontal rule for horizontal lines
-                                    p1, p2 = item[1], item[2]
-                                    if abs(p1.y - p2.y) < 5:  # Horizontal line
-                                        line_width = abs(p2.x - p1.x)
-                                        if line_width > 50:  # Minimum width
-                                            para = docx_doc.add_paragraph()
-                                            para.paragraph_format.space_before = Pt(0)
-                                            para.paragraph_format.space_after = Pt(0)
-                                            # Add bottom border
-                                            pPr = para._p.get_or_add_pPr()
-                                            pBdr = OxmlElement('w:pBdr')
-                                            bottom = OxmlElement('w:bottom')
-                                            bottom.set(qn('w:val'), 'single')
-                                            bottom.set(qn('w:sz'), '6')
-                                            bottom.set(qn('w:space'), '1')
-                                            bottom.set(qn('w:color'), '000000')
-                                            pBdr.append(bottom)
-                                            pPr.append(pBdr)
-                                elif item[0] == "re":  # Rectangle (thin ones are lines)
-                                    rect = item[1]
-                                    if rect.height < 5 and rect.width > 50:
-                                        para = docx_doc.add_paragraph()
-                                        para.paragraph_format.space_before = Pt(0)
-                                        para.paragraph_format.space_after = Pt(0)
-                                        pPr = para._p.get_or_add_pPr()
-                                        pBdr = OxmlElement('w:pBdr')
-                                        bottom = OxmlElement('w:bottom')
-                                        bottom.set(qn('w:val'), 'single')
-                                        bottom.set(qn('w:sz'), '6')
-                                        bottom.set(qn('w:space'), '1')
-                                        bottom.set(qn('w:color'), '000000')
-                                        pBdr.append(bottom)
-                                        pPr.append(pBdr)
-            except Exception as draw_error:
-                logger.warning(f"Failed to extract drawings: {draw_error}")
 
         # Save the document
         docx_doc.save(output_path)
