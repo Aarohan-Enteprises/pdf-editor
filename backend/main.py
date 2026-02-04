@@ -658,7 +658,6 @@ def convert_pdf_to_docx_with_libreoffice(input_path: str, temp_dir: str) -> str 
         lo_command = [
             lo_cmd,
             '--headless',
-            '--infilter=writer_pdf_import',
             '--convert-to', 'docx',
             '--outdir', temp_dir,
             input_path
