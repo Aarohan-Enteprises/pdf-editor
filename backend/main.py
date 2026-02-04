@@ -693,8 +693,8 @@ def convert_pdf_to_docx_with_libreoffice(input_path: str, temp_dir: str) -> str 
     if not lo_cmd:
         return None
 
-    # Try different filters - draw_pdf_import often preserves lines better
-    filters = ['draw_pdf_import', 'writer_pdf_import']
+    # Use writer_pdf_import - draw_pdf_import produces worse results
+    filters = ['writer_pdf_import']
 
     for infilter in filters:
         try:
