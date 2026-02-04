@@ -23,9 +23,11 @@ WORKDIR /app
 # Install runtime dependencies:
 # - Ghostscript for PDF compression
 # - LibreOffice for DOCX to PDF conversion
+# - Calibre for PDF to DOCX conversion
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ghostscript \
     libreoffice-writer-nogui \
+    calibre \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security with proper home directory

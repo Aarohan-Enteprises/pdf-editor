@@ -304,6 +304,18 @@
       "description": "Black out sensitive information",
       "pageTitle": "Redact PDF",
       "pageDescription": "Draw black rectangles over sensitive content to permanently redact it."
+    },
+    "pdfToDocx": {
+      "title": "PDF to Word",
+      "description": "Convert PDF to Word document",
+      "pageTitle": "Convert PDF to DOCX",
+      "pageDescription": "Convert PDF documents to editable Word format with text and layout preserved",
+      "convert": "Convert to DOCX",
+      "converting": "Converting...",
+      "success": "Conversion Complete",
+      "successDescription": "Your PDF has been converted to DOCX",
+      "infoTitle": "About PDF to DOCX conversion",
+      "infoDescription": "Extracts text and layout from your PDF and converts it to an editable Word document. Best results with text-based PDFs."
     }
   }
 }
