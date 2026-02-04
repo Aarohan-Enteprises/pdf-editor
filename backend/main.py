@@ -665,12 +665,11 @@ def fix_docx_margins(docx_path: str) -> bool:
             section.top_margin = Inches(1)
             section.bottom_margin = Inches(1)
 
-        # Fix paragraph alignment - remove excessive left indent
+        # Fix paragraph indentation - remove all indents
         for para in doc.paragraphs:
-            if para.paragraph_format.left_indent:
-                # Only reset if indent is excessive (> 0.5 inch)
-                if para.paragraph_format.left_indent > Inches(0.5):
-                    para.paragraph_format.left_indent = Inches(0)
+            para.paragraph_format.left_indent = Inches(0)
+            para.paragraph_format.right_indent = Inches(0)
+            para.paragraph_format.first_line_indent = Inches(0)
 
         doc.save(docx_path)
         logger.info("Fixed DOCX margins successfully")
