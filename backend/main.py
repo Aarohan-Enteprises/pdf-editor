@@ -538,78 +538,6 @@ async def convert_docx_to_pdf(file: UploadFile = File(...)):
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-def add_horizontal_line(docx_doc, width_inches=6.0, color="000000", thickness=1):
-    """Add a horizontal line to the document using a paragraph border."""
-    para = docx_doc.add_paragraph()
-
-    # Add a tiny run to control the paragraph height
-    run = para.add_run()
-    run.font.size = Pt(1)  # Tiny font to minimize space above line
-
-    # Remove paragraph spacing
-    para.paragraph_format.space_before = Pt(0)
-    para.paragraph_format.space_after = Pt(0)
-
-    # Add bottom border to create a horizontal line effect
-    pPr = para._p.get_or_add_pPr()
-    pBdr = OxmlElement('w:pBdr')
-    bottom = OxmlElement('w:bottom')
-    bottom.set(qn('w:val'), 'single')
-    bottom.set(qn('w:sz'), str(thickness * 8))  # Size in 1/8 points
-    bottom.set(qn('w:space'), '0')  # No space between text and border
-    bottom.set(qn('w:color'), color)
-    pBdr.append(bottom)
-    pPr.append(pBdr)
-    return para
-
-
-def extract_horizontal_lines(page):
-    """Extract horizontal lines from a PDF page.
-
-    Returns a list of (y_position, width, color) tuples for horizontal lines.
-    """
-    lines = []
-
-    try:
-        drawings = page.get_drawings()
-        for drawing in drawings:
-            # Get the drawing's rectangle
-            rect = drawing.get("rect", None)
-            items = drawing.get("items", [])
-            stroke_color = drawing.get("color", [0, 0, 0])
-            fill_color = drawing.get("fill", None)
-
-            for item in items:
-                item_type = item[0]
-
-                # Handle line items ("l")
-                if item_type == "l":
-                    p1, p2 = item[1], item[2]
-                    # Check if horizontal (y values are close)
-                    if abs(p1.y - p2.y) < 5:
-                        width = abs(p2.x - p1.x)
-                        if width > 50:  # Minimum width to be considered a line
-                            y_pos = (p1.y + p2.y) / 2
-                            color = stroke_color if stroke_color else [0, 0, 0]
-                            lines.append((y_pos, width, color))
-
-                # Handle rectangle items ("re") - thin rectangles are often horizontal rules
-                elif item_type == "re":
-                    rect = item[1]  # fitz.Rect
-                    height = rect.height
-                    width = rect.width
-                    # If rectangle is very thin and wide, treat as horizontal line
-                    if height < 5 and width > 50:
-                        y_pos = rect.y0 + height / 2
-                        color = fill_color if fill_color else (stroke_color if stroke_color else [0, 0, 0])
-                        lines.append((y_pos, width, color))
-
-    except Exception as e:
-        logger.warning(f"Error extracting lines: {e}")
-
-    return lines
-
-
 def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
     """Convert PDF to DOCX using PyMuPDF + python-docx.
 
@@ -633,38 +561,15 @@ def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
             if page_num > 0:
                 docx_doc.add_page_break()
 
-            # Get page dimensions
-            page_width = page.rect.width
-
-            # Extract horizontal lines with their Y positions
-            h_lines = extract_horizontal_lines(page)
-            h_lines_sorted = sorted(h_lines, key=lambda x: x[0])  # Sort by Y position
-            line_idx = 0
+            # Get page dimensions for scaling
+            page_rect = page.rect
+            page_width = page_rect.width
+            page_height = page_rect.height
 
             # Extract text blocks with formatting
             blocks = page.get_text("dict", flags=fitz.TEXT_PRESERVE_WHITESPACE)["blocks"]
 
-            # Sort blocks by vertical position
-            sorted_blocks = sorted(blocks, key=lambda b: b.get("bbox", [0, 0, 0, 0])[1])
-
-            for block in sorted_blocks:
-                block_y = block.get("bbox", [0, 0, 0, 0])[1]
-
-                # Insert any horizontal lines that come before this block
-                while line_idx < len(h_lines_sorted) and h_lines_sorted[line_idx][0] < block_y:
-                    line_y, line_width, line_color = h_lines_sorted[line_idx]
-                    # Convert color to hex
-                    if isinstance(line_color, (list, tuple)) and len(line_color) >= 3:
-                        hex_color = "{:02x}{:02x}{:02x}".format(
-                            int(line_color[0] * 255) if line_color[0] <= 1 else int(line_color[0]),
-                            int(line_color[1] * 255) if line_color[1] <= 1 else int(line_color[1]),
-                            int(line_color[2] * 255) if line_color[2] <= 1 else int(line_color[2])
-                        )
-                    else:
-                        hex_color = "000000"
-                    add_horizontal_line(docx_doc, color=hex_color)
-                    line_idx += 1
-
+            for block in blocks:
                 if block["type"] == 0:  # Text block
                     for line in block.get("lines", []):
                         para = docx_doc.add_paragraph()
@@ -700,9 +605,12 @@ def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
 
                 elif block["type"] == 1:  # Image block
                     try:
+                        # Extract image
                         bbox = block.get("bbox", [0, 0, 100, 100])
                         img_width = bbox[2] - bbox[0]
+                        img_height = bbox[3] - bbox[1]
 
+                        # Get image from block
                         xref = block.get("xref", 0)
                         if xref:
                             img_data = pdf_doc.extract_image(xref)
@@ -710,6 +618,7 @@ def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
                                 img_bytes = img_data["image"]
                                 img_ext = img_data["ext"]
 
+                                # Save image temporarily
                                 img_temp_path = os.path.join(
                                     os.path.dirname(output_path),
                                     f"temp_img_{page_num}_{xref}.{img_ext}"
@@ -717,27 +626,59 @@ def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
                                 with open(img_temp_path, "wb") as img_file:
                                     img_file.write(img_bytes)
 
-                                max_width = Inches(6)
+                                # Add image to document with appropriate size
+                                max_width = Inches(6)  # Max width in document
                                 scale = min(1.0, max_width / Pt(img_width).inches) if img_width > 0 else 1.0
                                 docx_doc.add_picture(img_temp_path, width=Inches(img_width * scale / 72))
 
+                                # Clean up temp image
                                 os.remove(img_temp_path)
                     except Exception as img_error:
                         logger.warning(f"Failed to extract image: {img_error}")
 
-            # Add any remaining horizontal lines after all blocks
-            while line_idx < len(h_lines_sorted):
-                line_y, line_width, line_color = h_lines_sorted[line_idx]
-                if isinstance(line_color, (list, tuple)) and len(line_color) >= 3:
-                    hex_color = "{:02x}{:02x}{:02x}".format(
-                        int(line_color[0] * 255) if line_color[0] <= 1 else int(line_color[0]),
-                        int(line_color[1] * 255) if line_color[1] <= 1 else int(line_color[1]),
-                        int(line_color[2] * 255) if line_color[2] <= 1 else int(line_color[2])
-                    )
-                else:
-                    hex_color = "000000"
-                add_horizontal_line(docx_doc, color=hex_color)
-                line_idx += 1
+            # Extract and add drawings (lines, rectangles, etc.)
+            try:
+                drawings = page.get_drawings()
+                if drawings:
+                    for drawing in drawings:
+                        if drawing.get("items"):
+                            for item in drawing["items"]:
+                                if item[0] == "l":  # Line
+                                    # Add horizontal rule for horizontal lines
+                                    p1, p2 = item[1], item[2]
+                                    if abs(p1.y - p2.y) < 5:  # Horizontal line
+                                        line_width = abs(p2.x - p1.x)
+                                        if line_width > 50:  # Minimum width
+                                            para = docx_doc.add_paragraph()
+                                            para.paragraph_format.space_before = Pt(0)
+                                            para.paragraph_format.space_after = Pt(0)
+                                            # Add bottom border
+                                            pPr = para._p.get_or_add_pPr()
+                                            pBdr = OxmlElement('w:pBdr')
+                                            bottom = OxmlElement('w:bottom')
+                                            bottom.set(qn('w:val'), 'single')
+                                            bottom.set(qn('w:sz'), '6')
+                                            bottom.set(qn('w:space'), '1')
+                                            bottom.set(qn('w:color'), '000000')
+                                            pBdr.append(bottom)
+                                            pPr.append(pBdr)
+                                elif item[0] == "re":  # Rectangle (thin ones are lines)
+                                    rect = item[1]
+                                    if rect.height < 5 and rect.width > 50:
+                                        para = docx_doc.add_paragraph()
+                                        para.paragraph_format.space_before = Pt(0)
+                                        para.paragraph_format.space_after = Pt(0)
+                                        pPr = para._p.get_or_add_pPr()
+                                        pBdr = OxmlElement('w:pBdr')
+                                        bottom = OxmlElement('w:bottom')
+                                        bottom.set(qn('w:val'), 'single')
+                                        bottom.set(qn('w:sz'), '6')
+                                        bottom.set(qn('w:space'), '1')
+                                        bottom.set(qn('w:color'), '000000')
+                                        pBdr.append(bottom)
+                                        pPr.append(pBdr)
+            except Exception as draw_error:
+                logger.warning(f"Failed to extract drawings: {draw_error}")
 
         # Save the document
         docx_doc.save(output_path)
