@@ -124,6 +124,12 @@ const toolConfigs: Record<string, ToolSEOConfig> = {
     keywords: ['redact PDF', 'black out PDF', 'censor PDF', 'PDF redaction tool', 'hide text in PDF'],
     path: '/redact',
   },
+  'pdf-to-docx': {
+    title: 'Convert PDF to Word Online - PDF to DOCX Free',
+    description: 'Convert PDF documents to editable Word files online for free. Preserve text and layout when converting PDF to DOCX.',
+    keywords: ['PDF to Word', 'PDF to DOCX', 'convert PDF to Word', 'PDF converter', 'PDF to editable Word'],
+    path: '/pdf-to-docx',
+  },
   'crop-pdf': {
     title: 'Crop PDF Pages Online - Trim PDF Margins Free',
     description: 'Crop PDF pages to remove unwanted margins or resize page areas online for free. Trim PDF documents easily.',
