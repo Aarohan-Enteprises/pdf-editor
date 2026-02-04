@@ -20,11 +20,10 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install Ghostscript for PDF compression, LibreOffice for DOCX conversion, and Pandoc for Docling
+# Install Ghostscript for PDF compression and LibreOffice for DOCX conversion fallback
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ghostscript \
     libreoffice-writer-nogui \
-    pandoc \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security with proper home directory

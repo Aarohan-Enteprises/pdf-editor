@@ -23,7 +23,7 @@ export default function PdfToDocxPage() {
   const [convertedData, setConvertedData] = useState<Uint8Array | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingStage, setProcessingStage] = useState<'idle' | 'uploading' | 'processing' | 'done'>('idle');
-  const [engine, setEngine] = useState<'docling' | 'libreoffice'>('docling');
+  const [engine, setEngine] = useState<'pymupdf' | 'libreoffice'>('pymupdf');
   const [engineUsed, setEngineUsed] = useState<string | null>(null);
 
   const handleFilesSelected = useCallback(async (selectedFiles: File[]) => {
@@ -202,25 +202,25 @@ export default function PdfToDocxPage() {
                   </label>
                   <div className="space-y-2">
                     <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      engine === 'docling'
+                      engine === 'pymupdf'
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                         : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
                     }`}>
                       <input
                         type="radio"
                         name="engine"
-                        value="docling"
-                        checked={engine === 'docling'}
-                        onChange={(e) => setEngine(e.target.value as 'docling' | 'libreoffice')}
+                        value="pymupdf"
+                        checked={engine === 'pymupdf'}
+                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice')}
                         className="mt-1"
                       />
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 dark:text-white text-sm">Docling (AI-powered)</span>
+                          <span className="font-medium text-gray-900 dark:text-white text-sm">PyMuPDF (Advanced)</span>
                           <span className="px-1.5 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">Recommended</span>
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          Better formatting preservation for complex documents, tables, and layouts
+                          Preserves text formatting, images, and horizontal lines
                         </p>
                       </div>
                     </label>
@@ -234,7 +234,7 @@ export default function PdfToDocxPage() {
                         name="engine"
                         value="libreoffice"
                         checked={engine === 'libreoffice'}
-                        onChange={(e) => setEngine(e.target.value as 'docling' | 'libreoffice')}
+                        onChange={(e) => setEngine(e.target.value as 'pymupdf' | 'libreoffice')}
                         className="mt-1"
                       />
                       <div>
@@ -360,7 +360,7 @@ export default function PdfToDocxPage() {
                         ? 'text-blue-600 dark:text-blue-400 font-medium'
                         : 'text-gray-400 dark:text-gray-500'
                     }`}>
-                      Converting with {engine === 'docling' ? 'Docling AI' : 'LibreOffice'}...
+                      Converting with {engine === 'pymupdf' ? 'PyMuPDF' : 'LibreOffice'}...
                     </span>
                   </div>
                 </div>
@@ -397,7 +397,7 @@ export default function PdfToDocxPage() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-500 dark:text-gray-400">Converted with</span>
                       <span className="font-medium text-gray-900 dark:text-white capitalize">
-                        {engineUsed === 'docling' ? 'Docling (AI)' : 'LibreOffice'}
+                        {engineUsed === 'pymupdf' ? 'PyMuPDF' : 'LibreOffice'}
                       </span>
                     </div>
                   )}
@@ -443,7 +443,7 @@ export default function PdfToDocxPage() {
                 <div className="text-sm text-slate-600 dark:text-slate-300">
                   <p className="font-medium mb-1">Secure server processing</p>
                   <p className="text-slate-500 dark:text-slate-400">
-                    Your file is encrypted during transfer, processed using {engine === 'docling' ? 'Docling AI' : 'LibreOffice'}, and automatically deleted after conversion.
+                    Your file is encrypted during transfer, processed using {engine === 'pymupdf' ? 'PyMuPDF' : 'LibreOffice'}, and automatically deleted after conversion.
                   </p>
                 </div>
               </div>

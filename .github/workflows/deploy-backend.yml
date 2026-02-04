@@ -101,13 +101,12 @@ jobs:
             echo "Stopping existing containers..."
             $DOCKER_CMD compose down --remove-orphans || true
 
-            echo "Cleaning up disk space before build..."
-            $DOCKER_CMD system prune -af --volumes || true
-            $DOCKER_CMD builder prune -af || true
+            echo "Cleaning up unused images..."
+            $DOCKER_CMD image prune -f || true
             df -h /
 
             echo "Building Docker images..."
-            $DOCKER_CMD compose build --no-cache
+            $DOCKER_CMD compose build
 
             echo "Starting containers..."
             $DOCKER_CMD compose up -d

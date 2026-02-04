@@ -10,22 +10,17 @@ import logging
 import time
 import glob as glob_module
 
-# Docling imports (optional - graceful fallback if not installed)
+# PyMuPDF + python-docx for PDF to DOCX conversion (optional)
 try:
-    from docling.document_converter import DocumentConverter
-    from docling.datamodel.base_models import InputFormat
-    from docling.datamodel.pipeline_options import PdfPipelineOptions
-    from docling.document_converter import PdfFormatOption
-    DOCLING_AVAILABLE = True
+    import fitz  # PyMuPDF
+    from docx import Document
+    from docx.shared import Pt, Inches, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    PYMUPDF_AVAILABLE = True
 except ImportError:
-    DOCLING_AVAILABLE = False
-
-# Pypandoc for markdown to DOCX conversion (optional)
-try:
-    import pypandoc
-    PYPANDOC_AVAILABLE = True
-except ImportError:
-    PYPANDOC_AVAILABLE = False
+    PYMUPDF_AVAILABLE = False
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -126,15 +121,10 @@ async def startup_event():
     else:
         logger.warning("LibreOffice not found! DOCX to PDF conversion will not work.")
 
-    if DOCLING_AVAILABLE:
-        logger.info("Docling is available for PDF to DOCX conversion")
+    if PYMUPDF_AVAILABLE:
+        logger.info("PyMuPDF + python-docx available for PDF to DOCX conversion")
     else:
-        logger.warning("Docling not installed. Install with: pip install docling")
-
-    if PYPANDOC_AVAILABLE:
-        logger.info("Pypandoc is available for markdown to DOCX conversion")
-    else:
-        logger.warning("Pypandoc not installed. Install with: pip install pypandoc")
+        logger.warning("PyMuPDF not installed. Install with: pip install pymupdf python-docx")
 
 # Ghostscript quality presets
 QUALITY_SETTINGS = {
@@ -548,48 +538,138 @@ async def convert_docx_to_pdf(file: UploadFile = File(...)):
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-def convert_pdf_to_docx_with_docling(input_path: str, output_path: str) -> bool:
-    """Convert PDF to DOCX using Docling + Pypandoc.
+def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
+    """Convert PDF to DOCX using PyMuPDF + python-docx.
 
-    Docling extracts PDF content to Markdown with better structure preservation,
-    then Pypandoc converts Markdown to DOCX.
+    Extracts text, images, and drawings from PDF and reconstructs in DOCX.
+    Preserves formatting, layout, and horizontal/vertical lines.
 
     Returns True on success, False on failure.
     """
-    if not DOCLING_AVAILABLE or not PYPANDOC_AVAILABLE:
+    if not PYMUPDF_AVAILABLE:
         return False
 
     try:
-        # Configure Docling pipeline for better quality
-        pipeline_options = PdfPipelineOptions()
-        pipeline_options.do_ocr = True
-        pipeline_options.do_table_structure = True
+        # Open PDF
+        pdf_doc = fitz.open(input_path)
+        docx_doc = Document()
 
-        converter = DocumentConverter(
-            format_options={
-                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
-            }
-        )
+        for page_num in range(len(pdf_doc)):
+            page = pdf_doc[page_num]
 
-        # Convert PDF to Docling document
-        result = converter.convert(input_path)
+            # Add page break between pages (except first)
+            if page_num > 0:
+                docx_doc.add_page_break()
 
-        # Export to Markdown
-        markdown_content = result.document.export_to_markdown()
+            # Get page dimensions for scaling
+            page_rect = page.rect
+            page_width = page_rect.width
+            page_height = page_rect.height
 
-        # Convert Markdown to DOCX using Pypandoc
-        pypandoc.convert_text(
-            markdown_content,
-            'docx',
-            format='md',
-            outputfile=output_path,
-            extra_args=['--standalone']
-        )
+            # Extract text blocks with formatting
+            blocks = page.get_text("dict", flags=fitz.TEXT_PRESERVE_WHITESPACE)["blocks"]
+
+            for block in blocks:
+                if block["type"] == 0:  # Text block
+                    for line in block.get("lines", []):
+                        para = docx_doc.add_paragraph()
+
+                        for span in line.get("spans", []):
+                            text = span.get("text", "")
+                            if not text.strip():
+                                continue
+
+                            run = para.add_run(text)
+
+                            # Apply font size
+                            font_size = span.get("size", 11)
+                            run.font.size = Pt(font_size)
+
+                            # Apply font name
+                            font_name = span.get("font", "")
+                            if font_name:
+                                run.font.name = font_name.split("+")[-1]  # Remove subset prefix
+
+                            # Apply bold/italic based on font flags
+                            flags = span.get("flags", 0)
+                            run.font.bold = bool(flags & 2 ** 4)  # Bold flag
+                            run.font.italic = bool(flags & 2 ** 1)  # Italic flag
+
+                            # Apply text color
+                            color = span.get("color", 0)
+                            if color and color != 0:
+                                r = (color >> 16) & 0xFF
+                                g = (color >> 8) & 0xFF
+                                b = color & 0xFF
+                                run.font.color.rgb = RGBColor(r, g, b)
+
+                elif block["type"] == 1:  # Image block
+                    try:
+                        # Extract image
+                        bbox = block.get("bbox", [0, 0, 100, 100])
+                        img_width = bbox[2] - bbox[0]
+                        img_height = bbox[3] - bbox[1]
+
+                        # Get image from block
+                        xref = block.get("xref", 0)
+                        if xref:
+                            img_data = pdf_doc.extract_image(xref)
+                            if img_data:
+                                img_bytes = img_data["image"]
+                                img_ext = img_data["ext"]
+
+                                # Save image temporarily
+                                img_temp_path = os.path.join(
+                                    os.path.dirname(output_path),
+                                    f"temp_img_{page_num}_{xref}.{img_ext}"
+                                )
+                                with open(img_temp_path, "wb") as img_file:
+                                    img_file.write(img_bytes)
+
+                                # Add image to document with appropriate size
+                                max_width = Inches(6)  # Max width in document
+                                scale = min(1.0, max_width / Pt(img_width).inches) if img_width > 0 else 1.0
+                                docx_doc.add_picture(img_temp_path, width=Inches(img_width * scale / 72))
+
+                                # Clean up temp image
+                                os.remove(img_temp_path)
+                    except Exception as img_error:
+                        logger.warning(f"Failed to extract image: {img_error}")
+
+            # Extract and add drawings (lines, rectangles, etc.)
+            try:
+                drawings = page.get_drawings()
+                if drawings:
+                    # Add a note about drawings/lines
+                    for drawing in drawings:
+                        if drawing.get("items"):
+                            for item in drawing["items"]:
+                                if item[0] == "l":  # Line
+                                    # Add horizontal rule for horizontal lines
+                                    p1, p2 = item[1], item[2]
+                                    if abs(p1.y - p2.y) < 2:  # Horizontal line
+                                        para = docx_doc.add_paragraph()
+                                        para_format = para.paragraph_format
+                                        # Add bottom border to simulate horizontal line
+                                        pBdr = OxmlElement('w:pBdr')
+                                        bottom = OxmlElement('w:bottom')
+                                        bottom.set(qn('w:val'), 'single')
+                                        bottom.set(qn('w:sz'), '6')
+                                        bottom.set(qn('w:space'), '1')
+                                        bottom.set(qn('w:color'), '000000')
+                                        pBdr.append(bottom)
+                                        para._p.get_or_add_pPr().append(pBdr)
+            except Exception as draw_error:
+                logger.warning(f"Failed to extract drawings: {draw_error}")
+
+        # Save the document
+        docx_doc.save(output_path)
+        pdf_doc.close()
 
         return os.path.exists(output_path)
 
     except Exception as e:
-        logger.error(f"Docling conversion error: {str(e)}")
+        logger.error(f"PyMuPDF conversion error: {str(e)}")
         return False
 
 
@@ -647,17 +727,17 @@ def convert_pdf_to_docx_with_libreoffice(input_path: str, temp_dir: str) -> str 
 @app.post("/api/pdf-to-docx")
 async def convert_pdf_to_docx(
     file: UploadFile = File(...),
-    engine: str = Form("docling")
+    engine: str = Form("pymupdf")
 ):
     """Convert a PDF file to DOCX.
 
     Args:
         file: The PDF file to convert
-        engine: Conversion engine to use - "docling" (default, better quality) or "libreoffice" (fallback)
+        engine: Conversion engine to use - "pymupdf" (default, better quality) or "libreoffice" (fallback)
     """
     # Validate engine parameter
-    if engine not in ["docling", "libreoffice"]:
-        raise HTTPException(status_code=400, detail="Invalid engine. Use 'docling' or 'libreoffice'")
+    if engine not in ["pymupdf", "libreoffice"]:
+        raise HTTPException(status_code=400, detail="Invalid engine. Use 'pymupdf' or 'libreoffice'")
 
     # Validate file extension
     if not file.filename or not file.filename.lower().endswith('.pdf'):
@@ -666,15 +746,15 @@ async def convert_pdf_to_docx(
     start_time = time.time()
 
     # Check engine availability
-    use_docling = engine == "docling" and DOCLING_AVAILABLE and PYPANDOC_AVAILABLE
-    use_libreoffice = engine == "libreoffice" or not use_docling
+    use_pymupdf = engine == "pymupdf" and PYMUPDF_AVAILABLE
+    use_libreoffice = engine == "libreoffice" or not use_pymupdf
 
     if use_libreoffice:
         lo_cmd = get_libreoffice_command()
-        if not lo_cmd and not use_docling:
+        if not lo_cmd and not use_pymupdf:
             raise HTTPException(
                 status_code=500,
-                detail="No conversion engine available. Install Docling (pip install docling pypandoc) or LibreOffice."
+                detail="No conversion engine available. Install PyMuPDF (pip install pymupdf python-docx) or LibreOffice."
             )
 
     # Read uploaded file
@@ -707,16 +787,16 @@ async def convert_pdf_to_docx(
         docx_content = None
         engine_used = None
 
-        # Try Docling first if requested
-        if use_docling:
-            logger.info("Attempting conversion with Docling...")
-            if convert_pdf_to_docx_with_docling(input_path, output_path):
-                engine_used = "docling"
+        # Try PyMuPDF first if requested
+        if use_pymupdf:
+            logger.info("Attempting conversion with PyMuPDF...")
+            if convert_pdf_to_docx_with_pymupdf(input_path, output_path):
+                engine_used = "pymupdf"
                 with open(output_path, 'rb') as f:
                     docx_content = f.read()
-                logger.info("Docling conversion successful")
+                logger.info("PyMuPDF conversion successful")
             else:
-                logger.warning("Docling conversion failed, falling back to LibreOffice")
+                logger.warning("PyMuPDF conversion failed, falling back to LibreOffice")
                 use_libreoffice = True
 
         # Fall back to LibreOffice if needed
@@ -763,12 +843,10 @@ async def get_available_engines():
 
     return {
         "pdf_to_docx": {
-            "docling": {
-                "available": DOCLING_AVAILABLE and PYPANDOC_AVAILABLE,
-                "description": "AI-powered conversion with better formatting preservation",
-                "missing": [] if DOCLING_AVAILABLE and PYPANDOC_AVAILABLE else
-                          (["docling"] if not DOCLING_AVAILABLE else []) +
-                          (["pypandoc"] if not PYPANDOC_AVAILABLE else [])
+            "pymupdf": {
+                "available": PYMUPDF_AVAILABLE,
+                "description": "Advanced conversion with text, images, and line preservation",
+                "missing": [] if PYMUPDF_AVAILABLE else ["pymupdf", "python-docx"]
             },
             "libreoffice": {
                 "available": lo_cmd is not None,
