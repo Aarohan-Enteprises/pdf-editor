@@ -840,6 +840,119 @@ def convert_pdf_to_docx_with_libreoffice(input_path: str, temp_dir: str) -> str 
     return None
 
 
+def convert_pdf_to_docx_with_poppler(input_path: str, temp_dir: str) -> str | None:
+    """Convert PDF to DOCX using Poppler (pdftohtml) + Pandoc pipeline.
+
+    This two-step conversion often preserves layout better:
+    1. pdftohtml converts PDF to HTML with positioning
+    2. pandoc converts HTML to DOCX
+
+    Returns the output path on success, None on failure.
+    """
+    try:
+        # Check if pdftohtml and pandoc are available
+        pdftohtml_check = subprocess.run(['which', 'pdftohtml'], capture_output=True)
+        pandoc_check = subprocess.run(['which', 'pandoc'], capture_output=True)
+
+        if pdftohtml_check.returncode != 0:
+            logger.warning("pdftohtml not found")
+            return None
+        if pandoc_check.returncode != 0:
+            logger.warning("pandoc not found")
+            return None
+
+        html_path = os.path.join(temp_dir, 'output.html')
+        output_path = os.path.join(temp_dir, 'output.docx')
+
+        # Step 1: Convert PDF to HTML using pdftohtml
+        # -s: single HTML file (not multiple pages)
+        # -i: ignore images (faster, focus on text)
+        # -noframes: don't generate frames
+        pdftohtml_cmd = [
+            'pdftohtml',
+            '-s',           # single document
+            '-noframes',    # no frames
+            '-enc', 'UTF-8',
+            input_path,
+            html_path
+        ]
+
+        logger.info(f"Running pdftohtml: {' '.join(pdftohtml_cmd)}")
+        result = subprocess.run(
+            pdftohtml_cmd,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        if result.returncode != 0:
+            logger.error(f"pdftohtml failed: {result.stderr}")
+            return None
+
+        # pdftohtml creates filename.html (without the .html we passed)
+        # or sometimes with -s it creates the exact filename
+        actual_html = html_path
+        if not os.path.exists(actual_html):
+            # Try without extension
+            base = os.path.join(temp_dir, 'output')
+            for ext in ['.html', 's.html', '-html.html']:
+                test_path = base + ext
+                if os.path.exists(test_path):
+                    actual_html = test_path
+                    break
+
+        if not os.path.exists(actual_html):
+            # List files to debug
+            files = os.listdir(temp_dir)
+            logger.error(f"HTML file not found. Files in temp_dir: {files}")
+            # Try to find any HTML file
+            for f in files:
+                if f.endswith('.html'):
+                    actual_html = os.path.join(temp_dir, f)
+                    break
+
+        if not os.path.exists(actual_html):
+            logger.error("No HTML output from pdftohtml")
+            return None
+
+        logger.info(f"HTML created at: {actual_html}")
+
+        # Step 2: Convert HTML to DOCX using Pandoc
+        pandoc_cmd = [
+            'pandoc',
+            actual_html,
+            '-o', output_path,
+            '--from', 'html',
+            '--to', 'docx'
+        ]
+
+        logger.info(f"Running pandoc: {' '.join(pandoc_cmd)}")
+        result = subprocess.run(
+            pandoc_cmd,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        if result.returncode != 0:
+            logger.error(f"pandoc failed: {result.stderr}")
+            return None
+
+        if os.path.exists(output_path):
+            logger.info("Poppler+Pandoc conversion successful")
+            return output_path
+
+        logger.error("DOCX output not created")
+        return None
+
+    except subprocess.TimeoutExpired:
+        logger.error("Poppler/Pandoc conversion timed out")
+        return None
+    except Exception as e:
+        logger.error(f"Poppler+Pandoc conversion error: {str(e)}")
+        return None
+
+
 @app.post("/api/pdf-to-docx")
 async def convert_pdf_to_docx(
     file: UploadFile = File(...),
@@ -849,11 +962,11 @@ async def convert_pdf_to_docx(
 
     Args:
         file: The PDF file to convert
-        engine: Conversion engine to use - "pymupdf" (default, better quality) or "libreoffice" (fallback)
+        engine: Conversion engine - "pymupdf" (default), "libreoffice", or "poppler"
     """
     # Validate engine parameter
-    if engine not in ["pymupdf", "libreoffice"]:
-        raise HTTPException(status_code=400, detail="Invalid engine. Use 'pymupdf' or 'libreoffice'")
+    if engine not in ["pymupdf", "libreoffice", "poppler"]:
+        raise HTTPException(status_code=400, detail="Invalid engine. Use 'pymupdf', 'libreoffice', or 'poppler'")
 
     # Validate file extension
     if not file.filename or not file.filename.lower().endswith('.pdf'):
@@ -863,14 +976,15 @@ async def convert_pdf_to_docx(
 
     # Check engine availability
     use_pymupdf = engine == "pymupdf" and PYMUPDF_AVAILABLE
-    use_libreoffice = engine == "libreoffice" or not use_pymupdf
+    use_libreoffice = engine == "libreoffice"
+    use_poppler = engine == "poppler"
 
     if use_libreoffice:
         lo_cmd = get_libreoffice_command()
-        if not lo_cmd and not use_pymupdf:
+        if not lo_cmd:
             raise HTTPException(
                 status_code=500,
-                detail="No conversion engine available. Install PyMuPDF (pip install pymupdf python-docx) or LibreOffice."
+                detail="LibreOffice not available on this server."
             )
 
     # Read uploaded file
@@ -903,7 +1017,7 @@ async def convert_pdf_to_docx(
         docx_content = None
         engine_used = None
 
-        # Try PyMuPDF first if requested
+        # Try the requested engine
         if use_pymupdf:
             logger.info("Attempting conversion with PyMuPDF...")
             if convert_pdf_to_docx_with_pymupdf(input_path, output_path):
@@ -912,11 +1026,20 @@ async def convert_pdf_to_docx(
                     docx_content = f.read()
                 logger.info("PyMuPDF conversion successful")
             else:
-                logger.warning("PyMuPDF conversion failed, falling back to LibreOffice")
-                use_libreoffice = True
+                logger.warning("PyMuPDF conversion failed")
 
-        # Fall back to LibreOffice if needed
-        if use_libreoffice and docx_content is None:
+        elif use_poppler:
+            logger.info("Attempting conversion with Poppler+Pandoc...")
+            poppler_output = convert_pdf_to_docx_with_poppler(input_path, temp_dir)
+            if poppler_output:
+                engine_used = "poppler"
+                with open(poppler_output, 'rb') as f:
+                    docx_content = f.read()
+                logger.info("Poppler+Pandoc conversion successful")
+            else:
+                logger.warning("Poppler+Pandoc conversion failed")
+
+        elif use_libreoffice:
             logger.info("Attempting conversion with LibreOffice...")
             lo_output = convert_pdf_to_docx_with_libreoffice(input_path, temp_dir)
             if lo_output:
@@ -957,17 +1080,28 @@ async def get_available_engines():
     lo_cmd = get_libreoffice_command()
     gs_cmd = get_ghostscript_command()
 
+    # Check if poppler and pandoc are available
+    poppler_available = subprocess.run(['which', 'pdftohtml'], capture_output=True).returncode == 0
+    pandoc_available = subprocess.run(['which', 'pandoc'], capture_output=True).returncode == 0
+
     return {
         "pdf_to_docx": {
             "pymupdf": {
                 "available": PYMUPDF_AVAILABLE,
-                "description": "Advanced conversion with text, images, and line preservation",
+                "description": "Advanced conversion with text and images",
                 "missing": [] if PYMUPDF_AVAILABLE else ["pymupdf", "python-docx"]
             },
             "libreoffice": {
                 "available": lo_cmd is not None,
-                "description": "Basic conversion using LibreOffice",
+                "description": "Conversion using LibreOffice (preserves lines)",
                 "path": lo_cmd
+            },
+            "poppler": {
+                "available": poppler_available and pandoc_available,
+                "description": "PDF→HTML→DOCX pipeline using Poppler and Pandoc",
+                "missing": [] if (poppler_available and pandoc_available) else
+                          (["poppler-utils"] if not poppler_available else []) +
+                          (["pandoc"] if not pandoc_available else [])
             }
         },
         "docx_to_pdf": {
