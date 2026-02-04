@@ -275,6 +275,195 @@ async def compress_pdf(
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+@app.post("/api/lock")
+async def lock_pdf(
+    file: UploadFile = File(...),
+    password: str = Form(...),
+    owner_password: str = Form(None),
+    allow_printing: bool = Form(True),
+    allow_copying: bool = Form(True),
+):
+    """Password protect a PDF file using Ghostscript.
+
+    Args:
+        file: The PDF file to protect
+        password: User password (required to open the PDF)
+        owner_password: Owner password (for changing permissions). If not provided, uses user password.
+        allow_printing: Whether to allow printing (default: True)
+        allow_copying: Whether to allow copying text/images (default: True)
+    """
+    gs_cmd = get_ghostscript_command()
+    if not gs_cmd:
+        raise HTTPException(
+            status_code=500,
+            detail="Ghostscript is not installed. PDF encryption requires Ghostscript."
+        )
+
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="File must be a PDF document")
+
+    if not password or len(password) < 1:
+        raise HTTPException(status_code=400, detail="Password is required")
+
+    content = await file.read()
+
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 50MB")
+
+    if not content.startswith(PDF_MAGIC_BYTES):
+        raise HTTPException(status_code=400, detail="Invalid PDF file")
+
+    temp_dir = tempfile.mkdtemp()
+    input_path = os.path.join(temp_dir, 'input.pdf')
+    output_path = os.path.join(temp_dir, 'output.pdf')
+
+    try:
+        with open(input_path, 'wb') as f:
+            f.write(content)
+
+        # Calculate permissions value
+        # Base permissions: -64 allows nothing
+        # Add 4 for printing, add 16 for copying
+        # Ghostscript uses negative values for restrictions
+        permissions = -64
+        if allow_printing:
+            permissions += 4
+        if allow_copying:
+            permissions += 16
+
+        owner_pwd = owner_password if owner_password else password
+
+        gs_command = [
+            gs_cmd,
+            '-dNOPAUSE',
+            '-dBATCH',
+            '-dQUIET',
+            '-sDEVICE=pdfwrite',
+            '-dCompatibilityLevel=1.4',
+            '-dEncryptionR=3',
+            '-dKeyLength=128',
+            f'-sOwnerPassword={owner_pwd}',
+            f'-sUserPassword={password}',
+            f'-dPermissions={permissions}',
+            f'-sOutputFile={output_path}',
+            input_path
+        ]
+
+        logger.info(f"Lock PDF: Encrypting with permissions={permissions}")
+        result = subprocess.run(gs_command, capture_output=True, text=True, timeout=120)
+
+        if result.returncode != 0:
+            logger.error(f"Lock PDF failed: {result.stderr}")
+            raise HTTPException(status_code=500, detail=f"Encryption failed: {result.stderr}")
+
+        if not os.path.exists(output_path):
+            raise HTTPException(status_code=500, detail="Encryption failed: output file not created")
+
+        with open(output_path, 'rb') as f:
+            locked_content = f.read()
+
+        output_filename = file.filename.rsplit('.', 1)[0] + '-locked.pdf'
+
+        return Response(
+            content=locked_content,
+            media_type='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="{output_filename}"',
+            }
+        )
+
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="Encryption timed out")
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@app.post("/api/unlock")
+async def unlock_pdf(
+    file: UploadFile = File(...),
+    password: str = Form(...),
+):
+    """Remove password protection from a PDF file using Ghostscript.
+
+    Args:
+        file: The password-protected PDF file
+        password: The password to unlock the PDF
+    """
+    gs_cmd = get_ghostscript_command()
+    if not gs_cmd:
+        raise HTTPException(
+            status_code=500,
+            detail="Ghostscript is not installed. PDF decryption requires Ghostscript."
+        )
+
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="File must be a PDF document")
+
+    if not password:
+        raise HTTPException(status_code=400, detail="Password is required")
+
+    content = await file.read()
+
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 50MB")
+
+    if not content.startswith(PDF_MAGIC_BYTES):
+        raise HTTPException(status_code=400, detail="Invalid PDF file")
+
+    temp_dir = tempfile.mkdtemp()
+    input_path = os.path.join(temp_dir, 'input.pdf')
+    output_path = os.path.join(temp_dir, 'output.pdf')
+
+    try:
+        with open(input_path, 'wb') as f:
+            f.write(content)
+
+        gs_command = [
+            gs_cmd,
+            '-dNOPAUSE',
+            '-dBATCH',
+            '-dQUIET',
+            '-sDEVICE=pdfwrite',
+            '-dCompatibilityLevel=1.4',
+            f'-sPDFPassword={password}',
+            f'-sOutputFile={output_path}',
+            input_path
+        ]
+
+        logger.info("Unlock PDF: Removing password protection")
+        result = subprocess.run(gs_command, capture_output=True, text=True, timeout=120)
+
+        if result.returncode != 0:
+            error_msg = result.stderr.lower()
+            if 'password' in error_msg or 'encrypt' in error_msg:
+                raise HTTPException(status_code=401, detail="Incorrect password")
+            logger.error(f"Unlock PDF failed: {result.stderr}")
+            raise HTTPException(status_code=500, detail=f"Decryption failed: {result.stderr}")
+
+        if not os.path.exists(output_path):
+            raise HTTPException(status_code=500, detail="Decryption failed: output file not created")
+
+        with open(output_path, 'rb') as f:
+            unlocked_content = f.read()
+
+        output_filename = file.filename.rsplit('.', 1)[0] + '-unlocked.pdf'
+
+        return Response(
+            content=unlocked_content,
+            media_type='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="{output_filename}"',
+            }
+        )
+
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="Decryption timed out")
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 @app.post("/api/docx-to-pdf")
 async def convert_docx_to_pdf(file: UploadFile = File(...)):
     """Convert a DOCX file to PDF using LibreOffice."""
@@ -426,41 +615,6 @@ async def pdf_to_docx_endpoint(file: UploadFile = File(...)):
 
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
-
-
-@app.get("/api/engines")
-async def get_available_engines():
-    """Get available conversion engines and their status."""
-    lo_cmd = get_libreoffice_command()
-    gs_cmd = get_ghostscript_command()
-    calibre_cmd = get_calibre_command()
-
-    return {
-        "pdf_to_docx": {
-            "calibre": {
-                "available": calibre_cmd is not None,
-                "path": calibre_cmd,
-                "description": "Calibre ebook-convert for PDF to DOCX"
-            },
-            "ghostscript": {
-                "available": gs_cmd is not None,
-                "path": gs_cmd,
-                "description": "Ghostscript for PDF flattening before conversion"
-            }
-        },
-        "docx_to_pdf": {
-            "libreoffice": {
-                "available": lo_cmd is not None,
-                "path": lo_cmd
-            }
-        },
-        "compression": {
-            "ghostscript": {
-                "available": gs_cmd is not None,
-                "path": gs_cmd
-            }
-        }
-    }
 
 
 @app.get("/health")
