@@ -654,22 +654,41 @@ def fix_docx_margins(docx_path: str) -> bool:
         return False
 
     try:
-        from docx.shared import Inches, Pt
+        from docx.shared import Inches, Pt, Twips
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
 
         doc = Document(docx_path)
 
-        # Fix page margins (set to standard 1 inch)
+        # Fix page margins (match typical PDF margins ~0.75 inch)
         for section in doc.sections:
-            section.left_margin = Inches(1)
-            section.right_margin = Inches(1)
-            section.top_margin = Inches(1)
-            section.bottom_margin = Inches(1)
+            section.left_margin = Inches(0.75)
+            section.right_margin = Inches(0.75)
+            section.top_margin = Inches(0.75)
+            section.bottom_margin = Inches(0.75)
 
-        # Fix paragraph indentation - remove all indents
+        # Fix paragraph indentation - remove all indents and extra spacing
         for para in doc.paragraphs:
-            para.paragraph_format.left_indent = Inches(0)
-            para.paragraph_format.right_indent = Inches(0)
-            para.paragraph_format.first_line_indent = Inches(0)
+            # Remove all indentation
+            para.paragraph_format.left_indent = Twips(0)
+            para.paragraph_format.right_indent = Twips(0)
+            para.paragraph_format.first_line_indent = Twips(0)
+
+            # Also check and fix runs for any character-level positioning
+            for run in para.runs:
+                # Clear any position adjustments
+                if hasattr(run.font, '_element'):
+                    pos = run.font._element.find('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}position')
+                    if pos is not None:
+                        run.font._element.remove(pos)
+
+        # Also fix tables if any
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    for para in cell.paragraphs:
+                        para.paragraph_format.left_indent = Twips(0)
+                        para.paragraph_format.right_indent = Twips(0)
+                        para.paragraph_format.first_line_indent = Twips(0)
 
         doc.save(docx_path)
         logger.info("Fixed DOCX margins successfully")
