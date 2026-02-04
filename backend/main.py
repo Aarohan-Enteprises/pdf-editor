@@ -10,6 +10,23 @@ import logging
 import time
 import glob as glob_module
 
+# Docling imports (optional - graceful fallback if not installed)
+try:
+    from docling.document_converter import DocumentConverter
+    from docling.datamodel.base_models import InputFormat
+    from docling.datamodel.pipeline_options import PdfPipelineOptions
+    from docling.document_converter import PdfFormatOption
+    DOCLING_AVAILABLE = True
+except ImportError:
+    DOCLING_AVAILABLE = False
+
+# Pypandoc for markdown to DOCX conversion (optional)
+try:
+    import pypandoc
+    PYPANDOC_AVAILABLE = True
+except ImportError:
+    PYPANDOC_AVAILABLE = False
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -108,6 +125,16 @@ async def startup_event():
         logger.info(f"LibreOffice found at: {lo_cmd}")
     else:
         logger.warning("LibreOffice not found! DOCX to PDF conversion will not work.")
+
+    if DOCLING_AVAILABLE:
+        logger.info("Docling is available for PDF to DOCX conversion")
+    else:
+        logger.warning("Docling not installed. Install with: pip install docling")
+
+    if PYPANDOC_AVAILABLE:
+        logger.info("Pypandoc is available for markdown to DOCX conversion")
+    else:
+        logger.warning("Pypandoc not installed. Install with: pip install pypandoc")
 
 # Ghostscript quality presets
 QUALITY_SETTINGS = {
@@ -521,23 +548,134 @@ async def convert_docx_to_pdf(file: UploadFile = File(...)):
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def convert_pdf_to_docx_with_docling(input_path: str, output_path: str) -> bool:
+    """Convert PDF to DOCX using Docling + Pypandoc.
+
+    Docling extracts PDF content to Markdown with better structure preservation,
+    then Pypandoc converts Markdown to DOCX.
+
+    Returns True on success, False on failure.
+    """
+    if not DOCLING_AVAILABLE or not PYPANDOC_AVAILABLE:
+        return False
+
+    try:
+        # Configure Docling pipeline for better quality
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_ocr = True
+        pipeline_options.do_table_structure = True
+
+        converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+            }
+        )
+
+        # Convert PDF to Docling document
+        result = converter.convert(input_path)
+
+        # Export to Markdown
+        markdown_content = result.document.export_to_markdown()
+
+        # Convert Markdown to DOCX using Pypandoc
+        pypandoc.convert_text(
+            markdown_content,
+            'docx',
+            format='md',
+            outputfile=output_path,
+            extra_args=['--standalone']
+        )
+
+        return os.path.exists(output_path)
+
+    except Exception as e:
+        logger.error(f"Docling conversion error: {str(e)}")
+        return False
+
+
+def convert_pdf_to_docx_with_libreoffice(input_path: str, temp_dir: str) -> str | None:
+    """Convert PDF to DOCX using LibreOffice.
+
+    Returns the output path on success, None on failure.
+    """
+    lo_cmd = get_libreoffice_command()
+    if not lo_cmd:
+        return None
+
+    try:
+        lo_command = [
+            lo_cmd,
+            '--headless',
+            '--infilter=writer_pdf_import',
+            '--convert-to', 'docx',
+            '--outdir', temp_dir,
+            input_path
+        ]
+
+        logger.info(f"Running command: {' '.join(lo_command)}")
+
+        result = subprocess.run(
+            lo_command,
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+
+        logger.info(f"LibreOffice return code: {result.returncode}")
+        if result.stderr:
+            logger.info(f"LibreOffice stderr: {result.stderr}")
+        if result.stdout:
+            logger.info(f"LibreOffice stdout: {result.stdout}")
+
+        if result.returncode != 0:
+            return None
+
+        output_path = os.path.join(temp_dir, 'input.docx')
+        if os.path.exists(output_path):
+            return output_path
+
+        return None
+
+    except subprocess.TimeoutExpired:
+        logger.error("LibreOffice conversion timed out")
+        return None
+    except Exception as e:
+        logger.error(f"LibreOffice conversion error: {str(e)}")
+        return None
+
+
 @app.post("/api/pdf-to-docx")
-async def convert_pdf_to_docx(file: UploadFile = File(...)):
-    """Convert a PDF file to DOCX using LibreOffice."""
+async def convert_pdf_to_docx(
+    file: UploadFile = File(...),
+    engine: str = Form("docling")
+):
+    """Convert a PDF file to DOCX.
+
+    Args:
+        file: The PDF file to convert
+        engine: Conversion engine to use - "docling" (default, better quality) or "libreoffice" (fallback)
+    """
+    # Validate engine parameter
+    if engine not in ["docling", "libreoffice"]:
+        raise HTTPException(status_code=400, detail="Invalid engine. Use 'docling' or 'libreoffice'")
+
     # Validate file extension
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="File must be a PDF document")
 
     start_time = time.time()
 
-    # Check if LibreOffice is available
-    lo_cmd = get_libreoffice_command()
-    logger.info(f"LibreOffice command: {lo_cmd}")
-    if not lo_cmd:
-        raise HTTPException(
-            status_code=500,
-            detail="LibreOffice is not installed. Please install LibreOffice from https://www.libreoffice.org/download/"
-        )
+    # Check engine availability
+    use_docling = engine == "docling" and DOCLING_AVAILABLE and PYPANDOC_AVAILABLE
+    use_libreoffice = engine == "libreoffice" or not use_docling
+
+    if use_libreoffice:
+        lo_cmd = get_libreoffice_command()
+        if not lo_cmd and not use_docling:
+            raise HTTPException(
+                status_code=500,
+                detail="No conversion engine available. Install Docling (pip install docling pypandoc) or LibreOffice."
+            )
 
     # Read uploaded file
     content = await file.read()
@@ -556,6 +694,7 @@ async def convert_pdf_to_docx(file: UploadFile = File(...)):
     # Create temp directory for input and output
     temp_dir = tempfile.mkdtemp()
     input_path = os.path.join(temp_dir, 'input.pdf')
+    output_path = os.path.join(temp_dir, 'output.docx')
 
     try:
         # Write input file
@@ -565,59 +704,39 @@ async def convert_pdf_to_docx(file: UploadFile = File(...)):
         write_time = time.time()
         logger.info(f"TIMING: Temp file written in {write_time - read_time:.3f}s")
 
-        # Run LibreOffice conversion
-        # --headless: Run without UI
-        # --infilter: Specify input filter for PDF
-        # --convert-to docx: Convert to DOCX format
-        # --outdir: Output directory
-        lo_command = [
-            lo_cmd,
-            '--headless',
-            '--infilter=writer_pdf_import',
-            '--convert-to', 'docx',
-            '--outdir', temp_dir,
-            input_path
-        ]
+        docx_content = None
+        engine_used = None
 
-        logger.info(f"Running command: {' '.join(lo_command)}")
+        # Try Docling first if requested
+        if use_docling:
+            logger.info("Attempting conversion with Docling...")
+            if convert_pdf_to_docx_with_docling(input_path, output_path):
+                engine_used = "docling"
+                with open(output_path, 'rb') as f:
+                    docx_content = f.read()
+                logger.info("Docling conversion successful")
+            else:
+                logger.warning("Docling conversion failed, falling back to LibreOffice")
+                use_libreoffice = True
 
-        result = subprocess.run(
-            lo_command,
-            capture_output=True,
-            text=True,
-            timeout=120  # 2 minute timeout
-        )
+        # Fall back to LibreOffice if needed
+        if use_libreoffice and docx_content is None:
+            logger.info("Attempting conversion with LibreOffice...")
+            lo_output = convert_pdf_to_docx_with_libreoffice(input_path, temp_dir)
+            if lo_output:
+                engine_used = "libreoffice"
+                with open(lo_output, 'rb') as f:
+                    docx_content = f.read()
+                logger.info("LibreOffice conversion successful")
 
-        logger.info(f"LibreOffice return code: {result.returncode}")
-        if result.stderr:
-            logger.info(f"LibreOffice stderr: {result.stderr}")
-        if result.stdout:
-            logger.info(f"LibreOffice stdout: {result.stdout}")
-
-        if result.returncode != 0:
+        if docx_content is None:
             raise HTTPException(
                 status_code=500,
-                detail=f"LibreOffice conversion failed: {result.stderr or 'Unknown error'}"
+                detail="Conversion failed with all available engines"
             )
-
-        lo_time = time.time()
-        logger.info(f"TIMING: LibreOffice completed in {lo_time - write_time:.3f}s")
-
-        # Find the output DOCX file
-        output_path = os.path.join(temp_dir, 'input.docx')
-
-        if not os.path.exists(output_path):
-            raise HTTPException(
-                status_code=500,
-                detail="Conversion failed: output DOCX not created"
-            )
-
-        # Read the converted DOCX
-        with open(output_path, 'rb') as f:
-            docx_content = f.read()
 
         total_time = time.time()
-        logger.info(f"TIMING: Total processing time: {total_time - start_time:.3f}s")
+        logger.info(f"TIMING: Total processing time: {total_time - start_time:.3f}s (engine: {engine_used})")
 
         # Generate output filename from input
         output_filename = file.filename.rsplit('.', 1)[0] + '.docx'
@@ -627,15 +746,49 @@ async def convert_pdf_to_docx(file: UploadFile = File(...)):
             media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             headers={
                 'Content-Disposition': f'attachment; filename="{output_filename}"',
+                'X-Conversion-Engine': engine_used,
             }
         )
-
-    except subprocess.TimeoutExpired:
-        raise HTTPException(status_code=500, detail="Conversion timed out")
 
     finally:
         # Cleanup temp directory and all files
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@app.get("/api/engines")
+async def get_available_engines():
+    """Get available conversion engines and their status."""
+    lo_cmd = get_libreoffice_command()
+    gs_cmd = get_ghostscript_command()
+
+    return {
+        "pdf_to_docx": {
+            "docling": {
+                "available": DOCLING_AVAILABLE and PYPANDOC_AVAILABLE,
+                "description": "AI-powered conversion with better formatting preservation",
+                "missing": [] if DOCLING_AVAILABLE and PYPANDOC_AVAILABLE else
+                          (["docling"] if not DOCLING_AVAILABLE else []) +
+                          (["pypandoc"] if not PYPANDOC_AVAILABLE else [])
+            },
+            "libreoffice": {
+                "available": lo_cmd is not None,
+                "description": "Basic conversion using LibreOffice",
+                "path": lo_cmd
+            }
+        },
+        "docx_to_pdf": {
+            "libreoffice": {
+                "available": lo_cmd is not None,
+                "path": lo_cmd
+            }
+        },
+        "compression": {
+            "ghostscript": {
+                "available": gs_cmd is not None,
+                "path": gs_cmd
+            }
+        }
+    }
 
 
 @app.get("/health")
