@@ -105,6 +105,55 @@ app.add_middleware(
 )
 
 
+def flatten_pdf_with_ghostscript(input_path: str, output_path: str) -> tuple[bool, str]:
+    """Flatten a PDF using Ghostscript to remove annotations, form fields, and interactive elements.
+
+    Returns (success, error_message)
+    """
+    gs_cmd = get_ghostscript_command()
+    if not gs_cmd:
+        return False, "ghostscript_not_found"
+
+    try:
+        # Flatten PDF by re-processing with Ghostscript
+        # This removes form fields, annotations, and flattens layers
+        cmd = [
+            gs_cmd,
+            '-dNOPAUSE',
+            '-dBATCH',
+            '-dQUIET',
+            '-sDEVICE=pdfwrite',
+            '-dCompatibilityLevel=1.4',
+            '-dPreserveAnnots=false',
+            '-dFlattenAnnots=true',
+            '-dPDFSETTINGS=/prepress',
+            f'-sOutputFile={output_path}',
+            input_path
+        ]
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        if result.returncode != 0:
+            logger.error(f"Ghostscript flatten failed: {result.stderr}")
+            return False, f"gs_error: {result.stderr[:200]}"
+
+        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+            return True, ""
+
+        return False, "flattened_output_not_created"
+
+    except subprocess.TimeoutExpired:
+        return False, "flatten_timeout"
+    except Exception as e:
+        logger.error(f"Ghostscript flatten error: {e}")
+        return False, str(e)
+
+
 def convert_pdf_to_docx_calibre(input_path: str, output_path: str) -> tuple[bool, str]:
     """Convert PDF to DOCX using Calibre's ebook-convert.
 
@@ -296,13 +345,21 @@ async def convert_docx_to_pdf(file: UploadFile = File(...)):
 async def pdf_to_docx_endpoint(file: UploadFile = File(...)):
     """Convert a PDF file to DOCX using Calibre's ebook-convert.
 
-    Calibre provides high-quality PDF to DOCX conversion with good formatting.
+    The PDF is first flattened using Ghostscript to remove annotations,
+    form fields, and interactive elements for better conversion results.
     """
     calibre_cmd = get_calibre_command()
     if not calibre_cmd:
         raise HTTPException(
             status_code=500,
             detail="Calibre is not installed. PDF to DOCX conversion requires Calibre."
+        )
+
+    gs_cmd = get_ghostscript_command()
+    if not gs_cmd:
+        raise HTTPException(
+            status_code=500,
+            detail="Ghostscript is not installed. PDF flattening requires Ghostscript."
         )
 
     if not file.filename or not file.filename.lower().endswith('.pdf'):
@@ -321,13 +378,27 @@ async def pdf_to_docx_endpoint(file: UploadFile = File(...)):
 
     temp_dir = tempfile.mkdtemp()
     input_path = os.path.join(temp_dir, 'input.pdf')
+    flattened_path = os.path.join(temp_dir, 'flattened.pdf')
     output_path = os.path.join(temp_dir, 'output.docx')
 
     try:
         with open(input_path, 'wb') as f:
             f.write(content)
 
-        success, engine = convert_pdf_to_docx_calibre(input_path, output_path)
+        # Step 1: Flatten the PDF using Ghostscript
+        logger.info("PDF to DOCX: Flattening PDF with Ghostscript...")
+        flatten_success, flatten_error = flatten_pdf_with_ghostscript(input_path, flattened_path)
+
+        if flatten_success:
+            logger.info("PDF to DOCX: Flattening successful")
+            pdf_to_convert = flattened_path
+        else:
+            # If flattening fails, proceed with original PDF
+            logger.warning(f"PDF to DOCX: Flattening failed ({flatten_error}), using original PDF")
+            pdf_to_convert = input_path
+
+        # Step 2: Convert to DOCX using Calibre
+        success, engine = convert_pdf_to_docx_calibre(pdf_to_convert, output_path)
 
         if not success:
             raise HTTPException(
@@ -339,7 +410,8 @@ async def pdf_to_docx_endpoint(file: UploadFile = File(...)):
             docx_content = f.read()
 
         total_time = time.time() - start_time
-        logger.info(f"PDF to DOCX: Completed in {total_time:.2f}s using {engine}")
+        engine_info = f"{engine}+flatten" if flatten_success else engine
+        logger.info(f"PDF to DOCX: Completed in {total_time:.2f}s using {engine_info}")
 
         output_filename = file.filename.rsplit('.', 1)[0] + '.docx'
 
@@ -348,7 +420,7 @@ async def pdf_to_docx_endpoint(file: UploadFile = File(...)):
             media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             headers={
                 'Content-Disposition': f'attachment; filename="{output_filename}"',
-                'X-Conversion-Engine': engine,
+                'X-Conversion-Engine': engine_info,
             }
         )
 
@@ -369,6 +441,11 @@ async def get_available_engines():
                 "available": calibre_cmd is not None,
                 "path": calibre_cmd,
                 "description": "Calibre ebook-convert for PDF to DOCX"
+            },
+            "ghostscript": {
+                "available": gs_cmd is not None,
+                "path": gs_cmd,
+                "description": "Ghostscript for PDF flattening before conversion"
             }
         },
         "docx_to_pdf": {
