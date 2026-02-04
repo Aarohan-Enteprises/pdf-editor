@@ -15,6 +15,8 @@ try:
     import fitz  # PyMuPDF
     from docx import Document
     from docx.shared import Pt, Inches, RGBColor
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
     PYMUPDF_AVAILABLE = True
 except ImportError:
     PYMUPDF_AVAILABLE = False
@@ -633,6 +635,29 @@ def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
                     except Exception as img_error:
                         logger.warning(f"Failed to extract image: {img_error}")
 
+            # Extract and add drawings (lines, rectangles, etc.)
+            try:
+                drawings = page.get_drawings()
+                if drawings:
+                    for drawing in drawings:
+                        if drawing.get("items"):
+                            for item in drawing["items"]:
+                                if item[0] == "l":  # Line
+                                    # Add horizontal rule for horizontal lines
+                                    p1, p2 = item[1], item[2]
+                                    if abs(p1.y - p2.y) < 2:  # Horizontal line
+                                        para = docx_doc.add_paragraph()
+                                        # Add bottom border to simulate horizontal line
+                                        pBdr = OxmlElement('w:pBdr')
+                                        bottom = OxmlElement('w:bottom')
+                                        bottom.set(qn('w:val'), 'single')
+                                        bottom.set(qn('w:sz'), '6')
+                                        bottom.set(qn('w:space'), '1')
+                                        bottom.set(qn('w:color'), '000000')
+                                        pBdr.append(bottom)
+                                        para._p.get_or_add_pPr().append(pBdr)
+            except Exception as draw_error:
+                logger.warning(f"Failed to extract drawings: {draw_error}")
 
         # Save the document
         docx_doc.save(output_path)
