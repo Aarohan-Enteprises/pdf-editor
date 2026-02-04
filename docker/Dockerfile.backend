@@ -38,7 +38,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ghostscript \
     libreoffice-writer-nogui \
-    openjdk-17-jre-headless \
+    openjdk-21-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security with proper home directory
