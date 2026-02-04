@@ -12,6 +12,8 @@ on:
       - 'scripts/**'
       - 'docker-compose.yml'
       - '.github/workflows/deploy-backend.yml'
+      - '*.md'
+      - '.gitignore'
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages

@@ -541,13 +541,19 @@ async def convert_docx_to_pdf(file: UploadFile = File(...)):
 def add_horizontal_line(docx_doc, width_inches=6.0, color="000000", thickness=1):
     """Add a horizontal line to the document using a paragraph border."""
     para = docx_doc.add_paragraph()
+
+    # Remove paragraph spacing to minimize vertical space
+    para.paragraph_format.space_before = Pt(0)
+    para.paragraph_format.space_after = Pt(0)
+    para.paragraph_format.line_spacing = 1.0
+
     # Add bottom border to create a horizontal line effect
     pPr = para._p.get_or_add_pPr()
     pBdr = OxmlElement('w:pBdr')
     bottom = OxmlElement('w:bottom')
     bottom.set(qn('w:val'), 'single')
     bottom.set(qn('w:sz'), str(thickness * 8))  # Size in 1/8 points
-    bottom.set(qn('w:space'), '1')
+    bottom.set(qn('w:space'), '0')  # No space between text and border
     bottom.set(qn('w:color'), color)
     pBdr.append(bottom)
     pPr.append(pBdr)
@@ -659,6 +665,10 @@ def convert_pdf_to_docx_with_pymupdf(input_path: str, output_path: str) -> bool:
                 if block["type"] == 0:  # Text block
                     for line in block.get("lines", []):
                         para = docx_doc.add_paragraph()
+
+                        # Minimize paragraph spacing to match PDF layout
+                        para.paragraph_format.space_before = Pt(0)
+                        para.paragraph_format.space_after = Pt(0)
 
                         for span in line.get("spans", []):
                             text = span.get("text", "")
