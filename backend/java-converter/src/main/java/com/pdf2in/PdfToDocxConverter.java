@@ -228,12 +228,21 @@ public class PdfToDocxConverter {
 
         // Create paragraph properties with bottom border
         PPr pPr = factory.createPPr();
-        PPrBase.PBdr pBdr = factory.createPPrBasePBdr();
 
+        // Remove spacing above and below the line
+        PPrBase.Spacing spacing = factory.createPPrBaseSpacing();
+        spacing.setBefore(BigInteger.ZERO);
+        spacing.setAfter(BigInteger.ZERO);
+        spacing.setLine(BigInteger.valueOf(240)); // Single line spacing (240 twips = 12pt)
+        spacing.setLineRule(STLineSpacingRule.AUTO);
+        pPr.setSpacing(spacing);
+
+        // Add bottom border
+        PPrBase.PBdr pBdr = factory.createPPrBasePBdr();
         CTBorder bottom = factory.createCTBorder();
         bottom.setVal(STBorder.SINGLE);
         bottom.setSz(BigInteger.valueOf(6));
-        bottom.setSpace(BigInteger.valueOf(1));
+        bottom.setSpace(BigInteger.valueOf(0));
         bottom.setColor("000000");
 
         pBdr.setBottom(bottom);
