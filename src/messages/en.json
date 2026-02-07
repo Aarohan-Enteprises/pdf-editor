@@ -362,6 +362,12 @@
       "pageTitle": "Redact PDF",
       "pageDescription": "Draw black rectangles over sensitive content to permanently redact it."
     },
+    "flattenPdf": {
+      "title": "Flatten PDF",
+      "description": "Merge layers and lock form fields",
+      "pageTitle": "Flatten PDF",
+      "pageDescription": "Flatten form fields, annotations, and layers into non-editable page content."
+    },
     "pdfToDocx": {
       "title": "PDF to Word",
       "description": "Convert PDF to Word document",

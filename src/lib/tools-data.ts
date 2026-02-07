@@ -25,6 +25,7 @@ export const toolNavItems: ToolNavItem[] = [
   { id: 'editMetadata', href: '/edit-metadata', category: 'edit' },
   { id: 'redact', href: '/redact', category: 'edit' },
   { id: 'compress', href: '/compress', category: 'edit' },
+  { id: 'flattenPdf', href: '/flatten-pdf', category: 'edit' },
   { id: 'lockPdf', href: '/lock-pdf', category: 'secure' },
   { id: 'unlockPdf', href: '/unlock-pdf', category: 'secure' },
 ];
@@ -49,6 +50,7 @@ export const slugToToolId: Record<string, string> = {
   'edit-metadata': 'editMetadata',
   'redact': 'redact',
   'compress': 'compress',
+  'flatten-pdf': 'flattenPdf',
   'lock-pdf': 'lockPdf',
   'unlock-pdf': 'unlockPdf',
 };
@@ -72,7 +74,8 @@ export const toolSuggestions: Record<string, string[]> = {
   'sign-pdf': ['compress', 'lock-pdf', 'watermark'],
   'edit-metadata': ['compress', 'lock-pdf', 'watermark'],
   'redact': ['compress', 'lock-pdf', 'sign-pdf'],
-  'compress': ['lock-pdf', 'watermark', 'sign-pdf'],
+  'compress': ['flatten-pdf', 'lock-pdf', 'watermark'],
+  'flatten-pdf': ['compress', 'lock-pdf', 'sign-pdf'],
   'lock-pdf': ['compress', 'watermark', 'sign-pdf'],
   'unlock-pdf': ['compress', 'edit-metadata', 'split'],
 };

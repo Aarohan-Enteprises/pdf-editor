@@ -281,6 +281,22 @@ export const toolSEOContent: Record<string, ToolSEOContent> = {
       { question: 'Will image quality be preserved?', answer: 'Yes. Images are embedded in the PDF at their original resolution without compression.' },
     ],
   },
+  'flatten-pdf': {
+    howToTitle: 'How to Flatten a PDF',
+    steps: [
+      { title: 'Upload PDF', description: 'Select the PDF file with form fields or annotations you want to flatten.' },
+      { title: 'Flatten Document', description: 'Click Flatten to merge all form fields, annotations, and layers into the page content.' },
+      { title: 'Preview Result', description: 'Review the flattened PDF to confirm all fields are locked in place.' },
+      { title: 'Download PDF', description: 'Download the flattened PDF with all content permanently embedded.' },
+    ],
+    faqs: [
+      { question: 'What does flattening a PDF do?', answer: 'Flattening converts all interactive form fields, annotations, and layers into static page content. The filled-in values become part of the page and can no longer be edited.' },
+      { question: 'Can I undo flattening?', answer: 'No. Flattening is irreversible. Once form fields and annotations are merged into the page, they cannot be made interactive again. Keep a copy of the original if needed.' },
+      { question: 'Will flattening change how my PDF looks?', answer: 'No. The visual appearance stays the same. Text, images, and filled form values remain exactly where they are — they just become non-editable.' },
+      { question: 'Why would I flatten a PDF?', answer: 'Flattening is useful when sharing completed forms, preventing further edits, reducing file complexity, or ensuring the PDF prints and displays consistently across all viewers.' },
+      { question: 'Does flattening work on PDFs without forms?', answer: 'Yes. If the PDF has no form fields, it is returned as-is. No data is lost or changed.' },
+    ],
+  },
   'pdf-to-jpg': {
     howToTitle: 'How to Convert PDF to Images',
     steps: [

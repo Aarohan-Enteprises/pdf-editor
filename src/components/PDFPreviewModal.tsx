@@ -71,7 +71,7 @@ export function PDFPreviewModal({
       setPages([]);
 
       try {
-        const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(pdfData) }).promise;
         const totalPages = pdf.numPages;
         const renderedPages: PagePreview[] = [];
 

@@ -45,6 +45,12 @@ export async function loadPDF(data: ArrayBuffer | Uint8Array): Promise<PDFDocume
   return PDFDocument.load(data, { ignoreEncryption: true });
 }
 
+function brandPDF(pdf: PDFDocument): void {
+  pdf.setCreator('PDF2.in');
+  pdf.setProducer('PDF2.in (https://pdf2.in)');
+  pdf.setModificationDate(new Date());
+}
+
 export async function mergePDFs(pdfDataList: ArrayBuffer[]): Promise<Uint8Array> {
   const mergedPdf = await PDFDocument.create();
 
@@ -54,6 +60,7 @@ export async function mergePDFs(pdfDataList: ArrayBuffer[]): Promise<Uint8Array>
     pages.forEach((page) => mergedPdf.addPage(page));
   }
 
+  brandPDF(mergedPdf);
   return mergedPdf.save();
 }
 
@@ -82,6 +89,7 @@ export async function mergePDFsWithOrder(
     mergedPdf.addPage(copiedPage);
   }
 
+  brandPDF(mergedPdf);
   return mergedPdf.save();
 }
 
@@ -95,6 +103,7 @@ export async function splitPDF(
   const pages = await newPdf.copyPages(sourcePdf, pageIndices);
   pages.forEach((page) => newPdf.addPage(page));
 
+  brandPDF(newPdf);
   return newPdf.save();
 }
 
@@ -109,6 +118,7 @@ export async function splitPDFToIndividual(
     const newPdf = await PDFDocument.create();
     const [page] = await newPdf.copyPages(sourcePdf, [pageIndex]);
     newPdf.addPage(page);
+    brandPDF(newPdf);
     results.push(await newPdf.save());
   }
 
@@ -124,6 +134,7 @@ export async function rotatePage(
   const page = pdf.getPage(pageIndex);
   const currentRotation = page.getRotation().angle;
   page.setRotation(degrees(currentRotation + rotationDegrees));
+  brandPDF(pdf);
   return pdf.save();
 }
 
@@ -140,6 +151,7 @@ export async function rotatePages(
     page.setRotation(degrees(currentRotation + rotationDegrees));
   }
 
+  brandPDF(pdf);
   return pdf.save();
 }
 
@@ -198,6 +210,7 @@ export async function addWatermark(
     });
   }
 
+  brandPDF(pdf);
   return pdf.save();
 }
 
@@ -207,7 +220,7 @@ export async function getPDFPageCount(pdfData: ArrayBuffer | Uint8Array): Promis
 }
 
 export function downloadPDF(data: Uint8Array, filename: string): void {
-  const blob = new Blob([data.slice()], { type: 'application/pdf' });
+  const blob = new Blob([data as unknown as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -253,6 +266,8 @@ export async function splitPDFAtPage(
   const secondPages = await secondPdf.copyPages(sourcePdf, secondPageIndices);
   secondPages.forEach((page) => secondPdf.addPage(page));
 
+  brandPDF(firstPdf);
+  brandPDF(secondPdf);
   return {
     firstPart: await firstPdf.save(),
     secondPart: await secondPdf.save(),
@@ -290,6 +305,7 @@ export async function addSignatureImage(
     height: options.height,
   });
 
+  brandPDF(pdf);
   return pdf.save();
 }
 
@@ -320,6 +336,7 @@ export async function insertBlankPages(
     insertedCount++;
   }
 
+  brandPDF(newPdf);
   return newPdf.save();
 }
 
@@ -338,6 +355,7 @@ export async function duplicatePages(
     }
   }
 
+  brandPDF(newPdf);
   return newPdf.save();
 }
 
@@ -352,6 +370,7 @@ export async function reversePageOrder(
   const pages = await newPdf.copyPages(sourcePdf, reversedIndices);
   pages.forEach((page) => newPdf.addPage(page));
 
+  brandPDF(newPdf);
   return newPdf.save();
 }
 
@@ -442,6 +461,7 @@ export async function imagesToPDF(
     });
   }
 
+  brandPDF(pdf);
   return pdf.save();
 }
 
@@ -463,9 +483,8 @@ export async function editMetadata(
   if (metadata.author) pdf.setAuthor(metadata.author);
   if (metadata.subject) pdf.setSubject(metadata.subject);
   if (metadata.keywords) pdf.setKeywords([metadata.keywords]);
+  brandPDF(pdf);
   if (metadata.creator) pdf.setCreator(metadata.creator);
-  pdf.setProducer('PDF2.in');
-  pdf.setModificationDate(new Date());
 
   return pdf.save();
 }
@@ -559,6 +578,7 @@ export async function addPageNumbers(
     });
   });
 
+  brandPDF(pdf);
   return pdf.save();
 }
 
@@ -634,6 +654,18 @@ async function createRedactionImage(
   });
 }
 
+export async function flattenPDF(pdfData: ArrayBuffer | Uint8Array): Promise<Uint8Array> {
+  const pdf = await loadPDF(pdfData);
+  try {
+    const form = pdf.getForm();
+    form.flatten();
+  } catch {
+    // PDF has no form fields — still valid, return as-is
+  }
+  brandPDF(pdf);
+  return pdf.save();
+}
+
 export async function applyRedactions(
   pdfData: ArrayBuffer | Uint8Array,
   redactions: PageRedaction[],
@@ -668,6 +700,7 @@ export async function applyRedactions(
     }
   }
 
+  brandPDF(pdf);
   return pdf.save();
 }
 
