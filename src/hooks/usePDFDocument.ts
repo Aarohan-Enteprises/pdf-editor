@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { PageInfo, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
+import { getPendingPDF } from '@/lib/pdf-store';
 
 export const MAX_TOTAL_PAGES = 200;
 
@@ -113,6 +114,15 @@ export function usePDFDocument() {
       setIsLoading(false);
     }
   }, []);
+
+  // Auto-load pending PDF from cross-tool navigation
+  useEffect(() => {
+    const pending = getPendingPDF();
+    if (pending) {
+      const file = new File([pending.data], pending.filename, { type: 'application/pdf' });
+      addFiles([file]).catch((err) => console.error('Failed to auto-load pending PDF:', err));
+    }
+  }, [addFiles]);
 
   const removePage = useCallback((pageId: string) => {
     setState((prev) => {

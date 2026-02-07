@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import * as pdfjsLib from 'pdfjs-dist';
 import { toolSuggestions, slugToToolId } from '@/lib/tools-data';
+import { setPendingPDF } from '@/lib/pdf-store';
 
 // Set worker
 if (typeof window !== 'undefined') {
@@ -35,6 +36,7 @@ export function PDFPreviewModal({
   onDownload,
   currentTool,
 }: PDFPreviewModalProps) {
+  const router = useRouter();
   const tTools = useTranslations('tools');
   const suggestions = currentTool ? toolSuggestions[currentTool] : undefined;
   const [pages, setPages] = useState<PagePreview[]>([]);
@@ -367,16 +369,22 @@ export function PDFPreviewModal({
                 const toolId = slugToToolId[slug];
                 if (!toolId) return null;
                 return (
-                  <Link
+                  <button
                     key={slug}
-                    href={`/${slug}`}
+                    onClick={() => {
+                      if (pdfData) {
+                        setPendingPDF(new Uint8Array(pdfData), filename);
+                      }
+                      onClose();
+                      router.push(`/${slug}`);
+                    }}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                   >
                     {tTools(`${toolId}.title`)}
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                  </Link>
+                  </button>
                 );
               })}
             </div>

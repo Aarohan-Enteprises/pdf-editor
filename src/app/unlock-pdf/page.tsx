@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
+import { getPendingPDF } from '@/lib/pdf-store';
 import Link from 'next/link';
 import { ToolSEOSection } from '@/components/ToolSEOSection';
 
@@ -38,6 +39,17 @@ export default function UnlockPdfPage() {
     closePreview,
     downloadPreview,
   } = usePDFPreview();
+
+  // Auto-load pending PDF from cross-tool navigation
+  useEffect(() => {
+    const pending = getPendingPDF();
+    if (pending) {
+      const f = new File([pending.data], pending.filename, { type: 'application/pdf' });
+      setFile(f);
+      const name = pending.filename.replace(/\.pdf$/i, '');
+      setOutputFilename(`${name}-unlocked`);
+    }
+  }, []);
 
   const handleFilesSelected = useCallback(async (selectedFiles: File[]) => {
     setUploadError(null);
