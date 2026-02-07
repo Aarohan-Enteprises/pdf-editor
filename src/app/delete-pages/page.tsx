@@ -24,6 +24,7 @@ export default function DeletePagesPage() {
     isLoading,
     addFiles,
     reorderPages,
+    removePage,
     togglePageSelection,
     selectAllPages,
     deselectAllPages,
@@ -34,6 +35,7 @@ export default function DeletePagesPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [outputFilename, setOutputFilename] = useState('document-edited');
+  const [directDeleteCount, setDirectDeleteCount] = useState(0);
 
   const {
     isPreviewOpen,
@@ -64,6 +66,25 @@ export default function DeletePagesPage() {
     },
     [addFiles, tDropzone]
   );
+
+  const handleDirectDelete = useCallback((pageId: string) => {
+    removePage(pageId);
+    setDirectDeleteCount(prev => prev + 1);
+  }, [removePage]);
+
+  const handlePreviewResult = useCallback(async () => {
+    if (pages.length === 0 || files.length === 0) return;
+    setIsProcessing(true);
+    try {
+      const resultData = await mergePDFsWithOrder(files.map((f) => f.data), pages);
+      const filename = outputFilename.trim() || 'document-edited';
+      showPreview(resultData, `${filename}.pdf`);
+    } catch (error) {
+      console.error('Failed to create preview:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [files, pages, outputFilename, showPreview]);
 
   const handleDeleteSelected = useCallback(async () => {
     if (pages.length === 0 || files.length === 0 || selectedPages.size === 0) return;
@@ -183,13 +204,30 @@ export default function DeletePagesPage() {
                   >
                     Clear All
                   </button>
-                  <button
-                    onClick={handleDeleteSelected}
-                    disabled={isProcessing || selectedPages.size === 0}
-                    className="btn btn-primary w-full bg-red-600 hover:bg-red-700"
-                  >
-                    {isProcessing ? 'Processing...' : `Delete ${selectedPages.size} Page(s) & Preview`}
-                  </button>
+                  {selectedPages.size > 0 ? (
+                    <button
+                      onClick={handleDeleteSelected}
+                      disabled={isProcessing}
+                      className="btn btn-primary w-full bg-red-600 hover:bg-red-700"
+                    >
+                      {isProcessing ? 'Processing...' : `Delete ${selectedPages.size} Page(s) & Preview`}
+                    </button>
+                  ) : directDeleteCount > 0 ? (
+                    <button
+                      onClick={handlePreviewResult}
+                      disabled={isProcessing}
+                      className="btn btn-primary w-full"
+                    >
+                      {isProcessing ? 'Processing...' : `Preview Result (${directDeleteCount} deleted)`}
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="btn btn-primary w-full bg-red-600 hover:bg-red-700"
+                    >
+                      Delete 0 Page(s) & Preview
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -216,6 +254,7 @@ export default function DeletePagesPage() {
                   onToggleSelection={togglePageSelection}
                   onReorder={reorderPages}
                   onThumbnailLoad={updatePageThumbnail}
+                  onDeletePage={handleDirectDelete}
                 />
               </div>
             ) : (

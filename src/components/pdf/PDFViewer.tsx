@@ -29,6 +29,7 @@ interface PDFViewerProps {
   onToggleSelection: (pageId: string) => void;
   onReorder: (activeId: string, overId: string) => void;
   onThumbnailLoad: (pageId: string, thumbnail: string) => void;
+  onDeletePage?: (pageId: string) => void;
 }
 
 export function PDFViewer({
@@ -38,6 +39,7 @@ export function PDFViewer({
   onToggleSelection,
   onReorder,
   onThumbnailLoad,
+  onDeletePage,
 }: PDFViewerProps) {
   const t = useTranslations('viewer');
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -125,6 +127,7 @@ export function PDFViewer({
                   pdfData={file?.data || null}
                   onSelect={() => onToggleSelection(page.id)}
                   onThumbnailLoad={(thumbnail) => onThumbnailLoad(page.id, thumbnail)}
+                  onDelete={onDeletePage ? () => onDeletePage(page.id) : undefined}
                 />
               );
             })}
