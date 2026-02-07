@@ -154,6 +154,12 @@ const toolConfigs: Record<string, ToolSEOConfig> = {
     keywords: ['flatten PDF', 'merge PDF layers', 'lock PDF forms', 'PDF flattener', 'non-editable PDF'],
     path: '/flatten-pdf',
   },
+  'organize-pdf': {
+    title: 'Organize PDF Pages Online - Rearrange & Reorder Free',
+    description: 'Organize and rearrange PDF pages with a simple select-and-place interface. Click pages to select, then click where to place them. No dragging required.',
+    keywords: ['organize PDF', 'rearrange PDF pages', 'reorder PDF', 'PDF page organizer', 'sort PDF pages', 'move PDF pages'],
+    path: '/organize-pdf',
+  },
 };
 
 export function generateToolMetadata(toolId: string): Metadata {

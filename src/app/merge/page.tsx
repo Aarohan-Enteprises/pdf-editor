@@ -110,7 +110,6 @@ export default function MergePage() {
     removeFile,
     reorderPages,
     reorderFiles,
-    rotatePage,
     updatePageThumbnail,
     clearAll,
   } = usePDFDocument();
@@ -300,13 +299,10 @@ export default function MergePage() {
           <div className="lg:col-span-2">
             {pages.length > 0 ? (
               <div className="card p-4">
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-4">
                   <h2 className="font-semibold text-gray-900 dark:text-white">
                     {pages.length} pages from {files.length} file(s)
                   </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Drag individual pages to fine-tune order
-                  </p>
                 </div>
                 <PDFViewer
                   files={files}
@@ -314,7 +310,6 @@ export default function MergePage() {
                   selectedPages={new Set()}
                   onToggleSelection={() => {}}
                   onReorder={reorderPages}
-                  onRotate={rotatePage}
                   onDelete={removePage}
                   onThumbnailLoad={updatePageThumbnail}
                 />

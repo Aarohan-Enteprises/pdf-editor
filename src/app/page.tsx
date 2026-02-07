@@ -98,6 +98,19 @@ const tools = [
     category: 'organize',
   },
   {
+    id: 'organizePdf',
+    href: '/organize-pdf',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+      </svg>
+    ),
+    gradient: 'from-cyan-500 to-cyan-600',
+    lightBg: 'bg-cyan-50 dark:bg-cyan-950/30',
+    textColor: 'text-cyan-600 dark:text-cyan-400',
+    category: 'organize',
+  },
+  {
     id: 'jpgToPdf',
     href: '/jpg-to-pdf',
     icon: (

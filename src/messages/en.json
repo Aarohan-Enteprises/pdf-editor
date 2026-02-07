@@ -368,6 +368,12 @@
       "pageTitle": "Flatten PDF",
       "pageDescription": "Flatten form fields, annotations, and layers into non-editable page content."
     },
+    "organizePdf": {
+      "title": "Organize PDF",
+      "description": "Select & place pages to reorder",
+      "pageTitle": "Organize PDF Pages",
+      "pageDescription": "Click pages to select them, then click where to place them. No dragging required."
+    },
     "pdfToDocx": {
       "title": "PDF to Word",
       "description": "Convert PDF to Word document",

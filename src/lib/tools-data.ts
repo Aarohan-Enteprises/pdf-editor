@@ -14,6 +14,7 @@ export const toolNavItems: ToolNavItem[] = [
   { id: 'reversePages', href: '/reverse-pages', category: 'organize' },
   { id: 'duplicatePages', href: '/duplicate-pages', category: 'organize' },
   { id: 'insertBlank', href: '/insert-blank', category: 'organize' },
+  { id: 'organizePdf', href: '/organize-pdf', category: 'organize' },
   { id: 'jpgToPdf', href: '/jpg-to-pdf', category: 'convert' },
   { id: 'pdfToJpg', href: '/pdf-to-jpg', category: 'convert' },
   { id: 'extractText', href: '/extract-text', category: 'convert' },
@@ -51,6 +52,7 @@ export const slugToToolId: Record<string, string> = {
   'redact': 'redact',
   'compress': 'compress',
   'flatten-pdf': 'flattenPdf',
+  'organize-pdf': 'organizePdf',
   'lock-pdf': 'lockPdf',
   'unlock-pdf': 'unlockPdf',
 };
@@ -76,6 +78,7 @@ export const toolSuggestions: Record<string, string[]> = {
   'redact': ['compress', 'lock-pdf', 'sign-pdf'],
   'compress': ['flatten-pdf', 'lock-pdf', 'watermark'],
   'flatten-pdf': ['compress', 'lock-pdf', 'sign-pdf'],
+  'organize-pdf': ['merge', 'rotate', 'delete-pages'],
   'lock-pdf': ['compress', 'watermark', 'sign-pdf'],
   'unlock-pdf': ['compress', 'edit-metadata', 'split'],
 };

@@ -12,7 +12,7 @@ interface PageThumbnailProps {
   thumbnail?: string;
   pdfData: ArrayBuffer | null;
   onSelect: () => void;
-  onRotate: (degrees: number) => void;
+  onRotate?: (degrees: number) => void;
   onDelete: () => void;
   onThumbnailLoad: (thumbnail: string) => void;
 }
@@ -176,34 +176,38 @@ export function PageThumbnail({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onRotate(-90);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="p-1.5 rounded bg-white/90 dark:bg-slate-800/90 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-          title="Rotate Left"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-          </svg>
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onRotate(90);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="p-1.5 rounded bg-white/90 dark:bg-slate-800/90 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-          title="Rotate Right"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6" />
-          </svg>
-        </button>
+        {onRotate && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onRotate(-90);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="p-1.5 rounded bg-white/90 dark:bg-slate-800/90 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              title="Rotate Left"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onRotate(90);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="p-1.5 rounded bg-white/90 dark:bg-slate-800/90 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              title="Rotate Right"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6" />
+              </svg>
+            </button>
+          </>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();

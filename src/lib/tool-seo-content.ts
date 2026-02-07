@@ -297,6 +297,21 @@ export const toolSEOContent: Record<string, ToolSEOContent> = {
       { question: 'Does flattening work on PDFs without forms?', answer: 'Yes. If the PDF has no form fields, it is returned as-is. No data is lost or changed.' },
     ],
   },
+  'organize-pdf': {
+    howToTitle: 'How to Organize PDF Pages',
+    steps: [
+      { title: 'Upload PDF', description: 'Select or drag and drop the PDF file whose pages you want to rearrange.' },
+      { title: 'Select Pages', description: 'Click on pages to select them in the order you want to move them. Numbered badges show your selection order.' },
+      { title: 'Place Pages', description: 'Click a teal insertion bar between pages to place the selected pages at that position.' },
+      { title: 'Download PDF', description: 'Preview the reorganized PDF and download it to your device.' },
+    ],
+    faqs: [
+      { question: 'How is this different from the Merge tool?', answer: 'The Merge tool uses drag-and-drop which can be awkward on mobile or for moving multiple pages. The Organize tool uses a click-to-select, click-to-place workflow that is easier for bulk moves.' },
+      { question: 'Can I move multiple pages at once?', answer: 'Yes. Click multiple pages to select them (in order), then click an insertion point to place them all at once.' },
+      { question: 'Does this work on mobile?', answer: 'Yes. The select-and-place interface is designed to work well on touch devices without requiring drag-and-drop.' },
+      { question: 'Are my files uploaded to a server?', answer: 'No. All processing happens locally in your browser. Your files never leave your device.' },
+    ],
+  },
   'pdf-to-jpg': {
     howToTitle: 'How to Convert PDF to Images',
     steps: [

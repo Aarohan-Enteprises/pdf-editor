@@ -28,7 +28,7 @@ interface PDFViewerProps {
   selectedPages: Set<string>;
   onToggleSelection: (pageId: string) => void;
   onReorder: (activeId: string, overId: string) => void;
-  onRotate: (pageId: string, degrees: number) => void;
+  onRotate?: (pageId: string, degrees: number) => void;
   onDelete: (pageId: string) => void;
   onThumbnailLoad: (pageId: string, thumbnail: string) => void;
 }
@@ -128,7 +128,7 @@ export function PDFViewer({
                   thumbnail={page.thumbnail}
                   pdfData={file?.data || null}
                   onSelect={() => onToggleSelection(page.id)}
-                  onRotate={(degrees) => onRotate(page.id, degrees)}
+                  onRotate={onRotate ? (degrees) => onRotate(page.id, degrees) : undefined}
                   onDelete={() => onDelete(page.id)}
                   onThumbnailLoad={(thumbnail) => onThumbnailLoad(page.id, thumbnail)}
                 />
