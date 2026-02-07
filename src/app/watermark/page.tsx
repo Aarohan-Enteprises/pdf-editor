@@ -8,7 +8,7 @@ import { PDFViewer } from '@/components/pdf/PDFViewer';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePDFDocument';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
-import { mergePDFsWithOrder, addWatermark, WatermarkOptions } from '@/lib/pdf-operations';
+import { mergePDFsWithOrder, addWatermark, flattenPDF, WatermarkOptions } from '@/lib/pdf-operations';
 import Link from 'next/link';
 import { ToolSEOSection } from '@/components/ToolSEOSection';
 
@@ -97,8 +97,9 @@ export default function WatermarkPage() {
         { text: watermarkText, fontSize, color: rgbColor, opacity, position },
         pageIndices
       );
+      const flattenedData = await flattenPDF(watermarkedData);
       const filename = outputFilename.trim() || 'watermarked-document';
-      showPreview(watermarkedData, `${filename}.pdf`);
+      showPreview(flattenedData, `${filename}.pdf`);
     } catch (error) {
       console.error('Failed to add watermark:', error);
     } finally {
