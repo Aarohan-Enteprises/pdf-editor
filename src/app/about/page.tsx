@@ -5,22 +5,28 @@ import { PageLayout } from '@/components/layout/PageLayout';
 export default function AboutPage() {
   return (
     <PageLayout>
-      {/* Hero Section */}
+      {/* Hero Section with Team Photo */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM2MzY2ZjEiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')]" />
+        <img
+          src="/about-team.jpg"
+          alt="Our team"
+          className="absolute inset-0 w-full h-full object-cover"
+          width={1280}
+          height={720}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/90 via-indigo-900/80 to-indigo-900/60" />
 
-        <div className="relative w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-16 lg:py-24">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-medium mb-6">
+        <div className="relative w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-20 lg:py-28">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-indigo-200 text-sm font-medium mb-6">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             About Us
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-            About <span className="text-indigo-600 dark:text-indigo-400">PDF2.in</span>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
+            About <span className="text-indigo-300">PDF2.in</span>
           </h1>
-          <p className="text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-2xl">
+          <p className="text-lg lg:text-xl text-indigo-100 max-w-2xl">
             Empowering millions with free, secure, and powerful PDF tools that respect your privacy.
           </p>
         </div>
@@ -44,25 +50,33 @@ export default function AboutPage() {
                 We believe that powerful document tools should be available to everyone, regardless of budget.
                 PDF2.in was built to democratize PDF editing by providing professional-grade tools completely free of charge.
               </p>
-              <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed mb-8">
                 Whether you&apos;re a student working on assignments, a professional handling contracts, or anyone
                 who needs to work with PDFs, our tools are designed to make your life easier without compromising
                 on features or security.
               </p>
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { number: '20+', label: 'PDF Tools' },
+                  { number: '100%', label: 'Free Forever' },
+                  { number: '0', label: 'Data Stored' },
+                  { number: '24/7', label: 'Available' },
+                ].map((stat, i) => (
+                  <div key={i} className="text-center">
+                    <div className="text-xl lg:text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stat.number}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { number: '20+', label: 'PDF Tools', icon: '🛠️' },
-                { number: '100%', label: 'Free Forever', icon: '💰' },
-                { number: '0', label: 'Data Stored', icon: '🔒' },
-                { number: '24/7', label: 'Available', icon: '⏰' },
-              ].map((stat, i) => (
-                <div key={i} className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 text-center">
-                  <div className="text-3xl mb-2">{stat.icon}</div>
-                  <div className="text-2xl lg:text-3xl font-bold text-indigo-600 dark:text-indigo-400">{stat.number}</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</div>
-                </div>
-              ))}
+            <div className="flex items-center justify-center">
+              <img
+                src="/about-mission.svg"
+                alt="PDF tools and technology"
+                className="w-full max-w-md lg:max-w-lg drop-shadow-xl"
+                width={500}
+                height={500}
+              />
             </div>
           </div>
         </div>
@@ -71,74 +85,44 @@ export default function AboutPage() {
       {/* Privacy Section */}
       <section className="py-16 lg:py-20 bg-gray-50 dark:bg-slate-800/50">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-medium mb-6">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              Privacy First
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="flex items-center justify-center order-2 lg:order-1">
+              <img
+                src="/about-privacy.svg"
+                alt="Data security and privacy"
+                className="w-full max-w-sm lg:max-w-md drop-shadow-xl"
+                width={450}
+                height={320}
+              />
             </div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Your Files Stay on Your Device
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl">
-              Unlike most online PDF tools, we process everything directly in your browser.
-              Your sensitive documents never leave your computer.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                ),
-                title: 'No Uploads Required',
-                description: 'Your files are processed locally using advanced browser technology.',
-                color: 'bg-blue-500',
-              },
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                ),
-                title: 'No Account Needed',
-                description: 'Start using our tools instantly. No registration or sign-up required.',
-                color: 'bg-purple-500',
-              },
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                ),
-                title: 'No Tracking',
-                description: 'We don&apos;t track your documents or collect any personal data.',
-                color: 'bg-green-500',
-              },
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                ),
-                title: '100% Secure',
-                description: 'Your data stays private. Always. We can&apos;t see your files even if we wanted to.',
-                color: 'bg-emerald-500',
-              },
-            ].map((feature, i) => (
-              <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700">
-                <div className={`w-12 h-12 rounded-xl ${feature.color} flex items-center justify-center text-white mb-4`}>
-                  {feature.icon}
-                </div>
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">{feature.description}</p>
+            <div className="order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-medium mb-6">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Privacy First
               </div>
-            ))}
+              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                Your Files Stay on Your Device
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-8">
+                Unlike most online PDF tools, we process everything directly in your browser.
+                Your sensitive documents never leave your computer.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { title: 'No Uploads Required', description: 'Files processed locally in your browser.', color: 'text-blue-600 dark:text-blue-400' },
+                  { title: 'No Account Needed', description: 'No registration or sign-up required.', color: 'text-purple-600 dark:text-purple-400' },
+                  { title: 'No Tracking', description: 'Zero personal data collection.', color: 'text-green-600 dark:text-green-400' },
+                  { title: '100% Secure', description: 'We can&apos;t see your files even if we wanted to.', color: 'text-emerald-600 dark:text-emerald-400' },
+                ].map((feature, i) => (
+                  <div key={i} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700">
+                    <h3 className={`font-semibold text-sm mb-1 ${feature.color}`}>{feature.title}</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">{feature.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
