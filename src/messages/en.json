@@ -17,7 +17,53 @@
     "title": "PDF Editing Made Simple",
     "subtitle": "No uploads. No signups. Your files stay on your device. Edit PDFs instantly in your browser.",
     "cta": "Start Editing",
+    "ctaSecondary": "See All Tools",
     "trustedBy": "Trusted by thousands of users"
+  },
+  "nav": {
+    "tools": "Tools",
+    "about": "About",
+    "organize": "Organize",
+    "convert": "Convert",
+    "edit": "Edit",
+    "secure": "Secure",
+    "allTools": "All Tools"
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "subtitle": "Three simple steps to edit your PDFs",
+    "step1": {
+      "title": "Upload Your PDF",
+      "description": "Drag & drop or browse files"
+    },
+    "step2": {
+      "title": "Choose Your Tool",
+      "description": "Merge, split, compress & more"
+    },
+    "step3": {
+      "title": "Download Result",
+      "description": "Instant processing, ready in seconds"
+    }
+  },
+  "whyChooseUs": {
+    "title": "Why Choose Us",
+    "subtitle": "Built with privacy and performance in mind",
+    "private": {
+      "title": "100% Private",
+      "description": "Files never leave your browser"
+    },
+    "fast": {
+      "title": "Lightning Fast",
+      "description": "No server uploads, instant processing"
+    },
+    "free": {
+      "title": "Completely Free",
+      "description": "No limits, no signup, no watermarks"
+    },
+    "noAds": {
+      "title": "No Ads",
+      "description": "Clean, distraction-free experience"
+    }
   },
   "features": {
     "title": "Powerful Features",
@@ -135,7 +181,18 @@
   "footer": {
     "tagline": "Free online PDF tools",
     "privacy": "Your files never leave your browser",
-    "copyright": "PDF2.in - All rights reserved"
+    "copyright": "PDF2.in - All rights reserved",
+    "description": "All processing happens in your browser. Your files are never uploaded to any server.",
+    "tools": "Tools",
+    "resources": "Resources",
+    "aboutUs": "About Us",
+    "security": {
+      "title": "Privacy & Security",
+      "browserProcessing": "100% browser processing",
+      "noUpload": "No file uploads",
+      "openSource": "Open source"
+    },
+    "builtWith": "Built with privacy in mind"
   },
   "tools": {
     "merge": {

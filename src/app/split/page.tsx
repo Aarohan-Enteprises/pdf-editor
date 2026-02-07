@@ -9,6 +9,7 @@ import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePDFDocument';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { mergePDFsWithOrder, splitPDF, downloadPDF } from '@/lib/pdf-operations';
+import Link from 'next/link';
 
 interface PageRange {
   id: string;
@@ -240,6 +241,12 @@ export default function SplitPage() {
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
+            <Link href="/#tools" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition-colors mb-4">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              All Tools
+            </Link>
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 rounded-2xl bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 flex items-center justify-center">
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">

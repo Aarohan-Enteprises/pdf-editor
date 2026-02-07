@@ -112,7 +112,7 @@ export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClear
     <div
       className={`
         dropzone
-        ${isDragActive ? 'dropzone-active border-blue-500 bg-blue-50 dark:bg-blue-950/20' : ''}
+        ${isDragActive ? 'dropzone-active dropzone-pulse border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : ''}
         ${isLoading ? 'opacity-50 cursor-wait' : ''}
       `}
       onDragEnter={handleDragEnter}
@@ -132,9 +132,9 @@ export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClear
       />
 
       <div className="flex flex-col items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+        <div className={`w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center transition-transform duration-300 ${isDragActive ? 'scale-110' : ''}`}>
           <svg
-            className="w-8 h-8 text-indigo-600 dark:text-indigo-400"
+            className="w-10 h-10 text-indigo-600 dark:text-indigo-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -142,7 +142,7 @@ export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClear
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+              strokeWidth={1.5}
               d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
             />
           </svg>

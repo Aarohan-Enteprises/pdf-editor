@@ -8,6 +8,7 @@ import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
+import Link from 'next/link';
 
 // Set worker
 if (typeof window !== 'undefined') {
@@ -46,8 +47,8 @@ export default function SignPdfPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagePreview, setPagePreview] = useState<string | null>(null);
 
-  // Signature mode: 'upload' or 'text'
-  const [signatureMode, setSignatureMode] = useState<'upload' | 'text'>('upload');
+  // Signature mode: 'upload', 'text', or 'draw'
+  const [signatureMode, setSignatureMode] = useState<'upload' | 'text' | 'draw'>('draw');
 
   // Text signature options
   const [signatureText, setSignatureText] = useState('');
@@ -57,9 +58,22 @@ export default function SignPdfPage() {
   const [signatureBold, setSignatureBold] = useState(false);
   const [signatureItalic, setSignatureItalic] = useState(true);
 
+  // Draw mode state
+  const [drawColor, setDrawColor] = useState('#000000');
+  const [drawStrokeWidth, setDrawStrokeWidth] = useState(3);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawPaths, setDrawPaths] = useState<{ points: { x: number; y: number }[]; color: string; width: number }[]>([]);
+  const [currentDrawPath, setCurrentDrawPath] = useState<{ x: number; y: number }[]>([]);
+
+  // Background removal for uploaded images
+  const [removeBackground, setRemoveBackground] = useState(true); // Default ON
+  const [originalUploadedFile, setOriginalUploadedFile] = useState<File | null>(null);
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
+
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const signInputRef = useRef<HTMLInputElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const drawCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Available handwriting-style fonts
   const signatureFonts = [
@@ -177,12 +191,11 @@ export default function SignPdfPage() {
       setError('Please upload a valid image file (PNG or JPG)');
       return;
     }
-    setSignatureFile(selectedFile);
-    const url = URL.createObjectURL(selectedFile);
-    setSignaturePreview(url);
+    setOriginalUploadedFile(selectedFile);
     setError(null);
 
     // Get image dimensions to set initial size
+    const url = URL.createObjectURL(selectedFile);
     const img = new Image();
     img.onload = () => {
       const maxWidth = 200;
@@ -191,9 +204,19 @@ export default function SignPdfPage() {
       const height = width / ratio;
       setAspectRatio(ratio);
       setSignaturePos(prev => ({ ...prev, width, height }));
+      URL.revokeObjectURL(url);
     };
     img.src = url;
-  }, []);
+
+    // If removeBackground is on (default), the effect will auto-process it.
+    // Otherwise set the file directly.
+    if (!removeBackground) {
+      setSignatureFile(selectedFile);
+      const previewUrl = URL.createObjectURL(selectedFile);
+      setSignaturePreview(previewUrl);
+    }
+    // The useEffect for removeBackground will handle the bg removal case
+  }, [removeBackground]);
 
   // Generate text signature as image
   const generateTextSignature = useCallback(() => {
@@ -258,6 +281,307 @@ export default function SignPdfPage() {
       generateTextSignature();
     }
   }, [signatureMode, signatureText, signatureFont, signatureColor, signatureFontSize, signatureBold, signatureItalic, generateTextSignature]);
+
+  // --- Draw mode functions ---
+  const redrawCanvas = useCallback((paths: typeof drawPaths, currentPath?: { x: number; y: number }[]) => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw completed paths
+    for (const path of paths) {
+      if (path.points.length < 2) continue;
+      ctx.beginPath();
+      ctx.strokeStyle = path.color;
+      ctx.lineWidth = path.width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.moveTo(path.points[0].x, path.points[0].y);
+      for (let i = 1; i < path.points.length; i++) {
+        ctx.lineTo(path.points[i].x, path.points[i].y);
+      }
+      ctx.stroke();
+    }
+
+    // Draw current path
+    if (currentPath && currentPath.length >= 2) {
+      ctx.beginPath();
+      ctx.strokeStyle = drawColor;
+      ctx.lineWidth = drawStrokeWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.moveTo(currentPath[0].x, currentPath[0].y);
+      for (let i = 1; i < currentPath.length; i++) {
+        ctx.lineTo(currentPath[i].x, currentPath[i].y);
+      }
+      ctx.stroke();
+    }
+  }, [drawColor, drawStrokeWidth]);
+
+  const getDrawCoords = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if ('touches' in e) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY,
+      };
+    }
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }, []);
+
+  const handleDrawStart = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    setIsDrawing(true);
+    const coords = getDrawCoords(e);
+    setCurrentDrawPath([coords]);
+  }, [getDrawCoords]);
+
+  const handleDrawMove = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const coords = getDrawCoords(e);
+    setCurrentDrawPath(prev => {
+      const updated = [...prev, coords];
+      redrawCanvas(drawPaths, updated);
+      return updated;
+    });
+  }, [isDrawing, getDrawCoords, drawPaths, redrawCanvas]);
+
+  const handleDrawEnd = useCallback(() => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+    if (currentDrawPath.length >= 2) {
+      setDrawPaths(prev => [...prev, { points: currentDrawPath, color: drawColor, width: drawStrokeWidth }]);
+    }
+    setCurrentDrawPath([]);
+  }, [isDrawing, currentDrawPath, drawColor, drawStrokeWidth]);
+
+  const undoDrawPath = useCallback(() => {
+    setDrawPaths(prev => {
+      const updated = prev.slice(0, -1);
+      redrawCanvas(updated);
+      return updated;
+    });
+  }, [redrawCanvas]);
+
+  const clearDrawCanvas = useCallback(() => {
+    setDrawPaths([]);
+    const canvas = drawCanvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d')!;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    setSignaturePreview(null);
+    setSignatureFile(null);
+  }, []);
+
+  // Convert draw canvas to signature image
+  const convertDrawingToSignature = useCallback(() => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas || drawPaths.length === 0) return;
+
+    // Find bounding box of all paths
+    let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
+    for (const path of drawPaths) {
+      for (const point of path.points) {
+        minX = Math.min(minX, point.x);
+        minY = Math.min(minY, point.y);
+        maxX = Math.max(maxX, point.x);
+        maxY = Math.max(maxY, point.y);
+      }
+    }
+
+    // Add padding
+    const pad = 10;
+    minX = Math.max(0, minX - pad);
+    minY = Math.max(0, minY - pad);
+    maxX = Math.min(canvas.width, maxX + pad);
+    maxY = Math.min(canvas.height, maxY + pad);
+
+    const cropWidth = maxX - minX;
+    const cropHeight = maxY - minY;
+    if (cropWidth <= 0 || cropHeight <= 0) return;
+
+    // Create cropped canvas
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = cropWidth;
+    croppedCanvas.height = cropHeight;
+    const ctx = croppedCanvas.getContext('2d')!;
+
+    // Redraw paths offset to cropped area
+    for (const path of drawPaths) {
+      if (path.points.length < 2) continue;
+      ctx.beginPath();
+      ctx.strokeStyle = path.color;
+      ctx.lineWidth = path.width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.moveTo(path.points[0].x - minX, path.points[0].y - minY);
+      for (let i = 1; i < path.points.length; i++) {
+        ctx.lineTo(path.points[i].x - minX, path.points[i].y - minY);
+      }
+      ctx.stroke();
+    }
+
+    const dataUrl = croppedCanvas.toDataURL('image/png');
+    setSignaturePreview(dataUrl);
+
+    croppedCanvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], 'drawn-signature.png', { type: 'image/png' });
+        setSignatureFile(file);
+
+        const maxWidth = 200;
+        const ratio = cropWidth / cropHeight;
+        const width = Math.min(cropWidth, maxWidth);
+        const height = width / ratio;
+        setAspectRatio(ratio);
+        setSignaturePos(prev => ({ ...prev, width, height }));
+      }
+    }, 'image/png');
+  }, [drawPaths]);
+
+  // Auto-convert drawing to signature when paths change
+  useEffect(() => {
+    if (signatureMode === 'draw' && drawPaths.length > 0) {
+      convertDrawingToSignature();
+    }
+  }, [signatureMode, drawPaths, convertDrawingToSignature]);
+
+  // --- Background removal for uploaded images ---
+  const removeImageBackground = useCallback(async (file: File, sensitivity: number) => {
+    setIsRemovingBg(true);
+    try {
+      // Load file as Image
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = dataUrl;
+      });
+
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      ctx.drawImage(img, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const data = imageData.data;
+
+      // Step 1: Auto-detect background color by sampling edges and corners
+      const samplePixels: { r: number; g: number; b: number }[] = [];
+      const sampleSize = Math.max(5, Math.floor(Math.min(w, h) * 0.05));
+
+      const getPixel = (x: number, y: number) => {
+        const i = (y * w + x) * 4;
+        return { r: data[i], g: data[i + 1], b: data[i + 2] };
+      };
+
+      // Sample from all 4 corners and edges
+      for (let d = 0; d < sampleSize; d++) {
+        for (let d2 = 0; d2 < sampleSize; d2++) {
+          samplePixels.push(getPixel(d, d2));                       // top-left
+          samplePixels.push(getPixel(w - 1 - d, d2));               // top-right
+          samplePixels.push(getPixel(d, h - 1 - d2));               // bottom-left
+          samplePixels.push(getPixel(w - 1 - d, h - 1 - d2));      // bottom-right
+        }
+      }
+      // Sample from edge midpoints
+      for (let d = 0; d < sampleSize; d++) {
+        samplePixels.push(getPixel(Math.floor(w / 2), d));          // top-center
+        samplePixels.push(getPixel(Math.floor(w / 2), h - 1 - d)); // bottom-center
+        samplePixels.push(getPixel(d, Math.floor(h / 2)));          // left-center
+        samplePixels.push(getPixel(w - 1 - d, Math.floor(h / 2))); // right-center
+      }
+
+      // Compute median background color (more robust than mean against outliers)
+      const rs = samplePixels.map(p => p.r).sort((a, b) => a - b);
+      const gs = samplePixels.map(p => p.g).sort((a, b) => a - b);
+      const bs = samplePixels.map(p => p.b).sort((a, b) => a - b);
+      const mid = Math.floor(samplePixels.length / 2);
+      const bgR = rs[mid], bgG = gs[mid], bgB = bs[mid];
+
+      // Step 2: Calculate color distance threshold from sensitivity slider
+      // sensitivity 180-255 maps to maxDistance 100-30 (higher sensitivity = tighter match)
+      const maxDistance = 30 + ((255 - sensitivity) / 75) * 70;
+      const softEdge = maxDistance * 0.4; // feathering zone
+
+      // Step 3: Process each pixel - compare to detected background color
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // Euclidean color distance from background
+        const dist = Math.sqrt(
+          (r - bgR) * (r - bgR) +
+          (g - bgG) * (g - bgG) +
+          (b - bgB) * (b - bgB)
+        );
+
+        if (dist < maxDistance - softEdge) {
+          // Clearly background → fully transparent
+          data[i + 3] = 0;
+        } else if (dist < maxDistance) {
+          // Transition zone → partial transparency for smooth edges
+          const alpha = Math.round(255 * ((dist - (maxDistance - softEdge)) / softEdge));
+          data[i + 3] = Math.min(data[i + 3], alpha);
+        }
+        // else: keep original pixel (foreground / signature ink)
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      const resultDataUrl = canvas.toDataURL('image/png');
+      setSignaturePreview(resultDataUrl);
+
+      const resultBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (resultBlob) {
+        const newFile = new File([resultBlob], 'signature-no-bg.png', { type: 'image/png' });
+        setSignatureFile(newFile);
+      }
+    } catch (err) {
+      console.error('Background removal failed:', err);
+      setError('Background removal failed. Try uploading a different image.');
+      setSignatureFile(file);
+      const url = URL.createObjectURL(file);
+      setSignaturePreview(url);
+    } finally {
+      setIsRemovingBg(false);
+    }
+  }, []);
+
+  // Apply or remove background removal when toggled
+  useEffect(() => {
+    if (signatureMode === 'upload' && originalUploadedFile) {
+      if (removeBackground) {
+        removeImageBackground(originalUploadedFile, 230);
+      } else {
+        // Restore original
+        setSignatureFile(originalUploadedFile);
+        const url = URL.createObjectURL(originalUploadedFile);
+        setSignaturePreview(url);
+      }
+    }
+  }, [removeBackground, signatureMode, originalUploadedFile, removeImageBackground]);
 
   // When changing pages, load the saved signature position or use default
   useEffect(() => {
@@ -530,8 +854,17 @@ export default function SignPdfPage() {
     setPagePreview(null);
     setPageSignatures(new Map());
     setError(null);
+    setOriginalUploadedFile(null);
+    setRemoveBackground(false);
+    setDrawPaths([]);
+    setCurrentDrawPath([]);
     if (pdfInputRef.current) pdfInputRef.current.value = '';
     if (signInputRef.current) signInputRef.current.value = '';
+    const canvas = drawCanvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   }, []);
 
   // Get list of pages with signatures
@@ -549,6 +882,12 @@ export default function SignPdfPage() {
       <div className="w-full px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
+            <Link href="/#tools" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition-colors mb-4">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              All Tools
+            </Link>
           <div className="flex items-center gap-3 sm:gap-4 mb-4">
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0">
               <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -607,6 +946,16 @@ export default function SignPdfPage() {
                 </label>
                 <div className="flex rounded-lg border border-gray-300 dark:border-slate-600 overflow-hidden mb-3">
                   <button
+                    onClick={() => setSignatureMode('draw')}
+                    className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+                      signatureMode === 'draw'
+                        ? 'bg-rose-500 text-white'
+                        : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    Draw
+                  </button>
+                  <button
                     onClick={() => setSignatureMode('text')}
                     className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
                       signatureMode === 'text'
@@ -614,7 +963,7 @@ export default function SignPdfPage() {
                         : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
                     }`}
                   >
-                    Type Text
+                    Type
                   </button>
                   <button
                     onClick={() => setSignatureMode('upload')}
@@ -624,33 +973,138 @@ export default function SignPdfPage() {
                         : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
                     }`}
                   >
-                    Upload Image
+                    Upload
                   </button>
                 </div>
 
-                {signatureMode === 'upload' ? (
-                  <div
-                    onClick={() => signInputRef.current?.click()}
-                    onDrop={handleSignDrop}
-                    onDragOver={(e) => { e.preventDefault(); setIsDraggingSign(true); }}
-                    onDragLeave={(e) => { e.preventDefault(); setIsDraggingSign(false); }}
-                    className={`dropzone py-4 ${isDraggingSign ? 'dropzone-active' : ''}`}
-                  >
-                    <input
-                      ref={signInputRef}
-                      type="file"
-                      accept="image/png,image/jpeg,image/jpg"
-                      onChange={(e) => e.target.files?.[0] && handleSignatureFile(e.target.files[0])}
-                      className="hidden"
-                    />
-                    <div className="flex flex-col items-center">
-                      {signaturePreview && signatureMode === 'upload' ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={signaturePreview} alt="Signature" className="max-h-12 max-w-full" />
-                      ) : (
-                        <p className="text-gray-500 dark:text-gray-400 text-sm">Drop image or click to browse</p>
-                      )}
+                {signatureMode === 'draw' ? (
+                  <div className="space-y-3">
+                    {/* Drawing canvas */}
+                    <div className="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
+                      <canvas
+                        ref={drawCanvasRef}
+                        width={400}
+                        height={160}
+                        className="w-full cursor-crosshair touch-none"
+                        style={{ height: '160px' }}
+                        onMouseDown={handleDrawStart}
+                        onMouseMove={handleDrawMove}
+                        onMouseUp={handleDrawEnd}
+                        onMouseLeave={handleDrawEnd}
+                        onTouchStart={handleDrawStart}
+                        onTouchMove={handleDrawMove}
+                        onTouchEnd={handleDrawEnd}
+                        onTouchCancel={handleDrawEnd}
+                      />
                     </div>
+                    {drawPaths.length === 0 && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 text-center">Draw your signature above</p>
+                    )}
+                    {/* Draw controls */}
+                    <div className="flex gap-3 items-end">
+                      <div>
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Color</label>
+                        <input
+                          type="color"
+                          value={drawColor}
+                          onChange={(e) => setDrawColor(e.target.value)}
+                          className="w-10 h-8 border border-gray-300 dark:border-slate-600 rounded cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Thickness: {drawStrokeWidth}px</label>
+                        <input
+                          type="range"
+                          min={1}
+                          max={8}
+                          value={drawStrokeWidth}
+                          onChange={(e) => setDrawStrokeWidth(parseInt(e.target.value))}
+                          className="w-full h-8 accent-rose-500"
+                        />
+                      </div>
+                      <button
+                        onClick={undoDrawPath}
+                        disabled={drawPaths.length === 0}
+                        className="px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-40 text-sm transition-colors"
+                        title="Undo"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a4 4 0 014 4v0a4 4 0 01-4 4H3m0-8l4-4m-4 4l4 4" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={clearDrawCanvas}
+                        disabled={drawPaths.length === 0}
+                        className="px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40 text-sm transition-colors"
+                        title="Clear"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                    {/* Preview */}
+                    {signaturePreview && signatureMode === 'draw' && (
+                      <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Preview:</p>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={signaturePreview} alt="Drawn Signature" className="max-h-16 max-w-full" />
+                      </div>
+                    )}
+                  </div>
+                ) : signatureMode === 'upload' ? (
+                  <div className="space-y-3">
+                    <div
+                      onClick={() => signInputRef.current?.click()}
+                      onDrop={handleSignDrop}
+                      onDragOver={(e) => { e.preventDefault(); setIsDraggingSign(true); }}
+                      onDragLeave={(e) => { e.preventDefault(); setIsDraggingSign(false); }}
+                      className={`dropzone py-4 ${isDraggingSign ? 'dropzone-active' : ''}`}
+                    >
+                      <input
+                        ref={signInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg"
+                        onChange={(e) => e.target.files?.[0] && handleSignatureFile(e.target.files[0])}
+                        className="hidden"
+                      />
+                      <div className="flex flex-col items-center">
+                        {signaturePreview && signatureMode === 'upload' ? (
+                          <div className={`p-2 rounded ${removeBackground ? 'checkerboard' : ''}`}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={signaturePreview} alt="Signature" className="max-h-12 max-w-full" />
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 dark:text-gray-400 text-sm">Drop image or click to browse</p>
+                        )}
+                      </div>
+                    </div>
+                    {isRemovingBg && (
+                      <div className="flex items-center gap-2 text-sm text-rose-600 dark:text-rose-400">
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Removing background...
+                      </div>
+                    )}
+                    {/* Background removal toggle */}
+                    {originalUploadedFile && (
+                      <div className="p-3 bg-rose-50 dark:bg-rose-950/20 rounded-lg border border-rose-200 dark:border-rose-800 space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={removeBackground}
+                            onChange={(e) => setRemoveBackground(e.target.checked)}
+                            className="w-4 h-4 rounded border-gray-300 text-rose-500 focus:ring-rose-500"
+                          />
+                          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Remove background</span>
+                        </label>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Auto-detects paper color and makes it transparent
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -919,10 +1373,10 @@ export default function SignPdfPage() {
                   </button>
                   <button
                     onClick={handleAddSignatures}
-                    disabled={isProcessing || pageSignatures.size === 0}
+                    disabled={isProcessing || isRemovingBg || pageSignatures.size === 0}
                     className="btn btn-primary w-full"
                   >
-                    {isProcessing ? 'Processing...' : `Sign ${pageSignatures.size} Page(s) & Preview`}
+                    {isProcessing ? 'Processing...' : isRemovingBg ? 'Removing background...' : `Sign ${pageSignatures.size} Page(s) & Preview`}
                   </button>
                 </>
               )}

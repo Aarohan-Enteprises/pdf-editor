@@ -6,6 +6,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
+import Link from 'next/link';
 
 type CompressionQuality = 'low' | 'medium' | 'high';
 
@@ -131,9 +132,9 @@ export default function CompressPage() {
       console.log(`[TIMING] Total time: ${((timings.end - timings.start) / 1000).toFixed(3)}s`);
       console.log(`[TIMING] Breakdown: Upload+Process=${((timings.responseReceived - timings.start) / 1000).toFixed(3)}s, Download=${((timings.blobReceived - timings.responseReceived) / 1000).toFixed(3)}s`);
 
-      // Get size info from headers
-      const originalSize = parseInt(response.headers.get('X-Original-Size') || '0', 10);
-      const compressedSize = parseInt(response.headers.get('X-Compressed-Size') || '0', 10);
+      // Get size info from headers, fall back to actual sizes
+      const originalSize = parseInt(response.headers.get('X-Original-Size') || '0', 10) || file.size;
+      const compressedSize = parseInt(response.headers.get('X-Compressed-Size') || '0', 10) || data.length;
 
       // Calculate reduction
       const reduction = originalSize > 0
@@ -141,8 +142,8 @@ export default function CompressPage() {
         : 0;
 
       setCompressionStats({
-        originalSize: originalSize || file.size,
-        compressedSize: compressedSize || data.length,
+        originalSize,
+        compressedSize,
         reduction,
       });
 
@@ -199,6 +200,12 @@ export default function CompressPage() {
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
         <div className="mb-8">
+            <Link href="/#tools" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition-colors mb-4">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              All Tools
+            </Link>
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">

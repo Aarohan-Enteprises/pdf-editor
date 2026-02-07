@@ -213,7 +213,7 @@ const tools = [
     gradient: 'from-emerald-500 to-emerald-600',
     lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
     textColor: 'text-emerald-600 dark:text-emerald-400',
-    category: 'server',
+    category: 'edit',
   },
   {
     id: 'lockPdf',
@@ -226,7 +226,7 @@ const tools = [
     gradient: 'from-emerald-500 to-emerald-600',
     lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
     textColor: 'text-emerald-600 dark:text-emerald-400',
-    category: 'server',
+    category: 'secure',
   },
   {
     id: 'unlockPdf',
@@ -239,7 +239,7 @@ const tools = [
     gradient: 'from-yellow-500 to-yellow-600',
     lightBg: 'bg-yellow-50 dark:bg-yellow-950/30',
     textColor: 'text-yellow-600 dark:text-yellow-400',
-    category: 'server',
+    category: 'secure',
   },
   {
     id: 'docxToPdf',
@@ -252,7 +252,7 @@ const tools = [
     gradient: 'from-red-500 to-red-600',
     lightBg: 'bg-red-50 dark:bg-red-950/30',
     textColor: 'text-red-600 dark:text-red-400',
-    category: 'server',
+    category: 'convert',
   },
   {
     id: 'pdfToDocx',
@@ -265,7 +265,7 @@ const tools = [
     gradient: 'from-blue-500 to-blue-600',
     lightBg: 'bg-blue-50 dark:bg-blue-950/30',
     textColor: 'text-blue-600 dark:text-blue-400',
-    category: 'server',
+    category: 'convert',
   },
 ];
 
@@ -395,13 +395,13 @@ function ToolCard({ tool, index, isVisible }: { tool: typeof tools[0]; index: nu
   return (
     <Link href={tool.href} className="group">
       <div
-        className={`relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 h-full transition-all duration-300 hover:shadow-lg hover:border-gray-300 dark:hover:border-slate-600 ${
+        className={`gradient-border relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 h-full transition-all duration-300 hover:shadow-soft-lg hover:border-gray-300 dark:hover:border-slate-600 hover:-translate-y-0.5 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}
         style={{ transitionDelay: `${index * 30}ms` }}
       >
         <div className="relative z-10">
-          <div className={`w-12 h-12 rounded-xl ${tool.lightBg} ${tool.textColor} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform duration-200`}>
+          <div className={`w-12 h-12 rounded-xl ${tool.lightBg} ${tool.textColor} flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-200 group-hover:shadow-md`}>
             {tool.icon}
           </div>
           <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
@@ -413,7 +413,7 @@ function ToolCard({ tool, index, isVisible }: { tool: typeof tools[0]; index: nu
         </div>
 
         {/* Arrow indicator */}
-        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0 -translate-x-1">
           <svg className={`w-5 h-5 ${tool.textColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
@@ -484,55 +484,62 @@ export default function HomePage() {
   const organizeTools = tools.filter(t => t.category === 'organize');
   const convertTools = tools.filter(t => t.category === 'convert');
   const editTools = tools.filter(t => t.category === 'edit');
-  const serverTools = tools.filter(t => t.category === 'server');
+  const secureTools = tools.filter(t => t.category === 'secure');
 
   return (
     <PageLayout>
-      {/* Hero Section - Full Width */}
-      <section className="relative overflow-hidden min-h-[60vh] flex items-center">
-        {/* Animated Background */}
+      {/* Hero Section */}
+      <section className="relative overflow-hidden min-h-[40vh] flex items-center">
+        {/* Animated gradient mesh background */}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM2MzY2ZjEiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] " />
-
+        <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-300/20 dark:bg-indigo-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-300/20 dark:bg-purple-500/10 rounded-full blur-3xl" />
 
         <div className="relative w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-16 lg:py-20">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Content */}
             <div className="space-y-8">
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-medium">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-medium opacity-0 animate-fade-in-up">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   100% Private
                 </div>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight opacity-0 animate-fade-in-up animation-delay-100">
                   {tHero('title').split(' ').map((word, i) => (
                     <span key={i} className={i === 0 ? 'text-indigo-600 dark:text-indigo-400' : ''}>
                       {word}{' '}
                     </span>
                   ))}
                 </h1>
-                <p className="text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-xl">
+                <p className="text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-xl opacity-0 animate-fade-in-up animation-delay-200">
                   {tHero('subtitle')}
                 </p>
               </div>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-wrap gap-4">
+              {/* Dual CTA Buttons */}
+              <div className="flex flex-wrap gap-4 opacity-0 animate-fade-in-up animation-delay-300">
                 <Link
                   href="#tools"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold shadow-button hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
                 >
                   {tHero('cta')}
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </Link>
+                <Link
+                  href="#tools"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-all duration-200 hover:-translate-y-0.5"
+                >
+                  {tHero('ctaSecondary')}
+                </Link>
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200 dark:border-slate-700">
+              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200 dark:border-slate-700 opacity-0 animate-fade-in-up animation-delay-400">
                 <StatCard value={14} label="PDF Tools" suffix="+" />
                 <StatCard value={100} label="Free Forever" suffix="%" />
                 <StatCard value={0} label="Uploads to Server" />
@@ -540,7 +547,7 @@ export default function HomePage() {
             </div>
 
             {/* Right - Trust Badges Grid */}
-            <div className="grid gap-4">
+            <div className="grid gap-4 opacity-0 animate-fade-in-up animation-delay-300">
               {[
                 {
                   icon: (
@@ -589,7 +596,7 @@ export default function HomePage() {
               ].map((badge, i) => (
                 <div
                   key={i}
-                  className={`${badge.bg} rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50`}
+                  className={`${badge.bg} rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50 transition-all duration-200 hover:-translate-y-1 hover:shadow-soft-md`}
                 >
                   <div className="flex items-start gap-4">
                     <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white shadow-lg`}>
@@ -608,10 +615,11 @@ export default function HomePage() {
       </section>
 
       {/* Tools Section */}
-      <section id="tools" ref={toolsRef} className="py-16 lg:py-20 bg-gray-50/50 dark:bg-slate-900/50">
+      <section id="tools" ref={toolsRef} className="py-16 lg:py-20 bg-white dark:bg-slate-900">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
           {/* Section Header */}
           <div className="text-center mb-12">
+            <p className="section-label mb-3">PDF Tools</p>
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Choose Your Tool
             </h2>
@@ -686,18 +694,18 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Secure Server Processing Tools */}
+          {/* Security Tools */}
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center text-white">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Secure Server Processing</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Security</h3>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-              {serverTools.map((tool, index) => (
+              {secureTools.map((tool, index) => (
                 <ToolCard
                   key={tool.id}
                   tool={tool}
@@ -723,8 +731,8 @@ export default function HomePage() {
                 <UpcomingToolCard
                   key={tool.id}
                   tool={tool}
-                  index={index + organizeTools.length + convertTools.length + editTools.length + serverTools.length}
-                  isVisible={toolsInView && visibleItems.includes(index + organizeTools.length + convertTools.length + editTools.length + serverTools.length)}
+                  index={index + organizeTools.length + convertTools.length + editTools.length + secureTools.length}
+                  isVisible={toolsInView && visibleItems.includes(index + organizeTools.length + convertTools.length + editTools.length + secureTools.length)}
                 />
               ))}
             </div>

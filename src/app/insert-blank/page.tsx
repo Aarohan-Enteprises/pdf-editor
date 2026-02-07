@@ -8,6 +8,7 @@ import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
+import Link from 'next/link';
 
 // Set worker
 if (typeof window !== 'undefined') {
@@ -223,6 +224,12 @@ export default function InsertBlankPage() {
       <div className="w-full px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
+            <Link href="/#tools" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition-colors mb-4">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              All Tools
+            </Link>
           <div className="flex items-center gap-3 sm:gap-4 mb-4">
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-100 dark:bg-slate-950/30 text-slate-600 dark:text-slate-400 flex items-center justify-center flex-shrink-0">
               <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
