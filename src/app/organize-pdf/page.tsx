@@ -280,6 +280,8 @@ export default function OrganizePDFPage() {
                 isLoading={isLoading}
                 externalError={uploadError}
                 onClearError={() => setUploadError(null)}
+                fileLoaded={files.length > 0}
+                fileName={files[0]?.name}
               />
 
               {orderedPages.length > 0 && (

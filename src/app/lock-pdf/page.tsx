@@ -175,6 +175,8 @@ export default function LockPdfPage() {
                 isLoading={false}
                 externalError={uploadError}
                 onClearError={() => setUploadError(null)}
+                fileLoaded={!!file}
+                fileName={file?.name}
               />
 
               {file && (

@@ -23,9 +23,7 @@ export default function RotatePage() {
     selectedPages,
     isLoading,
     addFiles,
-    removePage,
     reorderPages,
-    rotatePage,
     rotateSelectedPages,
     togglePageSelection,
     selectAllPages,
@@ -125,6 +123,8 @@ export default function RotatePage() {
                 isLoading={isLoading}
                 externalError={uploadError}
                 onClearError={() => setUploadError(null)}
+                fileLoaded={files.length > 0}
+                fileName={files[0]?.name}
               />
 
               {pages.length > 0 && (
@@ -239,8 +239,6 @@ export default function RotatePage() {
                   selectedPages={selectedPages}
                   onToggleSelection={togglePageSelection}
                   onReorder={reorderPages}
-                  onRotate={rotatePage}
-                  onDelete={removePage}
                   onThumbnailLoad={updatePageThumbnail}
                 />
               </div>

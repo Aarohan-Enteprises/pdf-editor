@@ -10,9 +10,12 @@ interface PDFDropzoneProps {
   isLoading?: boolean;
   externalError?: string | null;
   onClearError?: () => void;
+  multiple?: boolean;
+  fileLoaded?: boolean;
+  fileName?: string;
 }
 
-export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClearError }: PDFDropzoneProps) {
+export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClearError, multiple = false, fileLoaded = false, fileName }: PDFDropzoneProps) {
   const t = useTranslations('dropzone');
   const [isDragActive, setIsDragActive] = useState(false);
   const [internalError, setInternalError] = useState<string | null>(null);
@@ -24,6 +27,12 @@ export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClear
     (files: FileList | File[]): File[] => {
       const validFiles: File[] = [];
       const fileArray = Array.from(files);
+
+      if (!multiple && fileArray.length > 1) {
+        setInternalError('Please upload only one PDF file');
+        if (onClearError) onClearError();
+        return [];
+      }
 
       for (const file of fileArray) {
         if (file.type !== 'application/pdf') {
@@ -50,7 +59,7 @@ export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClear
       setInternalError(null);
       return validFiles;
     },
-    [t, onClearError]
+    [t, onClearError, multiple]
   );
 
   const handleDragEnter = useCallback((e: DragEvent<HTMLDivElement>) => {
@@ -105,8 +114,30 @@ export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClear
   );
 
   const handleClick = useCallback(() => {
+    if (!multiple && fileLoaded) return;
     inputRef.current?.click();
-  }, []);
+  }, [multiple, fileLoaded]);
+
+  // Single-file mode with a file already loaded
+  if (!multiple && fileLoaded) {
+    return (
+      <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+        <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+          <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-green-800 dark:text-green-200 truncate">
+            {fileName || 'PDF loaded'}
+          </p>
+          <p className="text-xs text-green-600 dark:text-green-400">
+            File uploaded successfully
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -125,7 +156,7 @@ export function PDFDropzone({ onFilesSelected, isLoading, externalError, onClear
         ref={inputRef}
         type="file"
         accept="application/pdf"
-        multiple
+        multiple={multiple}
         className="hidden"
         onChange={handleFileInput}
         disabled={isLoading}

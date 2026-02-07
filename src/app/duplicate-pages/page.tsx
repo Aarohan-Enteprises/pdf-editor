@@ -23,9 +23,7 @@ export default function DuplicatePagesPage() {
     selectedPages,
     isLoading,
     addFiles,
-    removePage,
     reorderPages,
-    rotatePage,
     togglePageSelection,
     selectAllPages,
     deselectAllPages,
@@ -74,17 +72,15 @@ export default function DuplicatePagesPage() {
     setIsProcessing(true);
     try {
       const arrayBuffer = files[0].data;
-      // Get the page indices for selected pages
-      const selectedIndices = pages
-        .filter(page => selectedPages.has(page.id))
-        .map(page => page.pageIndex)
-        .sort((a, b) => a - b);
 
-      // Create array with duplicates
+      // Build page list: keep all pages, insert duplicates after selected ones
       const allIndices: number[] = [];
-      for (const index of selectedIndices) {
-        for (let i = 0; i <= copies; i++) {
-          allIndices.push(index);
+      for (const page of pages) {
+        allIndices.push(page.pageIndex);
+        if (selectedPages.has(page.id)) {
+          for (let i = 0; i < copies; i++) {
+            allIndices.push(page.pageIndex);
+          }
         }
       }
 
@@ -144,6 +140,8 @@ export default function DuplicatePagesPage() {
                 isLoading={isLoading}
                 externalError={uploadError}
                 onClearError={() => setUploadError(null)}
+                fileLoaded={files.length > 0}
+                fileName={files[0]?.name}
               />
 
               {pages.length > 0 && (
@@ -240,8 +238,6 @@ export default function DuplicatePagesPage() {
                   selectedPages={selectedPages}
                   onToggleSelection={togglePageSelection}
                   onReorder={reorderPages}
-                  onRotate={rotatePage}
-                  onDelete={removePage}
                   onThumbnailLoad={updatePageThumbnail}
                 />
               </div>

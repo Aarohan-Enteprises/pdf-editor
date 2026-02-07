@@ -23,9 +23,7 @@ export default function DeletePagesPage() {
     selectedPages,
     isLoading,
     addFiles,
-    removePage,
     reorderPages,
-    rotatePage,
     togglePageSelection,
     selectAllPages,
     deselectAllPages,
@@ -134,6 +132,8 @@ export default function DeletePagesPage() {
                 isLoading={isLoading}
                 externalError={uploadError}
                 onClearError={() => setUploadError(null)}
+                fileLoaded={files.length > 0}
+                fileName={files[0]?.name}
               />
 
               {pages.length > 0 && (
@@ -215,8 +215,6 @@ export default function DeletePagesPage() {
                   selectedPages={selectedPages}
                   onToggleSelection={togglePageSelection}
                   onReorder={reorderPages}
-                  onRotate={rotatePage}
-                  onDelete={removePage}
                   onThumbnailLoad={updatePageThumbnail}
                 />
               </div>

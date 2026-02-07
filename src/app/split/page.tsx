@@ -43,9 +43,7 @@ export default function SplitPage() {
     selectedPages,
     isLoading,
     addFiles,
-    removePage,
     reorderPages,
-    rotatePage,
     togglePageSelection,
     selectAllPages,
     deselectAllPages,
@@ -276,6 +274,8 @@ export default function SplitPage() {
                 isLoading={isLoading}
                 externalError={uploadError}
                 onClearError={() => setUploadError(null)}
+                fileLoaded={files.length > 0}
+                fileName={files[0]?.name}
               />
 
               {pages.length > 0 && (
@@ -585,16 +585,63 @@ export default function SplitPage() {
                       </div>
                     )}
                   </div>
+                ) : splitMode === 'fixed' ? (
+                  /* Fixed Mode - Show pages grouped by chunk */
+                  <div className="space-y-6">
+                    {Array.from({ length: fixedChunks }, (_, i) => {
+                      const start = i * fixedSize;
+                      const end = Math.min(start + fixedSize, pages.length);
+                      const chunkPages = pages.slice(start, end);
+                      const color = RANGE_COLORS[i % RANGE_COLORS.length];
+                      return (
+                        <div key={i} className={`p-4 rounded-xl ${color.light}`}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className={`w-3 h-3 rounded-full ${color.bg}`} />
+                            <h3 className={`font-medium ${color.text}`}>
+                              Part {i + 1}: Pages {start + 1} - {end}
+                            </h3>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              ({chunkPages.length} page{chunkPages.length !== 1 ? 's' : ''})
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                            {chunkPages.map((page, idx) => (
+                              <div
+                                key={page.id}
+                                className={`relative aspect-[3/4] bg-white dark:bg-slate-800 rounded-lg overflow-hidden border-2 ${color.border} shadow-sm`}
+                              >
+                                {page.thumbnail ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={page.thumbnail}
+                                    alt={`Page ${start + idx + 1}`}
+                                    className="w-full h-full object-contain"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                                  </div>
+                                )}
+                                <div className="absolute bottom-1 left-1 right-1">
+                                  <span className={`inline-block px-1.5 py-0.5 ${color.bg} rounded text-xs text-white font-medium`}>
+                                    {start + idx + 1}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 ) : (
-                  /* Select/Fixed Mode - Use standard PDFViewer */
+                  /* Select Mode - Use standard PDFViewer */
                   <PDFViewer
                     files={files}
                     pages={pages}
-                    selectedPages={splitMode === 'select' ? selectedPages : new Set()}
-                    onToggleSelection={splitMode === 'select' ? togglePageSelection : () => {}}
+                    selectedPages={selectedPages}
+                    onToggleSelection={togglePageSelection}
                     onReorder={reorderPages}
-                    onRotate={rotatePage}
-                    onDelete={removePage}
                     onThumbnailLoad={updatePageThumbnail}
                   />
                 )}

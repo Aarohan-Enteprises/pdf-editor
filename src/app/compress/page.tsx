@@ -235,6 +235,8 @@ export default function CompressPage() {
                 isLoading={false}
                 externalError={uploadError}
                 onClearError={() => setUploadError(null)}
+                fileLoaded={!!file}
+                fileName={file?.name}
               />
 
               {file && (
