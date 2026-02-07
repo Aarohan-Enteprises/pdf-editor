@@ -3,8 +3,24 @@
   <rect width="1200" height="630" fill="url(#gradient)" fill-opacity="0.1"/>
 
   <!-- Logo Icon -->
-  <rect x="500" y="180" width="80" height="80" rx="16" fill="#4f46e5"/>
-  <path d="M520 220h40m-40 12h40m8 18h-56v-56h22.343a4 4 0 012.829 1.172l21.656 21.656a4 4 0 011.172 2.829V250z" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="logoBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="logoFolder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="logoLock" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#3730a3"/>
+    </linearGradient>
+  </defs>
+  <rect x="520" y="140" width="160" height="160" rx="30" fill="url(#logoBg)"/>
+  <path d="M567 127 c-2.5 0-4.7 2.2-4.7 4.7v83c0 2.5 2.1 4.7 4.7 4.7h58.8c2.5 0 4.7-2.2 4.7-4.7V146l-16.6-18.7H567z" fill="white" fill-opacity="0.95" transform="translate(520 140) scale(0.3125)"/>
+  <path d="M575 165c-2.8 0-5 2.1-5 5v60.6c0 2.8 2.2 5 5 5h85.9c2.8 0 5-2.2 5-5V183.6c0-2.8-2.2-5-5-5h-38.4l-2.8-8.4c-.7-2.2-2.6-3.4-4.7-3.4H575z" fill="url(#logoFolder)" transform="translate(520 140) scale(0.3125)"/>
+  <rect x="559" y="196" width="82" height="50" rx="5" fill="url(#logoLock)" transform="translate(0 3)"/>
 
   <!-- PDF2.in Text -->
   <text x="600" y="310" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="bold" fill="#1e293b" text-anchor="middle">PDF2.in</text>

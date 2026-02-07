@@ -591,70 +591,35 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right - Trust Badges Grid */}
-            <div className="grid gap-4 opacity-0 animate-fade-in-up animation-delay-300">
-              {[
-                {
-                  icon: (
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  ),
-                  title: tTrust('secure.title'),
-                  description: tTrust('secure.description'),
-                  gradient: 'from-green-500 to-emerald-500',
-                  bg: 'bg-green-50 dark:bg-green-900/20',
-                },
-                {
-                  icon: (
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  ),
-                  title: tTrust('free.title'),
-                  description: tTrust('free.description'),
-                  gradient: 'from-blue-500 to-indigo-500',
-                  bg: 'bg-blue-50 dark:bg-blue-900/20',
-                },
-                {
-                  icon: (
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  ),
-                  title: tTrust('fast.title'),
-                  description: tTrust('fast.description'),
-                  gradient: 'from-amber-500 to-orange-500',
-                  bg: 'bg-amber-50 dark:bg-amber-900/20',
-                },
-                {
-                  icon: (
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                    </svg>
-                  ),
-                  title: tTrust('noAds.title'),
-                  description: tTrust('noAds.description'),
-                  gradient: 'from-rose-500 to-pink-500',
-                  bg: 'bg-rose-50 dark:bg-rose-900/20',
-                },
-              ].map((badge, i) => (
-                <div
-                  key={i}
-                  className={`${badge.bg} rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50 transition-all duration-200 hover:-translate-y-1 hover:shadow-soft-md`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white shadow-lg`}>
-                      {badge.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{badge.title}</h3>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{badge.description}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            {/* Right - Hero Illustration */}
+            <div className="flex items-center justify-center opacity-0 animate-fade-in-up animation-delay-300">
+              <div className="relative w-full max-w-md lg:max-w-lg xl:max-w-xl">
+                {/* Glow behind illustration */}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-full blur-3xl scale-110" />
+                <img
+                  src="/hero-illustration.svg"
+                  alt="Secure PDF editing"
+                  className="relative w-full h-auto drop-shadow-2xl animate-float"
+                  width={520}
+                  height={520}
+                />
+              </div>
             </div>
+          </div>
+
+          {/* Trust Badges - compact inline */}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 mt-10 opacity-0 animate-fade-in-up animation-delay-500">
+            {[
+              { icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>, label: tTrust('secure.title'), color: 'text-green-600 dark:text-green-400' },
+              { icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>, label: tTrust('free.title'), color: 'text-blue-600 dark:text-blue-400' },
+              { icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>, label: tTrust('fast.title'), color: 'text-amber-600 dark:text-amber-400' },
+              { icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>, label: tTrust('noAds.title'), color: 'text-rose-600 dark:text-rose-400' },
+            ].map((badge, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <span className={badge.color}>{badge.icon}</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{badge.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
