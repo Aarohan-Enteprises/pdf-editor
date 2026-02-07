@@ -46,8 +46,8 @@ export async function loadPDF(data: ArrayBuffer | Uint8Array): Promise<PDFDocume
 }
 
 function brandPDF(pdf: PDFDocument): void {
-  pdf.setCreator('PDF2.in');
-  pdf.setProducer('PDF2.in (https://pdf2.in)');
+  pdf.setCreator('https://pdf2.in');
+  pdf.setProducer('https://pdf2.in');
   pdf.setModificationDate(new Date());
 }
 
