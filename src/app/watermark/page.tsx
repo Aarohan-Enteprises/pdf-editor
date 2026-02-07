@@ -10,6 +10,7 @@ import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePD
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { mergePDFsWithOrder, addWatermark, WatermarkOptions } from '@/lib/pdf-operations';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 export default function WatermarkPage() {
   const t = useTranslations('tools.watermark');
@@ -115,6 +116,7 @@ export default function WatermarkPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="watermark"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -353,6 +355,7 @@ export default function WatermarkPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="watermark" />
       </div>
     </PageLayout>
   );

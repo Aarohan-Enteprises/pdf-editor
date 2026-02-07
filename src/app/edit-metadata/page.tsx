@@ -7,6 +7,7 @@ import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { editMetadata, getMetadata, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 export default function EditMetadataPage() {
   const t = useTranslations('tools.editMetadata');
@@ -156,6 +157,7 @@ export default function EditMetadataPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="edit-metadata"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -351,6 +353,7 @@ export default function EditMetadataPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="edit-metadata" />
       </div>
     </PageLayout>
   );

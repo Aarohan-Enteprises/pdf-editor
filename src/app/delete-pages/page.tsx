@@ -10,6 +10,7 @@ import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePD
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { mergePDFsWithOrder } from '@/lib/pdf-operations';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 export default function DeletePagesPage() {
   const t = useTranslations('tools.deletePages');
@@ -95,6 +96,7 @@ export default function DeletePagesPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="delete-pages"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -235,6 +237,7 @@ export default function DeletePagesPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="delete-pages" />
       </div>
     </PageLayout>
   );

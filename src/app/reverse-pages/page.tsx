@@ -7,6 +7,7 @@ import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { reversePageOrder, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 export default function ReversePagesPage() {
   const t = useTranslations('tools.reversePages');
@@ -118,6 +119,7 @@ export default function ReversePagesPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="reverse-pages"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -243,6 +245,7 @@ export default function ReversePagesPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="reverse-pages" />
       </div>
     </PageLayout>
   );

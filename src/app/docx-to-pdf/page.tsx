@@ -6,6 +6,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
@@ -181,6 +182,7 @@ export default function DocxToPdfPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="docx-to-pdf"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -511,6 +513,7 @@ export default function DocxToPdfPage() {
             </div>
           </div>
         </div>
+        <ToolSEOSection toolId="docx-to-pdf" />
       </div>
     </PageLayout>
   );

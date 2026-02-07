@@ -2,6 +2,9 @@
   "permissions": {
     "disallow": [
       "Bash(npm run build*)"
+    ],
+    "allow": [
+      "Bash(npx tsc:*)"
     ]
   }
 }

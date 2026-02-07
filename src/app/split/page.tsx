@@ -10,6 +10,7 @@ import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePD
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { mergePDFsWithOrder, splitPDF, downloadPDF } from '@/lib/pdf-operations';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 interface PageRange {
   id: string;
@@ -237,6 +238,7 @@ export default function SplitPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="split"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -614,6 +616,7 @@ export default function SplitPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="split" />
       </div>
     </PageLayout>
   );

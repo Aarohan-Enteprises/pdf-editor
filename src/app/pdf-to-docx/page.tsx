@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
@@ -478,6 +479,7 @@ export default function PdfToDocxPage() {
             </div>
           </div>
         </div>
+        <ToolSEOSection toolId="pdf-to-docx" />
       </div>
     </PageLayout>
   );

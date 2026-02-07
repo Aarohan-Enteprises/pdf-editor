@@ -466,25 +466,44 @@ function StatCard({ value, label, suffix = '' }: { value: number; label: string;
   }, [isInView, start]);
 
   return (
-    <div ref={ref} className="text-center">
+    <div
+      ref={ref}
+      className="text-center transition-all duration-700"
+      style={{
+        opacity: isInView ? 1 : 0,
+        transform: isInView ? 'translateY(0)' : 'translateY(16px)',
+      }}
+    >
       <div className="text-3xl lg:text-4xl font-bold text-indigo-600 dark:text-indigo-400">
-        {count}{suffix}
+        {value === 0 ? '0' : count}{suffix}
       </div>
       <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{label}</div>
     </div>
   );
 }
 
+type CategoryFilter = 'all' | 'organize' | 'convert' | 'edit' | 'secure';
+
 export default function HomePage() {
   const tHero = useTranslations('hero');
   const tTrust = useTranslations('trust');
+  const tNav = useTranslations('nav');
   const visibleItems = useStaggeredAnimation(tools.length + upcomingTools.length, 40);
   const { ref: toolsRef, isInView: toolsInView } = useInView(0.05);
+  const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
 
   const organizeTools = tools.filter(t => t.category === 'organize');
   const convertTools = tools.filter(t => t.category === 'convert');
   const editTools = tools.filter(t => t.category === 'edit');
   const secureTools = tools.filter(t => t.category === 'secure');
+
+  const categoryTabs: { key: CategoryFilter; label: string }[] = [
+    { key: 'all', label: tNav('allTools') },
+    { key: 'organize', label: tNav('organize') },
+    { key: 'convert', label: tNav('convert') },
+    { key: 'edit', label: tNav('edit') },
+    { key: 'secure', label: tNav('secure') },
+  ];
 
   return (
     <PageLayout>
@@ -539,8 +558,8 @@ export default function HomePage() {
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200 dark:border-slate-700 opacity-0 animate-fade-in-up animation-delay-400">
-                <StatCard value={14} label="PDF Tools" suffix="+" />
+              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200 dark:border-slate-700">
+                <StatCard value={tools.length} label="PDF Tools" suffix="+" />
                 <StatCard value={100} label="Free Forever" suffix="%" />
                 <StatCard value={0} label="Uploads to Server" />
               </div>
@@ -628,7 +647,27 @@ export default function HomePage() {
             </p>
           </div>
 
+          {/* Category Filter Tabs */}
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex gap-2 overflow-x-auto pb-2 max-w-full scrollbar-hide">
+              {categoryTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveCategory(tab.key)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                    activeCategory === tab.key
+                      ? 'bg-indigo-600 text-white shadow-md'
+                      : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Organize Tools */}
+          {(activeCategory === 'all' || activeCategory === 'organize') && (
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white">
@@ -649,8 +688,10 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+          )}
 
           {/* Convert Tools */}
+          {(activeCategory === 'all' || activeCategory === 'convert') && (
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white">
@@ -671,8 +712,10 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+          )}
 
           {/* Edit Tools */}
+          {(activeCategory === 'all' || activeCategory === 'edit') && (
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
@@ -693,8 +736,10 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+          )}
 
           {/* Security Tools */}
+          {(activeCategory === 'all' || activeCategory === 'secure') && (
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white">
@@ -715,8 +760,10 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+          )}
 
           {/* Coming Soon Tools */}
+          {activeCategory === 'all' && (
           <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white">
@@ -737,6 +784,7 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+          )}
         </div>
       </section>
 

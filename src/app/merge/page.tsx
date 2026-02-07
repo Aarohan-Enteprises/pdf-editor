@@ -26,6 +26,7 @@ import { usePDFDocument, PageLimitError, EncryptedPDFError, PDFFile } from '@/ho
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { mergePDFsWithOrder } from '@/lib/pdf-operations';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 interface SortableFileItemProps {
   file: PDFFile;
@@ -184,6 +185,7 @@ export default function MergePage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="merge"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -334,6 +336,7 @@ export default function MergePage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="merge" />
       </div>
     </PageLayout>
   );

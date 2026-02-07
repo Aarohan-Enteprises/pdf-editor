@@ -7,6 +7,7 @@ import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { imagesToPDF, checkPDFEncryption, EncryptedPDFError, SUPPORTED_IMAGE_FORMATS } from '@/lib/pdf-operations';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 interface ImageFile {
   id: string;
@@ -169,6 +170,7 @@ export default function JpgToPdfPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="jpg-to-pdf"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -358,6 +360,7 @@ export default function JpgToPdfPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="jpg-to-pdf" />
       </div>
     </PageLayout>
   );

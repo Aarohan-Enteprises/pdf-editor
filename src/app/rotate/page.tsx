@@ -10,6 +10,7 @@ import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePD
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { mergePDFsWithOrder } from '@/lib/pdf-operations';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 export default function RotatePage() {
   const t = useTranslations('tools.rotate');
@@ -86,6 +87,7 @@ export default function RotatePage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="rotate"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -259,6 +261,7 @@ export default function RotatePage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="rotate" />
       </div>
     </PageLayout>
   );

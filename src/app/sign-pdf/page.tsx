@@ -9,6 +9,7 @@ import { getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pd
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 // Set worker
 if (typeof window !== 'undefined') {
@@ -878,6 +879,7 @@ export default function SignPdfPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="sign-pdf"
       />
       <div className="w-full px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
         {/* Page Header */}
@@ -1508,6 +1510,7 @@ export default function SignPdfPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="sign-pdf" />
       </div>
     </PageLayout>
   );

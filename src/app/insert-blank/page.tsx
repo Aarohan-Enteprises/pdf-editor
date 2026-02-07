@@ -9,6 +9,7 @@ import { getPDFPageCount, checkPDFEncryption, EncryptedPDFError } from '@/lib/pd
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 // Set worker
 if (typeof window !== 'undefined') {
@@ -220,6 +221,7 @@ export default function InsertBlankPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="insert-blank"
       />
       <div className="w-full px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
         {/* Page Header */}
@@ -478,6 +480,7 @@ export default function InsertBlankPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="insert-blank" />
       </div>
     </PageLayout>
   );

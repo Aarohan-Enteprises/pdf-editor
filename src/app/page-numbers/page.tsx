@@ -7,6 +7,7 @@ import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { addPageNumbers, PageNumberOptions, checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 export default function PageNumbersPage() {
   const t = useTranslations('tools.pageNumbers');
@@ -131,6 +132,7 @@ export default function PageNumbersPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="page-numbers"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -327,6 +329,7 @@ export default function PageNumbersPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="page-numbers" />
       </div>
     </PageLayout>
   );

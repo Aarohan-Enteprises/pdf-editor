@@ -6,6 +6,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import * as pdfjsLib from 'pdfjs-dist';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 // Set worker
 if (typeof window !== 'undefined') {
@@ -250,6 +251,7 @@ export default function ExtractTextPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="extract-text" />
       </div>
     </PageLayout>
   );

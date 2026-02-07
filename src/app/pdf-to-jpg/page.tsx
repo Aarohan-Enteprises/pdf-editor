@@ -6,6 +6,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { checkPDFEncryption, EncryptedPDFError } from '@/lib/pdf-operations';
 import * as pdfjsLib from 'pdfjs-dist';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -348,6 +349,7 @@ export default function PdfToJpgPage() {
             ) : null}
           </div>
         </div>
+        <ToolSEOSection toolId="pdf-to-jpg" />
       </div>
     </PageLayout>
   );

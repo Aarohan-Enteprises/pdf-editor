@@ -7,6 +7,7 @@ import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
@@ -155,6 +156,7 @@ export default function UnlockPdfPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="unlock-pdf"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -485,6 +487,7 @@ export default function UnlockPdfPage() {
             </div>
           </div>
         </div>
+        <ToolSEOSection toolId="unlock-pdf" />
       </div>
     </PageLayout>
   );

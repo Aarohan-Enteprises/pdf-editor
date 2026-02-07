@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import * as pdfjsLib from 'pdfjs-dist';
+import { toolSuggestions, slugToToolId } from '@/lib/tools-data';
 
 // Set worker
 if (typeof window !== 'undefined') {
@@ -14,6 +17,7 @@ interface PDFPreviewModalProps {
   filename: string;
   onClose: () => void;
   onDownload: () => void;
+  currentTool?: string;
 }
 
 interface PagePreview {
@@ -29,7 +33,10 @@ export function PDFPreviewModal({
   filename,
   onClose,
   onDownload,
+  currentTool,
 }: PDFPreviewModalProps) {
+  const tTools = useTranslations('tools');
+  const suggestions = currentTool ? toolSuggestions[currentTool] : undefined;
   const [pages, setPages] = useState<PagePreview[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -330,23 +337,50 @@ export function PDFPreviewModal({
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col sm:flex-row gap-3 px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          <button
-            onClick={onClose}
-            className="btn btn-secondary flex-1 sm:flex-none"
-          >
-            Close
-          </button>
-          <button
-            onClick={onDownload}
-            disabled={isLoading}
-            className="btn btn-primary flex-1 sm:flex-none sm:ml-auto"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Download PDF
-          </button>
+        <div className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={onClose}
+              className="btn btn-secondary flex-1 sm:flex-none"
+            >
+              Close
+            </button>
+            <button
+              onClick={onDownload}
+              disabled={isLoading}
+              className="btn btn-primary flex-1 sm:flex-none sm:ml-auto"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download PDF
+            </button>
+          </div>
+
+          {/* What's Next Suggestions */}
+          {suggestions && suggestions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 dark:border-slate-700/50">
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                What&apos;s next?
+              </span>
+              {suggestions.map((slug) => {
+                const toolId = slugToToolId[slug];
+                if (!toolId) return null;
+                return (
+                  <Link
+                    key={slug}
+                    href={`/${slug}`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    {tTools(`${toolId}.title`)}
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

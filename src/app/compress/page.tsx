@@ -7,6 +7,7 @@ import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 type CompressionQuality = 'low' | 'medium' | 'high';
 
@@ -196,6 +197,7 @@ export default function CompressPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="compress"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -559,6 +561,7 @@ export default function CompressPage() {
             </div>
           </div>
         </div>
+        <ToolSEOSection toolId="compress" />
       </div>
     </PageLayout>
   );

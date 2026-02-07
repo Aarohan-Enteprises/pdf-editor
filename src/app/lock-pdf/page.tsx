@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
@@ -469,6 +470,7 @@ export default function LockPdfPage() {
             </div>
           </div>
         </div>
+        <ToolSEOSection toolId="lock-pdf" />
       </div>
     </PageLayout>
   );

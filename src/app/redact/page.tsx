@@ -8,6 +8,7 @@ import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { getPDFPageCount, checkPDFEncryption, EncryptedPDFError, applyRedactions, RedactionStyle } from '@/lib/pdf-operations';
 import * as pdfjsLib from 'pdfjs-dist';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 // Set worker
 if (typeof window !== 'undefined') {
@@ -529,6 +530,7 @@ export default function RedactPdfPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="redact"
       />
       <div className="w-full px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
         {/* Page Header */}
@@ -938,6 +940,7 @@ export default function RedactPdfPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="redact" />
       </div>
     </PageLayout>
   );

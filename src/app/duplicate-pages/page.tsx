@@ -10,6 +10,7 @@ import { usePDFDocument, PageLimitError, EncryptedPDFError } from '@/hooks/usePD
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { splitPDF } from '@/lib/pdf-operations';
 import Link from 'next/link';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 export default function DuplicatePagesPage() {
   const t = useTranslations('tools.duplicatePages');
@@ -105,6 +106,7 @@ export default function DuplicatePagesPage() {
         filename={previewFilename}
         onClose={closePreview}
         onDownload={downloadPreview}
+        currentTool="duplicate-pages"
       />
       <div className="w-full px-6 lg:px-12 py-8">
         {/* Page Header */}
@@ -260,6 +262,7 @@ export default function DuplicatePagesPage() {
             )}
           </div>
         </div>
+        <ToolSEOSection toolId="duplicate-pages" />
       </div>
     </PageLayout>
   );
