@@ -179,7 +179,7 @@ export function generateToolMetadata(toolId: string): Metadata {
     openGraph: {
       title: config.title,
       description: config.description,
-      url: `${BASE_URL}${config.path}`,
+      url: `${BASE_URL}${config.path}/`,
       siteName: 'PDF2.in',
       type: 'website',
       images: [
@@ -198,7 +198,7 @@ export function generateToolMetadata(toolId: string): Metadata {
       images: ['/og-image.png'],
     },
     alternates: {
-      canonical: `${BASE_URL}${config.path}`,
+      canonical: `${BASE_URL}${config.path}/`,
     },
   };
 }
@@ -212,7 +212,7 @@ export function generateToolJsonLd(toolId: string) {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: config.title.split(' - ')[0],
-    url: `${BASE_URL}${config.path}`,
+    url: `${BASE_URL}${config.path}/`,
     description: config.description,
     applicationCategory: 'UtilityApplication',
     operatingSystem: 'Any',

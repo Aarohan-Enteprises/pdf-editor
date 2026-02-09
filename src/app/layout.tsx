@@ -92,7 +92,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: BASE_URL,
+    canonical: `${BASE_URL}/`,
   },
   category: 'technology',
 };
@@ -145,7 +145,6 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="canonical" href={BASE_URL} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
