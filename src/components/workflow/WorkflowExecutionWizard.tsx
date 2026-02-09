@@ -22,7 +22,7 @@ function StepFlowPipeline({ steps, progress, phase }: {
   const t = useTranslations('workflows');
 
   return (
-    <div className="flex items-center justify-center gap-0 overflow-x-auto pb-2 mb-6">
+    <div className="flex items-center justify-start sm:justify-center gap-0 overflow-x-auto pb-2 mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
       {steps.map((step, i) => {
         const def = stepRegistry[step.type];
         if (!def) return null;
@@ -40,28 +40,28 @@ function StepFlowPipeline({ steps, progress, phase }: {
 
         return (
           <div key={step.id} className="flex items-center flex-shrink-0">
-            <div className="flex flex-col items-center gap-1.5 min-w-[4.5rem]">
+            <div className="flex flex-col items-center gap-1 sm:gap-1.5 min-w-[3.5rem] sm:min-w-[4.5rem]">
               {/* Step icon */}
-              <div className={`relative w-10 h-10 rounded-xl ${isCompleted || isDone ? 'bg-green-50 dark:bg-green-950/30' : def.lightBg} flex items-center justify-center transition-all duration-300 ${ringClass}`}>
+              <div className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl ${isCompleted || isDone ? 'bg-green-50 dark:bg-green-950/30' : def.lightBg} flex items-center justify-center transition-all duration-300 ${ringClass}`}>
                 {(isCompleted || isDone) ? (
-                  <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 ) : isRunning ? (
-                  <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
                 ) : isError ? (
-                  <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
-                  <span className={`text-sm font-semibold ${def.textColor}`}>{i + 1}</span>
+                  <span className={`text-xs sm:text-sm font-semibold ${def.textColor}`}>{i + 1}</span>
                 )}
               </div>
               {/* Step label */}
-              <span className={`text-xs font-medium text-center leading-tight ${
+              <span className={`text-[10px] sm:text-xs font-medium text-center leading-tight ${
                 isRunning ? 'text-indigo-600 dark:text-indigo-400'
                 : isCompleted || isDone ? 'text-green-600 dark:text-green-400'
                 : isError ? 'text-red-600 dark:text-red-400'
@@ -72,9 +72,9 @@ function StepFlowPipeline({ steps, progress, phase }: {
             </div>
             {/* Connector arrow */}
             {i < steps.length - 1 && (
-              <div className="flex items-center px-1 -mt-5">
-                <div className={`w-6 h-0.5 ${isCompleted || isDone ? 'bg-green-400 dark:bg-green-600' : 'bg-gray-200 dark:bg-slate-700'}`} />
-                <svg className={`w-3 h-3 -ml-0.5 flex-shrink-0 ${isCompleted || isDone ? 'text-green-400 dark:text-green-600' : 'text-gray-300 dark:text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center px-0.5 sm:px-1 -mt-4 sm:-mt-5">
+                <div className={`w-4 sm:w-6 h-0.5 ${isCompleted || isDone ? 'bg-green-400 dark:bg-green-600' : 'bg-gray-200 dark:bg-slate-700'}`} />
+                <svg className={`w-2.5 h-2.5 sm:w-3 sm:h-3 -ml-0.5 flex-shrink-0 ${isCompleted || isDone ? 'text-green-400 dark:text-green-600' : 'text-gray-300 dark:text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -294,7 +294,7 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
             {t('completeDescription')}
           </p>
 
-          <div className="flex gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-center">
             {!steps.some((s) => s.type === 'lock') && (
               <button
                 onClick={handlePreview}
@@ -332,7 +332,7 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
           </h3>
           <p className="text-red-500 mb-6">{errorMessage}</p>
 
-          <div className="flex gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-center">
             <button
               onClick={() => { setPhase('configure'); setProgress(null); }}
               className="py-3 px-6 rounded-xl text-white font-semibold bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 shadow-sm"

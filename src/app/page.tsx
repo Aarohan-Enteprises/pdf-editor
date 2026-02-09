@@ -642,13 +642,13 @@ export default function HomePage() {
           </div>
 
           {/* Category Filter Tabs */}
-          <div className="flex justify-center mb-10">
-            <div className="inline-flex gap-2 overflow-x-auto pb-2 max-w-full scrollbar-hide">
+          <div className="flex justify-center mb-10 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="inline-flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 max-w-full scrollbar-hide">
               {categoryTabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveCategory(tab.key)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                     activeCategory === tab.key
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700'

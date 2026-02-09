@@ -229,7 +229,7 @@ export function WorkflowBuilder({ onBack, onRun, editId, editName, editDescripti
 
           {/* Action buttons */}
           {steps.length > 0 && name.trim() && (
-            <div className="flex gap-3 mt-6">
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
               <button
                 onClick={handleSave}
                 className="flex-1 py-3 px-6 rounded-xl text-gray-700 dark:text-gray-300 font-semibold border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200"

@@ -19,7 +19,7 @@ export function WorkflowCard({ nameKey, descriptionKey, lightBg, textColor, step
   const t = useTranslations('workflows');
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 h-full flex flex-col transition-all duration-300 hover:shadow-soft-lg hover:border-gray-300 dark:hover:border-slate-600 hover:-translate-y-0.5">
+    <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-4 sm:p-5 h-full flex flex-col transition-all duration-300 hover:shadow-soft-lg hover:border-gray-300 dark:hover:border-slate-600 hover:-translate-y-0.5">
       <div className="relative z-10 flex flex-col flex-1">
         {/* Icon */}
         <div className={`w-12 h-12 rounded-xl ${lightBg} ${textColor} flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-200 group-hover:shadow-md`}>
@@ -40,14 +40,14 @@ export function WorkflowCard({ nameKey, descriptionKey, lightBg, textColor, step
           {steps.map((step, i) => {
             const def = stepRegistry[step.type];
             return (
-              <span key={i} className="inline-flex items-center gap-1">
+              <span key={i} className="inline-flex items-center gap-0.5 sm:gap-1">
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${def?.lightBg || 'bg-gray-100 dark:bg-slate-700'} ${def?.textColor || 'text-gray-600 dark:text-gray-400'}`}
+                  className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${def?.lightBg || 'bg-gray-100 dark:bg-slate-700'} ${def?.textColor || 'text-gray-600 dark:text-gray-400'}`}
                 >
                   {t(def?.labelKey || step.type)}
                 </span>
                 {i < steps.length - 1 && (
-                  <svg className="w-3 h-3 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 )}

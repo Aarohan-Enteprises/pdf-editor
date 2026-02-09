@@ -12,8 +12,10 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const lastScrollY = useRef(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   const handleScroll = useCallback(() => {
     const currentScrollY = window.scrollY;
@@ -46,6 +48,27 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isToolsOpen]);
 
+  // Close mobile menu on route change / resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 640) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileMenuOpen]);
+
   const categories = [
     { key: 'organize' as const, label: tNav('organize') },
     { key: 'convert' as const, label: tNav('convert') },
@@ -55,6 +78,7 @@ export function Header() {
 
   return (
     <header
+      ref={headerRef}
       className={`glass sticky top-0 z-50 border-b transition-all duration-300 ${
         isScrolled
           ? 'border-gray-200/70 dark:border-slate-700/70 shadow-soft'
@@ -71,8 +95,8 @@ export function Header() {
           </div>
         </Link>
 
-        {/* Navigation */}
-        <nav className="flex items-center gap-1">
+        {/* Desktop Navigation */}
+        <nav className="hidden sm:flex items-center gap-1">
           {/* Tools Dropdown */}
           <div ref={dropdownRef} className="relative">
             <button
@@ -96,8 +120,8 @@ export function Header() {
 
             {/* Dropdown Panel */}
             {isToolsOpen && (
-              <div className="absolute right-0 sm:right-auto sm:left-0 mt-2 w-[calc(100vw-2rem)] sm:w-[540px] bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-200 dark:border-slate-700 p-4 z-50">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="absolute left-0 mt-2 w-[540px] bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-200 dark:border-slate-700 p-4 z-50">
+                <div className="grid grid-cols-2 gap-4">
                   {categories.map((cat) => {
                     const items = toolNavItems.filter((item) => item.category === cat.key);
                     return (
@@ -150,7 +174,84 @@ export function Header() {
             {tNav('about')}
           </Link>
         </nav>
+
+        {/* Mobile Hamburger Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="sm:hidden p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+          aria-label="Toggle menu"
+        >
+          {isMobileMenuOpen ? (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="sm:hidden absolute left-0 right-0 z-40 bg-white dark:bg-slate-900 overflow-y-auto border-t border-gray-200 dark:border-slate-700 shadow-lg"
+          style={{ maxHeight: 'calc(100vh - 61px)' }}
+        >
+          <nav className="px-4 py-4 space-y-1">
+            {/* Tools section */}
+            <div className="mb-2">
+              <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                {tNav('tools')}
+              </p>
+              {categories.map((cat) => {
+                const items = toolNavItems.filter((item) => item.category === cat.key);
+                return (
+                  <div key={cat.key} className="mb-3">
+                    <p className="px-3 py-1 text-xs font-medium text-gray-400 dark:text-gray-500">
+                      {cat.label}
+                    </p>
+                    {items.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="block px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                      >
+                        {tTools(`${item.id}.title`)}
+                      </Link>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="border-t border-gray-200 dark:border-slate-700 pt-2">
+              <Link
+                href="/workflows"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                </svg>
+                {tNav('workflows')}
+              </Link>
+              <Link
+                href="/about"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {tNav('about')}
+              </Link>
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
