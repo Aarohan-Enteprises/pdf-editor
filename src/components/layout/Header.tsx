@@ -138,6 +138,12 @@ export function Header() {
           </div>
 
           <Link
+            href="/workflows"
+            className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            {tNav('workflows')}
+          </Link>
+          <Link
             href="/about"
             className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
           >

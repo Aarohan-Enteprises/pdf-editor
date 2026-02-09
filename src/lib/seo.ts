@@ -160,6 +160,12 @@ const toolConfigs: Record<string, ToolSEOConfig> = {
     keywords: ['organize PDF', 'rearrange PDF pages', 'reorder PDF', 'PDF page organizer', 'sort PDF pages', 'move PDF pages'],
     path: '/organize-pdf',
   },
+  workflows: {
+    title: 'PDF Workflows - Automate Multi-Step PDF Processing Free',
+    description: 'Automate multi-step PDF processing with one-click workflows. Compress, watermark, add page numbers, lock PDFs and more in a single pipeline.',
+    keywords: ['PDF workflow', 'PDF automation', 'batch PDF processing', 'PDF pipeline', 'multi-step PDF', 'automate PDF'],
+    path: '/workflows',
+  },
 };
 
 export function generateToolMetadata(toolId: string): Metadata {

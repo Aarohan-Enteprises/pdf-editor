@@ -55,6 +55,7 @@ export const slugToToolId: Record<string, string> = {
   'organize-pdf': 'organizePdf',
   'lock-pdf': 'lockPdf',
   'unlock-pdf': 'unlockPdf',
+  'workflows': 'workflows',
 };
 
 // Suggested tools after completing an operation (slug → slugs)

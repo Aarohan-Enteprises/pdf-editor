@@ -27,7 +27,8 @@
     "convert": "Convert",
     "edit": "Edit",
     "secure": "Secure",
-    "allTools": "All Tools"
+    "allTools": "All Tools",
+    "workflows": "Workflows"
   },
   "howItWorks": {
     "title": "How It Works",
@@ -385,6 +386,144 @@
       "successDescription": "Your PDF has been converted to DOCX",
       "infoTitle": "About PDF to DOCX conversion",
       "infoDescription": "Extracts text and layout from your PDF and converts it to an editable Word document. Best results with text-based PDFs."
+    }
+  },
+  "workflows": {
+    "title": "PDF Workflows",
+    "subtitle": "Automate multi-step PDF processing with one-click pipelines",
+    "sectionTitle": "Popular Workflows",
+    "sectionSubtitle": "One-click multi-step PDF processing",
+    "viewAll": "View All Workflows",
+    "templatesLabel": "Templates",
+    "myWorkflows": "My Workflows",
+    "createNew": "Create New",
+    "createWorkflow": "Create Workflow",
+    "editWorkflow": "Edit Workflow",
+    "runWorkflow": "Run Workflow",
+    "noConfigNeeded": "No configuration needed",
+    "backToList": "Back",
+    "allTools": "All Tools",
+    "uploadTitle": "Drop your PDF here",
+    "uploadSubtitle": "or click to browse files",
+    "changeFile": "Change",
+    "processing": "Processing your PDF...",
+    "completeTitle": "Workflow Complete!",
+    "completeDescription": "Your PDF has been processed successfully.",
+    "preview": "Preview",
+    "download": "Download PDF",
+    "runAnother": "Process Another",
+    "errorTitle": "Something went wrong",
+    "tryAgain": "Try Again",
+    "startOver": "Start Over",
+    "workflowName": "Workflow Name",
+    "workflowNamePlaceholder": "e.g., My Custom Workflow",
+    "workflowDescription": "Description (optional)",
+    "workflowDescriptionPlaceholder": "What does this workflow do?",
+    "availableSteps": "Available Steps",
+    "pipeline": "Pipeline",
+    "emptyPipeline": "Click a step on the left to add it to your pipeline",
+    "save": "Save",
+    "saveAndRun": "Save & Run",
+    "noCustomWorkflows": "You haven't created any custom workflows yet.",
+    "createFirst": "Create your first workflow",
+    "steps": {
+      "rotate": {
+        "label": "Rotate",
+        "description": "Rotate all pages",
+        "degrees": "Rotation",
+        "90": "90° Clockwise",
+        "180": "180°",
+        "270": "90° Counter-clockwise"
+      },
+      "reverse": {
+        "label": "Reverse",
+        "description": "Reverse page order"
+      },
+      "pageNumbers": {
+        "label": "Page Numbers",
+        "description": "Add page numbers",
+        "position": "Position",
+        "bottomCenter": "Bottom Center",
+        "bottomLeft": "Bottom Left",
+        "bottomRight": "Bottom Right",
+        "topCenter": "Top Center",
+        "topLeft": "Top Left",
+        "topRight": "Top Right",
+        "format": "Format",
+        "formatNumber": "1, 2, 3...",
+        "formatPageOfTotal": "Page 1 of N",
+        "formatDash": "- 1 -",
+        "fontSize": "Font Size",
+        "startNumber": "Start From"
+      },
+      "watermark": {
+        "label": "Watermark",
+        "description": "Add text watermark",
+        "text": "Text",
+        "fontSize": "Font Size",
+        "opacity": "Opacity",
+        "position": "Position",
+        "center": "Center",
+        "topLeft": "Top Left",
+        "topRight": "Top Right",
+        "bottomLeft": "Bottom Left",
+        "bottomRight": "Bottom Right"
+      },
+      "editMetadata": {
+        "label": "Metadata",
+        "description": "Edit document metadata",
+        "title": "Title",
+        "author": "Author",
+        "subject": "Subject",
+        "keywords": "Keywords"
+      },
+      "flatten": {
+        "label": "Flatten",
+        "description": "Flatten form fields"
+      },
+      "compress": {
+        "label": "Compress",
+        "description": "Reduce file size",
+        "quality": "Quality",
+        "low": "Low (smallest)",
+        "medium": "Medium (balanced)",
+        "high": "High (best quality)"
+      },
+      "lock": {
+        "label": "Lock",
+        "description": "Password protect",
+        "password": "Password"
+      }
+    },
+    "templates": {
+      "prepareForEmail": {
+        "name": "Prepare for Email",
+        "description": "Compress and password-protect your PDF for secure email sharing"
+      },
+      "professionalDocument": {
+        "name": "Professional Document",
+        "description": "Add page numbers and a light draft watermark"
+      },
+      "archiveReady": {
+        "name": "Archive Ready",
+        "description": "Flatten forms, clean metadata, and compress for archival"
+      },
+      "confidentialReport": {
+        "name": "Confidential Report",
+        "description": "Add confidential watermark, page numbers, and password protection"
+      },
+      "cleanAndCompress": {
+        "name": "Clean & Compress",
+        "description": "Flatten, clear metadata, and maximize compression"
+      },
+      "presentationReady": {
+        "name": "Presentation Ready",
+        "description": "Rotate to landscape, add page numbers and subtle watermark"
+      },
+      "reverseAndNumber": {
+        "name": "Reverse & Number",
+        "description": "Reverse page order and add page numbers"
+      }
     }
   }
 }

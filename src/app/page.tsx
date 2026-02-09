@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useState, useEffect, useRef } from 'react';
+import { getFeaturedTemplates } from '@/lib/workflow-templates';
+import { WorkflowCard } from '@/components/workflow/WorkflowCard';
 
 const tools = [
   {
@@ -508,7 +510,7 @@ function StatCard({ value, label, suffix = '' }: { value: number; label: string;
   );
 }
 
-type CategoryFilter = 'all' | 'organize' | 'convert' | 'edit' | 'secure';
+type CategoryFilter = 'all' | 'organize' | 'convert' | 'edit' | 'secure' | 'workflows';
 
 export default function HomePage() {
   const tHero = useTranslations('hero');
@@ -529,6 +531,7 @@ export default function HomePage() {
     { key: 'convert', label: tNav('convert') },
     { key: 'edit', label: tNav('edit') },
     { key: 'secure', label: tNav('secure') },
+    { key: 'workflows', label: tNav('workflows') },
   ];
 
   return (
@@ -749,6 +752,43 @@ export default function HomePage() {
                   isVisible={toolsInView && visibleItems.includes(index + organizeTools.length + convertTools.length + editTools.length)}
                 />
               ))}
+            </div>
+          </div>
+          )}
+
+          {/* Workflows */}
+          {(activeCategory === 'all' || activeCategory === 'workflows') && (
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Workflows</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {getFeaturedTemplates().map((tpl) => (
+                <WorkflowCard
+                  key={tpl.id}
+                  nameKey={tpl.nameKey}
+                  descriptionKey={tpl.descriptionKey}
+                  gradient={tpl.gradient}
+                  steps={tpl.steps}
+                  onAction={() => { window.location.href = `/workflows#${tpl.id}`; }}
+                />
+              ))}
+            </div>
+            <div className="mt-4">
+              <Link
+                href="/workflows"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                View all workflows
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
             </div>
           </div>
           )}
