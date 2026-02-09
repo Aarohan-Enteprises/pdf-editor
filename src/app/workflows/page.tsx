@@ -126,6 +126,8 @@ export default function WorkflowsPage() {
                       nameKey={tpl.nameKey}
                       descriptionKey={tpl.descriptionKey}
                       gradient={tpl.gradient}
+                      lightBg={tpl.lightBg}
+                      textColor={tpl.textColor}
                       steps={tpl.steps}
                       onAction={() => handleRunTemplate(tpl.id)}
                     />
@@ -145,7 +147,7 @@ export default function WorkflowsPage() {
                   </h2>
                   <button
                     onClick={() => { setEditWorkflow(null); setView('builder'); }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 shadow-sm"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -173,35 +175,33 @@ export default function WorkflowsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {customWorkflows.map((cw) => (
                       <div key={cw.id} className="relative group">
-                        <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 h-full transition-all duration-300 hover:shadow-soft-lg hover:border-gray-300 dark:hover:border-slate-600">
-                          <div className="relative z-10">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500 to-slate-600 text-white flex items-center justify-center mb-3">
+                        <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 h-full flex flex-col transition-all duration-300 hover:shadow-soft-lg hover:border-gray-300 dark:hover:border-slate-600">
+                          <div className="relative z-10 flex flex-col flex-1">
+                            <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 flex items-center justify-center mb-3">
                               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
                             </div>
                             <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{cw.name}</h3>
-                            {cw.description && (
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">{cw.description}</p>
-                            )}
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2 min-h-[2.5rem]">{cw.description || '\u00A0'}</p>
                             <div className="flex flex-wrap gap-1.5 mb-4">
                               {cw.steps.map((step, i) => {
                                 const def = stepRegistry[step.type];
                                 return (
                                   <span
                                     key={i}
-                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${def?.gradient || 'from-gray-400 to-gray-500'} text-white`}
+                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${def?.lightBg || 'bg-gray-100 dark:bg-slate-700'} ${def?.textColor || 'text-gray-600 dark:text-gray-400'}`}
                                   >
                                     {t(def?.labelKey || step.type)}
                                   </span>
                                 );
                               })}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 mt-auto">
                               <button
                                 onClick={() => handleRunCustom(cw)}
-                                className="flex-1 py-2 px-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:opacity-90 transition-opacity"
+                                className="flex-1 py-2 px-3 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
                               >
                                 {t('runWorkflow')}
                               </button>

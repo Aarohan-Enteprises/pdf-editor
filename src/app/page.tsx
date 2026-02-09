@@ -774,6 +774,8 @@ export default function HomePage() {
                   nameKey={tpl.nameKey}
                   descriptionKey={tpl.descriptionKey}
                   gradient={tpl.gradient}
+                  lightBg={tpl.lightBg}
+                  textColor={tpl.textColor}
                   steps={tpl.steps}
                   onAction={() => { window.location.href = `/workflows#${tpl.id}`; }}
                 />

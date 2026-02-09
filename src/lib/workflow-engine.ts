@@ -14,6 +14,8 @@ export interface WorkflowTemplate {
   descriptionKey: string;
   icon: string; // emoji or identifier
   gradient: string;
+  lightBg: string;
+  textColor: string;
   steps: WorkflowStep[];
   featured?: boolean;
 }

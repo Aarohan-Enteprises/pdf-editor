@@ -31,6 +31,8 @@ export interface StepDefinition {
   descriptionKey: string;
   icon: string;
   gradient: string;
+  lightBg: string;
+  textColor: string;
   configFields: ConfigField[];
   defaultConfig: Record<string, string | number | boolean>;
   isBackend?: boolean;
@@ -43,6 +45,8 @@ export const stepRegistry: Record<StepType, StepDefinition> = {
     descriptionKey: 'steps.rotate.description',
     icon: 'rotate',
     gradient: 'from-cyan-500 to-cyan-600',
+    lightBg: 'bg-cyan-50 dark:bg-cyan-950/30',
+    textColor: 'text-cyan-600 dark:text-cyan-400',
     configFields: [
       {
         key: 'degrees',
@@ -63,6 +67,8 @@ export const stepRegistry: Record<StepType, StepDefinition> = {
     descriptionKey: 'steps.reverse.description',
     icon: 'reverse',
     gradient: 'from-amber-500 to-amber-600',
+    lightBg: 'bg-amber-50 dark:bg-amber-950/30',
+    textColor: 'text-amber-600 dark:text-amber-400',
     configFields: [],
     defaultConfig: {},
   },
@@ -72,6 +78,8 @@ export const stepRegistry: Record<StepType, StepDefinition> = {
     descriptionKey: 'steps.pageNumbers.description',
     icon: 'pageNumbers',
     gradient: 'from-indigo-500 to-indigo-600',
+    lightBg: 'bg-indigo-50 dark:bg-indigo-950/30',
+    textColor: 'text-indigo-600 dark:text-indigo-400',
     configFields: [
       {
         key: 'position',
@@ -119,6 +127,8 @@ export const stepRegistry: Record<StepType, StepDefinition> = {
     descriptionKey: 'steps.watermark.description',
     icon: 'watermark',
     gradient: 'from-pink-500 to-pink-600',
+    lightBg: 'bg-pink-50 dark:bg-pink-950/30',
+    textColor: 'text-pink-600 dark:text-pink-400',
     configFields: [
       {
         key: 'text',
@@ -163,6 +173,8 @@ export const stepRegistry: Record<StepType, StepDefinition> = {
     descriptionKey: 'steps.editMetadata.description',
     icon: 'editMetadata',
     gradient: 'from-violet-500 to-violet-600',
+    lightBg: 'bg-violet-50 dark:bg-violet-950/30',
+    textColor: 'text-violet-600 dark:text-violet-400',
     configFields: [
       { key: 'title', labelKey: 'steps.editMetadata.title', type: 'text', placeholder: 'Document Title' },
       { key: 'author', labelKey: 'steps.editMetadata.author', type: 'text', placeholder: 'Author Name' },
@@ -177,6 +189,8 @@ export const stepRegistry: Record<StepType, StepDefinition> = {
     descriptionKey: 'steps.flatten.description',
     icon: 'flatten',
     gradient: 'from-teal-500 to-teal-600',
+    lightBg: 'bg-teal-50 dark:bg-teal-950/30',
+    textColor: 'text-teal-600 dark:text-teal-400',
     configFields: [],
     defaultConfig: {},
   },
@@ -186,6 +200,8 @@ export const stepRegistry: Record<StepType, StepDefinition> = {
     descriptionKey: 'steps.compress.description',
     icon: 'compress',
     gradient: 'from-emerald-500 to-emerald-600',
+    lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+    textColor: 'text-emerald-600 dark:text-emerald-400',
     configFields: [
       {
         key: 'quality',
@@ -207,6 +223,8 @@ export const stepRegistry: Record<StepType, StepDefinition> = {
     descriptionKey: 'steps.lock.description',
     icon: 'lock',
     gradient: 'from-emerald-500 to-emerald-600',
+    lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+    textColor: 'text-emerald-600 dark:text-emerald-400',
     configFields: [
       {
         key: 'password',

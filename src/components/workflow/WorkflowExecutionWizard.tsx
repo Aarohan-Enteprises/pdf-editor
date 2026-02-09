@@ -232,7 +232,7 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
               return (
                 <div key={step.id} className="border border-gray-200 dark:border-slate-700 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className={`w-6 h-6 rounded-full bg-gradient-to-r ${def.gradient} text-white text-xs flex items-center justify-center font-medium`}>
+                    <span className={`w-6 h-6 rounded-full ${def.lightBg} ${def.textColor} text-xs flex items-center justify-center font-semibold`}>
                       {i + 1}
                     </span>
                     <h4 className="font-medium text-gray-900 dark:text-white">{t(def.labelKey)}</h4>
@@ -251,7 +251,7 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
           <button
             onClick={runWorkflow}
             disabled={!isConfigValid()}
-            className="w-full mt-6 py-3 px-6 rounded-xl text-white font-semibold bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-button"
+            className="w-full mt-6 py-3 px-6 rounded-xl text-white font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
           >
             {t('runWorkflow')}
           </button>
@@ -303,15 +303,17 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
           )}
 
           <div className="flex gap-3 justify-center">
-            <button
-              onClick={handlePreview}
-              className="py-3 px-6 rounded-xl text-indigo-600 dark:text-indigo-400 font-semibold border-2 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-all duration-200"
-            >
-              {t('preview')}
-            </button>
+            {!steps.some((s) => s.type === 'lock') && (
+              <button
+                onClick={handlePreview}
+                className="py-3 px-6 rounded-xl text-indigo-600 dark:text-indigo-400 font-semibold border-2 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-all duration-200"
+              >
+                {t('preview')}
+              </button>
+            )}
             <button
               onClick={handleDownload}
-              className="py-3 px-6 rounded-xl text-white font-semibold bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-button"
+              className="py-3 px-6 rounded-xl text-white font-semibold bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 shadow-sm"
             >
               {t('download')}
             </button>
@@ -350,7 +352,7 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => { setPhase('configure'); setProgress(null); }}
-              className="py-3 px-6 rounded-xl text-white font-semibold bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-button"
+              className="py-3 px-6 rounded-xl text-white font-semibold bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 shadow-sm"
             >
               {t('tryAgain')}
             </button>

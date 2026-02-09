@@ -143,7 +143,7 @@ export function WorkflowBuilder({ onBack, onRun, editId, editName, editDescripti
                   onClick={() => addStep(type)}
                   className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-all text-left"
                 >
-                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${def.gradient} text-white flex items-center justify-center flex-shrink-0`}>
+                  <div className={`w-8 h-8 rounded-lg ${def.lightBg} ${def.textColor} flex items-center justify-center flex-shrink-0`}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
@@ -178,7 +178,7 @@ export function WorkflowBuilder({ onBack, onRun, editId, editName, editDescripti
                 return (
                   <div key={step.id} className="border border-gray-200 dark:border-slate-700 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className={`w-6 h-6 rounded-full bg-gradient-to-r ${def.gradient} text-white text-xs flex items-center justify-center font-medium`}>
+                      <span className={`w-6 h-6 rounded-full ${def.lightBg} ${def.textColor} text-xs flex items-center justify-center font-semibold`}>
                         {i + 1}
                       </span>
                       <h4 className="font-medium text-gray-900 dark:text-white flex-1">{t(def.labelKey)}</h4>
@@ -238,7 +238,7 @@ export function WorkflowBuilder({ onBack, onRun, editId, editName, editDescripti
               </button>
               <button
                 onClick={handleSaveAndRun}
-                className="flex-1 py-3 px-6 rounded-xl text-white font-semibold bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-button"
+                className="flex-1 py-3 px-6 rounded-xl text-white font-semibold bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 shadow-sm"
               >
                 {t('saveAndRun')}
               </button>
