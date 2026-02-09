@@ -312,6 +312,23 @@ export const toolSEOContent: Record<string, ToolSEOContent> = {
       { question: 'Are my files uploaded to a server?', answer: 'No. All processing happens locally in your browser. Your files never leave your device.' },
     ],
   },
+  workflows: {
+    howToTitle: 'How to Use PDF Workflows',
+    steps: [
+      { title: 'Choose a Workflow', description: 'Pick a pre-built template like "Prepare for Email" or create your own custom workflow with the builder.' },
+      { title: 'Upload Your PDF', description: 'Drag and drop or browse to select the PDF file you want to process.' },
+      { title: 'Configure Steps', description: 'Review and adjust each step\'s settings - compression quality, watermark text, password, etc.' },
+      { title: 'Run & Download', description: 'Click Run to process all steps automatically. Preview the result and download when done.' },
+    ],
+    faqs: [
+      { question: 'What is a PDF workflow?', answer: 'A workflow chains multiple PDF operations into a single automated pipeline. Instead of running each tool separately, you upload once and all steps (compress, watermark, lock, etc.) run in sequence.' },
+      { question: 'What operations are available in workflows?', answer: 'Workflows support: Rotate, Reverse Pages, Page Numbers, Watermark, Edit Metadata, Flatten, Compress, and Lock. These cover most common PDF processing needs.' },
+      { question: 'Are my files uploaded to a server?', answer: 'Most steps run locally in your browser. Compress and Lock require server-side processing - for those steps the file is uploaded, processed, and returned. Files are deleted after processing.' },
+      { question: 'Can I create my own custom workflows?', answer: 'Yes. Use the workflow builder to add steps in any order, configure each one, and save it for reuse. Custom workflows are stored in your browser\'s local storage.' },
+      { question: 'Can I edit or delete saved workflows?', answer: 'Yes. Custom workflows can be edited or deleted at any time from the "My Workflows" section. Pre-built templates cannot be modified but you can use them as a starting point.' },
+      { question: 'Is there a limit on the number of steps?', answer: 'There is no hard limit on steps. However, each step processes the entire PDF, so workflows with many steps on large files may take longer.' },
+    ],
+  },
   'pdf-to-jpg': {
     howToTitle: 'How to Convert PDF to Images',
     steps: [

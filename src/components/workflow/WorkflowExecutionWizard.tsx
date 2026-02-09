@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import type { WorkflowStep, WorkflowProgress } from '@/lib/workflow-engine';
 import { executeWorkflow } from '@/lib/workflow-engine';
@@ -9,10 +9,82 @@ import { createStepExecutors } from '@/lib/workflow-steps';
 import { downloadPDF } from '@/lib/pdf-operations';
 import { usePDFPreview } from '@/hooks/usePDFPreview';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { PDFDropzone } from '@/components/pdf/PDFDropzone';
 import { StepConfigPanel } from './StepConfigPanel';
-import { WorkflowProgressStepper } from './WorkflowProgress';
 
 type Phase = 'upload' | 'configure' | 'processing' | 'done' | 'error';
+
+function StepFlowPipeline({ steps, progress, phase }: {
+  steps: WorkflowStep[];
+  progress: WorkflowProgress | null;
+  phase: Phase;
+}) {
+  const t = useTranslations('workflows');
+
+  return (
+    <div className="flex items-center justify-center gap-0 overflow-x-auto pb-2 mb-6">
+      {steps.map((step, i) => {
+        const def = stepRegistry[step.type];
+        if (!def) return null;
+
+        const stepProgress = progress?.steps[i];
+        const isCompleted = stepProgress?.status === 'completed';
+        const isRunning = stepProgress?.status === 'running';
+        const isError = stepProgress?.status === 'error';
+        const isDone = phase === 'done';
+
+        let ringClass = 'ring-1 ring-gray-200 dark:ring-slate-700';
+        if (isRunning) ringClass = 'ring-2 ring-indigo-500 dark:ring-indigo-400';
+        else if (isError) ringClass = 'ring-2 ring-red-500 dark:ring-red-400';
+        else if (isCompleted || isDone) ringClass = 'ring-2 ring-green-500 dark:ring-green-400';
+
+        return (
+          <div key={step.id} className="flex items-center flex-shrink-0">
+            <div className="flex flex-col items-center gap-1.5 min-w-[4.5rem]">
+              {/* Step icon */}
+              <div className={`relative w-10 h-10 rounded-xl ${isCompleted || isDone ? 'bg-green-50 dark:bg-green-950/30' : def.lightBg} flex items-center justify-center transition-all duration-300 ${ringClass}`}>
+                {(isCompleted || isDone) ? (
+                  <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : isRunning ? (
+                  <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : isError ? (
+                  <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <span className={`text-sm font-semibold ${def.textColor}`}>{i + 1}</span>
+                )}
+              </div>
+              {/* Step label */}
+              <span className={`text-xs font-medium text-center leading-tight ${
+                isRunning ? 'text-indigo-600 dark:text-indigo-400'
+                : isCompleted || isDone ? 'text-green-600 dark:text-green-400'
+                : isError ? 'text-red-600 dark:text-red-400'
+                : 'text-gray-500 dark:text-gray-400'
+              }`}>
+                {t(def.labelKey)}
+              </span>
+            </div>
+            {/* Connector arrow */}
+            {i < steps.length - 1 && (
+              <div className="flex items-center px-1 -mt-5">
+                <div className={`w-6 h-0.5 ${isCompleted || isDone ? 'bg-green-400 dark:bg-green-600' : 'bg-gray-200 dark:bg-slate-700'}`} />
+                <svg className={`w-3 h-3 -ml-0.5 flex-shrink-0 ${isCompleted || isDone ? 'text-green-400 dark:text-green-600' : 'text-gray-300 dark:text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 interface WorkflowExecutionWizardProps {
   workflowName: string;
@@ -30,7 +102,6 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
   const [progress, setProgress] = useState<WorkflowProgress | null>(null);
   const [resultData, setResultData] = useState<Uint8Array | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     isPreviewOpen,
     previewData,
@@ -40,25 +111,11 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
     downloadPreview,
   } = usePDFPreview();
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    if (selected && selected.type === 'application/pdf') {
-      setFile(selected);
+  const handleFilesSelected = useCallback((files: File[]) => {
+    if (files.length > 0) {
+      setFile(files[0]);
       setPhase('configure');
     }
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const dropped = e.dataTransfer.files[0];
-    if (dropped && dropped.type === 'application/pdf') {
-      setFile(dropped);
-      setPhase('configure');
-    }
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
   }, []);
 
   const updateStepConfig = useCallback((stepIndex: number, key: string, value: string | number | boolean) => {
@@ -145,63 +202,14 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
           {t('backToList')}
         </button>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{workflowName}</h2>
-
-        {/* Phase indicators */}
-        <div className="flex items-center gap-2 mt-4">
-          {(['upload', 'configure', 'processing', 'done'] as const).map((p, i) => (
-            <div key={p} className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                phase === p || (phase === 'error' && p === 'processing')
-                  ? 'bg-indigo-600 text-white'
-                  : (['upload', 'configure', 'processing', 'done'].indexOf(phase === 'error' ? 'processing' : phase) > i)
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                  : 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500'
-              }`}>
-                {(['upload', 'configure', 'processing', 'done'].indexOf(phase === 'error' ? 'processing' : phase) > i) ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  i + 1
-                )}
-              </div>
-              {i < 3 && (
-                <div className={`w-8 h-0.5 ${
-                  (['upload', 'configure', 'processing', 'done'].indexOf(phase === 'error' ? 'processing' : phase) > i)
-                    ? 'bg-green-300 dark:bg-green-700'
-                    : 'bg-gray-200 dark:bg-slate-700'
-                }`} />
-              )}
-            </div>
-          ))}
-        </div>
       </div>
+
+      {/* Step Flow Pipeline - visible in all phases */}
+      <StepFlowPipeline steps={steps} progress={progress} phase={phase} />
 
       {/* Upload Phase */}
       {phase === 'upload' && (
-        <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-2xl p-12 text-center cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
-        >
-          <svg className="w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
-          <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
-            {t('uploadTitle')}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {t('uploadSubtitle')}
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,application/pdf"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-        </div>
+        <PDFDropzone onFilesSelected={handleFilesSelected} />
       )}
 
       {/* Configure Phase */}
@@ -261,19 +269,12 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
       {/* Processing Phase */}
       {phase === 'processing' && progress && (
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-medium">
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
             {t('processing')}
-          </div>
-
-          <div className="max-w-xs mx-auto">
-            <WorkflowProgressStepper
-              steps={steps.map((s) => ({ stepId: s.id, type: s.type }))}
-              progress={progress.steps}
-            />
           </div>
         </div>
       )}
@@ -292,15 +293,6 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
           <p className="text-gray-500 dark:text-gray-400 mb-6">
             {t('completeDescription')}
           </p>
-
-          {progress && (
-            <div className="max-w-xs mx-auto mb-6">
-              <WorkflowProgressStepper
-                steps={steps.map((s) => ({ stepId: s.id, type: s.type }))}
-                progress={progress.steps}
-              />
-            </div>
-          )}
 
           <div className="flex gap-3 justify-center">
             {!steps.some((s) => s.type === 'lock') && (
@@ -339,15 +331,6 @@ export function WorkflowExecutionWizard({ workflowName, initialSteps, onBack }: 
             {t('errorTitle')}
           </h3>
           <p className="text-red-500 mb-6">{errorMessage}</p>
-
-          {progress && (
-            <div className="max-w-xs mx-auto mb-6">
-              <WorkflowProgressStepper
-                steps={steps.map((s) => ({ stepId: s.id, type: s.type }))}
-                progress={progress.steps}
-              />
-            </div>
-          )}
 
           <div className="flex gap-3 justify-center">
             <button

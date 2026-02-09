@@ -35,16 +35,22 @@ export function WorkflowCard({ nameKey, descriptionKey, lightBg, textColor, step
           {t(descriptionKey)}
         </p>
 
-        {/* Step pills */}
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        {/* Step flow */}
+        <div className="flex flex-wrap items-center gap-1 mb-4">
           {steps.map((step, i) => {
             const def = stepRegistry[step.type];
             return (
-              <span
-                key={i}
-                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${def?.lightBg || 'bg-gray-100 dark:bg-slate-700'} ${def?.textColor || 'text-gray-600 dark:text-gray-400'}`}
-              >
-                {t(def?.labelKey || step.type)}
+              <span key={i} className="inline-flex items-center gap-1">
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${def?.lightBg || 'bg-gray-100 dark:bg-slate-700'} ${def?.textColor || 'text-gray-600 dark:text-gray-400'}`}
+                >
+                  {t(def?.labelKey || step.type)}
+                </span>
+                {i < steps.length - 1 && (
+                  <svg className="w-3 h-3 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                )}
               </span>
             );
           })}

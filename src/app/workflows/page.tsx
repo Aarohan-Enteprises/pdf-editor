@@ -12,6 +12,7 @@ import { getCustomWorkflows, deleteCustomWorkflow } from '@/lib/workflow-storage
 import { cloneStepsWithNewIds } from '@/lib/workflow-storage';
 import { stepRegistry } from '@/lib/workflow-steps';
 import type { WorkflowStep, CustomWorkflow } from '@/lib/workflow-engine';
+import { ToolSEOSection } from '@/components/ToolSEOSection';
 
 type ViewMode = 'list' | 'execute' | 'builder';
 
@@ -185,15 +186,21 @@ export default function WorkflowsPage() {
                             </div>
                             <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{cw.name}</h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2 min-h-[2.5rem]">{cw.description || '\u00A0'}</p>
-                            <div className="flex flex-wrap gap-1.5 mb-4">
+                            <div className="flex flex-wrap items-center gap-1 mb-4">
                               {cw.steps.map((step, i) => {
                                 const def = stepRegistry[step.type];
                                 return (
-                                  <span
-                                    key={i}
-                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${def?.lightBg || 'bg-gray-100 dark:bg-slate-700'} ${def?.textColor || 'text-gray-600 dark:text-gray-400'}`}
-                                  >
-                                    {t(def?.labelKey || step.type)}
+                                  <span key={i} className="inline-flex items-center gap-1">
+                                    <span
+                                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${def?.lightBg || 'bg-gray-100 dark:bg-slate-700'} ${def?.textColor || 'text-gray-600 dark:text-gray-400'}`}
+                                    >
+                                      {t(def?.labelKey || step.type)}
+                                    </span>
+                                    {i < cw.steps.length - 1 && (
+                                      <svg className="w-3 h-3 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                      </svg>
+                                    )}
                                   </span>
                                 );
                               })}
@@ -231,6 +238,9 @@ export default function WorkflowsPage() {
                   </div>
                 )}
               </section>
+
+              {/* FAQ Section */}
+              <ToolSEOSection toolId="workflows" />
             </>
           )}
 
