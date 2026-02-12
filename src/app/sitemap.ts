@@ -5,6 +5,8 @@ const BASE_URL = 'https://pdf2.in';
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = [
     { path: '/about', priority: 0.5 },
+    { path: '/workflows', priority: 0.7 },
+    { path: '/organize-pdf', priority: 0.6 },
   ];
 
   const tools = [
