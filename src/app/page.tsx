@@ -637,7 +637,7 @@ export default function HomePage() {
               Choose Your Tool
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Select from our comprehensive suite of PDF tools. All processing happens in your browser - your files never leave your device.
+              Select from our comprehensive suite of free online PDF tools. Whether you need to merge, split, compress, or convert files, every operation runs directly in your browser. Your documents never leave your device — no uploads, no accounts, no limits.
             </p>
           </div>
 
@@ -671,6 +671,9 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Organize Pages</h3>
             </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-3xl">
+              Rearrange, merge, split, delete, reverse, or duplicate pages within your PDF. Perfect for assembling documents from multiple sources or removing pages you no longer need.
+            </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
               {organizeTools.map((tool, index) => (
                 <ToolCard
@@ -695,6 +698,9 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Convert & Extract</h3>
             </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-3xl">
+              Convert between PDF and other formats including Word, JPG, and PNG. Extract text content from scanned or digital PDFs for easy editing and reuse.
+            </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
               {convertTools.map((tool, index) => (
                 <ToolCard
@@ -719,6 +725,9 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Edit & Enhance</h3>
             </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-3xl">
+              Add watermarks, page numbers, signatures, and metadata to your PDFs. Compress files to reduce size, redact sensitive information, or flatten form fields — all without installing any software.
+            </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
               {editTools.map((tool, index) => (
                 <ToolCard
@@ -743,6 +752,9 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Security</h3>
             </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-3xl">
+              Protect your PDF with a password or remove existing password protection. Keep sensitive documents secure while maintaining full control over access.
+            </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
               {secureTools.map((tool, index) => (
                 <ToolCard
@@ -818,6 +830,65 @@ export default function HomePage() {
             </div>
           </div>
           )}
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 lg:py-20 bg-gray-50 dark:bg-slate-800/50">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Everything you need to know about our free online PDF editor.
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {[
+              {
+                q: 'Is PDF2.in really free to use?',
+                a: 'Yes, PDF2.in is completely free with no hidden fees, no premium tiers, and no usage limits. Every PDF tool on this site — from merging and splitting to compressing and converting — is available at no cost. There is no account or signup required to get started.',
+              },
+              {
+                q: 'Are my files safe and private?',
+                a: 'Absolutely. PDF2.in processes your documents entirely within your web browser using client-side JavaScript. Your PDF files are never uploaded to a remote server, which means no one else can access your data. Once you close the tab, your files are gone from memory.',
+              },
+              {
+                q: 'What PDF tools are available?',
+                a: 'PDF2.in offers a full suite of over 20 tools. You can merge multiple PDFs into one, split a document into parts, rotate or delete pages, compress file size, add watermarks or page numbers, sign documents, redact sensitive content, edit metadata, convert between PDF and Word or image formats, and much more.',
+              },
+              {
+                q: 'Do I need to install any software?',
+                a: 'No. PDF2.in is a web-based PDF editor that works directly in your browser on any device — desktop, tablet, or phone. There is nothing to download or install. Just open the site, pick a tool, and start editing your PDF instantly.',
+              },
+              {
+                q: 'What file formats are supported for conversion?',
+                a: 'You can convert PDF to Word (DOCX), PDF to JPG, PNG, or WebP images, and vice versa. Image-to-PDF conversion supports JPG, PNG, WebP, GIF, BMP, TIFF, AVIF, HEIC, and SVG formats. Word-to-PDF conversion preserves formatting, tables, and images from your original document.',
+              },
+            ].map((item, i) => (
+              <details
+                key={i}
+                className="group bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 overflow-hidden"
+              >
+                <summary className="flex items-center justify-between cursor-pointer px-6 py-5 text-left font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+                  {item.q}
+                  <svg
+                    className="w-5 h-5 text-gray-400 flex-shrink-0 ml-4 transition-transform duration-200 group-open:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <p className="px-6 pb-5 text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {item.a}
+                </p>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 

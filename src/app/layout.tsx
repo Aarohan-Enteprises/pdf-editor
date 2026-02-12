@@ -133,6 +133,53 @@ export default async function RootLayout({
     permissions: 'No account required. Files processed locally.',
   };
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Is PDF2.in really free to use?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes, PDF2.in is completely free with no hidden fees, no premium tiers, and no usage limits. Every PDF tool — from merging and splitting to compressing and converting — is available at no cost. No account or signup required.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Are my files safe and private?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'PDF2.in processes your documents entirely within your web browser using client-side JavaScript. Your PDF files are never uploaded to a remote server. Once you close the tab, your files are gone from memory.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What PDF tools are available?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'PDF2.in offers over 20 tools including merge, split, rotate, delete pages, compress, add watermarks, page numbers, signatures, redact content, edit metadata, and convert between PDF, Word, and image formats.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Do I need to install any software?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'No. PDF2.in is a web-based PDF editor that works directly in your browser on any device. There is nothing to download or install.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What file formats are supported for conversion?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'You can convert PDF to Word (DOCX), PDF to JPG, PNG, or WebP images, and vice versa. Image-to-PDF supports JPG, PNG, WebP, GIF, BMP, TIFF, AVIF, HEIC, and SVG formats.',
+        },
+      },
+    ],
+  };
+
   const organizationJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -148,6 +195,10 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
         <script
           type="application/ld+json"
