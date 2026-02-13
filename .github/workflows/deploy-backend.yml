@@ -8,8 +8,6 @@ on:
     paths:
       - 'backend/**'
       - 'docker/**'
-      - 'nginx/**'
-      - 'scripts/**'
       - 'docker-compose.yml'
       - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
@@ -29,7 +27,6 @@ jobs:
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-          # Configure SSH keepalive to prevent timeout during long builds
           cat >> ~/.ssh/config << EOF
           Host *
             ServerAliveInterval=60
@@ -105,6 +102,12 @@ jobs:
             $DOCKER_CMD image prune -f || true
             df -h /
 
+            echo "Ensuring shared proxy network exists..."
+            $DOCKER_CMD network inspect shared_proxy_network >/dev/null 2>&1 || {
+              echo "ERROR: shared_proxy_network does not exist. Start shared-proxy first."
+              exit 1
+            }
+
             echo "Building Docker images..."
             $DOCKER_CMD compose build
 
@@ -114,28 +117,12 @@ jobs:
             echo "Waiting for services..."
             sleep 10
 
-            # Reload nginx to pick up config changes
-            echo "Reloading nginx config..."
-            $DOCKER_CMD compose exec -T nginx nginx -s reload || $DOCKER_CMD compose restart nginx
-
             $DOCKER_CMD compose ps
 
             echo "Cleaning up old images..."
             $DOCKER_CMD image prune -f
 
             echo "Deployment complete!"
-          ENDSSH
-
-      - name: Setup SSL Certificates
-        env:
-          DEPLOY_DOMAIN: ${{ vars.API_DOMAIN || 'api.pdf2.in' }}
-          DEPLOY_EMAIL: ${{ vars.SSL_EMAIL || 'admin@pdf2.in' }}
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << ENDSSH
-            set -e
-            cd ~/pdf-editor
-            chmod +x scripts/setup-ssl.sh
-            ./scripts/setup-ssl.sh "$DEPLOY_DOMAIN" "$DEPLOY_EMAIL"
           ENDSSH
 
       - name: Verify Deployment
@@ -161,7 +148,7 @@ jobs:
             elif curl -f http://localhost/health > /dev/null 2>&1; then
               echo "HTTP Health check passed!"
             else
-              echo "WARNING: Health check failed"
+              echo "WARNING: Health check failed (nginx is managed by shared-proxy)"
               $DOCKER_CMD compose logs backend --tail=30
             fi
           ENDSSH
