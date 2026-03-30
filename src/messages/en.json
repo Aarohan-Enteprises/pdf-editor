@@ -268,6 +268,18 @@
       "pageTitle": "Extract Text from PDF",
       "pageDescription": "Extract all text content from your PDF document."
     },
+    "pdfToOcr": {
+      "title": "PDF to OCR",
+      "description": "Extract text from scanned PDFs",
+      "pageTitle": "Convert PDF to OCR Text",
+      "pageDescription": "Scan PDF pages and extract readable text from image-based or scanned documents.",
+      "convert": "Run OCR",
+      "converting": "Scanning...",
+      "success": "OCR Complete",
+      "successDescription": "Text was extracted from your PDF",
+      "infoTitle": "About PDF OCR",
+      "infoDescription": "Uses smart extraction for digital PDFs and OCR fallback for scanned pages. Works best with clear English documents and high-quality scans."
+    },
     "insertBlank": {
       "title": "Insert Blank Pages",
       "description": "Add blank pages to your PDF",

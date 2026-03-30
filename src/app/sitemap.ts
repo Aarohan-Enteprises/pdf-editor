@@ -25,6 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/docx-to-pdf', priority: 0.8 },
     { path: '/pdf-to-docx', priority: 0.8 },
     { path: '/extract-text', priority: 0.7 },
+    { path: '/pdf-to-ocr', priority: 0.7 },
     { path: '/edit-metadata', priority: 0.6 },
     { path: '/sign-pdf', priority: 0.8 },
     { path: '/lock-pdf', priority: 0.7 },

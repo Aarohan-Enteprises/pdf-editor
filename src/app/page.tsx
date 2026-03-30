@@ -152,6 +152,19 @@ const tools = [
     category: 'convert',
   },
   {
+    id: 'pdfToOcr',
+    href: '/pdf-to-ocr',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 3H5a2 2 0 00-2 2v2m16-4h-2m2 0a2 2 0 012 2v2M3 17v2a2 2 0 002 2h2m12-4v2a2 2 0 01-2 2h-2M8 8h8M8 12h8m-8 4h5" />
+      </svg>
+    ),
+    gradient: 'from-emerald-500 to-cyan-500',
+    lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+    textColor: 'text-emerald-600 dark:text-emerald-400',
+    category: 'convert',
+  },
+  {
     id: 'watermark',
     href: '/watermark',
     icon: (
