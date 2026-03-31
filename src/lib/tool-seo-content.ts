@@ -115,6 +115,20 @@ export const toolSEOContent: Record<string, ToolSEOContent> = {
       { question: 'Is there a page limit for text extraction?', answer: 'You can extract text from PDFs with up to 200 pages. The 50MB file size limit also applies.' },
     ],
   },
+  'pdf-to-ocr': {
+    howToTitle: 'How to Convert PDF to OCR Text',
+    steps: [
+      { title: 'Upload PDF', description: 'Choose a scanned or image-based PDF from your device.' },
+      { title: 'Run OCR', description: 'The tool checks each page for embedded text and falls back to OCR when needed.' },
+      { title: 'Review Results', description: 'Read the extracted text directly in your browser and confirm the output.' },
+      { title: 'Copy or Download', description: 'Copy the OCR result to your clipboard or download it as a TXT file.' },
+    ],
+    faqs: [
+      { question: 'Does this work for scanned PDFs?', answer: 'Yes. The tool is designed for scanned and image-based PDFs, while also handling normal text PDFs automatically.' },
+      { question: 'Are my files uploaded anywhere?', answer: 'No. OCR runs in your browser so the PDF stays on your device during processing.' },
+      { question: 'What languages are supported?', answer: 'The current setup is optimized for English OCR. Clear, high-resolution scans produce the best results.' },
+    ],
+  },
   'page-numbers': {
     howToTitle: 'How to Add Page Numbers to PDF',
     steps: [

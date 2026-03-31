@@ -94,6 +94,12 @@ const toolConfigs: Record<string, ToolSEOConfig> = {
     keywords: ['extract text from PDF', 'PDF text extractor', 'copy text from PDF', 'PDF to text', 'get text from PDF'],
     path: '/extract-text',
   },
+  'pdf-to-ocr': {
+    title: 'PDF to OCR Online - Extract Text from Scanned PDFs Free',
+    description: 'Convert scanned or image-based PDFs to searchable text online for free. Run browser-based OCR and download the extracted text instantly.',
+    keywords: ['PDF to OCR', 'OCR PDF online', 'extract text from scanned PDF', 'scan PDF to text', 'PDF OCR converter'],
+    path: '/pdf-to-ocr',
+  },
   'edit-metadata': {
     title: 'Edit PDF Metadata Online - Change PDF Properties Free',
     description: 'Edit PDF metadata including title, author, subject, and keywords online for free. Modify PDF document properties easily.',
